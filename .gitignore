@@ -56,6 +56,7 @@ _deps
 ### Ninja ###
 .ninja_deps
 .ninja_log
+build.ninja
 
 ### VisualStudio ###
 ## Ignore Visual Studio temporary files, build results, and
