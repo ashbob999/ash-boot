@@ -460,5 +460,6 @@ FodyWeavers.xsd
 # End of https://www.toptal.com/developers/gitignore/api/c++,visualstudio,cmake,ninja
 
 /stage-0-compiler/msvc/
+/stage-0-compiler/linux/
 
 /kal_test/
