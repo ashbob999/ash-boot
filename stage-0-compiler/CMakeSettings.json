@@ -1,0 +1,42 @@
+﻿{
+	"configurations": [
+		{
+			"name": "x64-Debug (default)",
+			"generator": "Ninja",
+			"configurationType": "Debug",
+			"inheritEnvironments": [ "msvc_x64_x64" ],
+			"buildRoot": "${projectDir}\\msvc\\build\\${name}",
+			"installRoot": "${projectDir}\\msvc\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"variables": [
+				{
+					"name": "CMAKE_CXX_FLAGS_DEBUG",
+					"value": "/Zi /Ob0 /Od /RTC1 /W4",
+					"type": "STRING"
+				}
+			],
+			"intelliSenseMode": "windows-msvc-x64"
+		},
+		{
+			"name": "x64-Release",
+			"generator": "Ninja",
+			"configurationType": "Release",
+			"inheritEnvironments": [ "msvc_x64_x64" ],
+			"buildRoot": "${projectDir}\\msvc\\build\\${name}",
+			"installRoot": "${projectDir}\\msvc\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"variables": [
+				{
+					"name": "CMAKE_CXX_FLAGS_RELEASE",
+					"value": "/O2 /Ob2 /GL /Ob3 /W4",
+					"type": "STRING"
+				}
+			],
+			"intelliSenseMode": "windows-msvc-x64"
+		}
+	]
+}

@@ -1,0 +1,16 @@
+linux
+cd llvm
+mkdir build-linux
+cd build-linux
+cmake -G Ninja -DLLVM_ENABLE_PROJECTS=lld -DLLVM_TARGETS_TO_BUILD='X86;' -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DLLVM_INCLUDE_BENCHMARKS=OFF ../llvm
+ninja
+
+
+msvc
+open visual studio developer prompt
+or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
+cd llvm
+mkdir build-msvc
+cd build-msvc
+cmake -G Ninja -DLLVM_ENABLE_PROJECTS=lld -DLLVM_TARGETS_TO_BUILD='X86;' -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DLLVM_INCLUDE_BENCHMARKS=OFF ../llvm
+ninja
