@@ -39,6 +39,15 @@ namespace parser
 		return func;
 	}
 
+	ast::BodyExpr* Parser::parse_file_as_body()
+	{
+		start_;
+		bodies.push_back(nullptr);
+		ast::BodyExpr* body = parse_body(true, false);
+		end_;
+		return body;
+	}
+
 	char Parser::get_char()
 	{
 		char c = input_file.get();

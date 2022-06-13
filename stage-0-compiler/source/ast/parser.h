@@ -40,6 +40,7 @@ namespace parser
 
 		ast::BaseExpr* parse_file();
 		ast::FunctionDefinition* parse_file_as_func();
+		ast::BodyExpr* parse_file_as_body();
 		static const std::unordered_map<char, int> binop_precedence;
 	private:
 		char get_char();

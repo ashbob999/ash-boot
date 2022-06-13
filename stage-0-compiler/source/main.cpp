@@ -50,14 +50,13 @@ int main(int argc, char** argv)
 
 		// TODO: handle parse errors
 		parser::Parser parser{ file_stream };
-		//ast::BaseExpr* file_ast = parser.parse_file();
-		ast::FunctionDefinition* file_ast = parser.parse_file_as_func();
+		ast::BodyExpr* body_ast = parser.parse_file_as_body();
 
 		file_stream.close();
 
 		//std::cout << std::endl;
 
-		if (file_ast == nullptr)
+		if (body_ast == nullptr)
 		{
 			std::cout << std::endl;
 			std::cout << "Failed To Parse Code." << std::endl;
@@ -71,7 +70,7 @@ int main(int argc, char** argv)
 		// do type checking
 		type_checker::TypeChecker tc;
 
-		if (!tc.check_types(file_ast->body))
+		if (!tc.check_types(body_ast))
 		{
 			std::cout << "File Failed Type Checks" << std::endl;
 			return 1;
@@ -83,49 +82,52 @@ int main(int argc, char** argv)
 		llvm_builder.llvm_module->setSourceFileName(file_name);
 
 		llvm::Function* func = nullptr;
-		func = llvm_builder.generate_function_definition(file_ast);
 
-		if (func == nullptr)
+		for (auto& f : body_ast->functions)
 		{
-			std::cout << "Failed To Generate LLVM IR Code" << std::endl;
+			auto func = llvm_builder.generate_function_definition(f);
+
+			if (f == nullptr)
+			{
+				std::cout << "Failed To Generate LLVM IR Code For Function: " << f->prototype->name << std::endl;
+
+				delete body_ast;
+
+				return 1;
+			}
+		}
+
+		std::cout << "Successfully Generated LLVM IR Code" << std::endl;
+
+		std::string output_file_name{ argv[2] };
+
+		std::error_code error_code;
+
+		// create the raw fd stream
+		llvm::raw_fd_ostream output_file_stream(output_file_name, error_code, llvm::sys::fs::CreationDisposition::CD_CreateAlways, llvm::sys::fs::FileAccess::FA_Write, llvm::sys::fs::OpenFlags::OF_TextWithCRLF);
+
+		if (error_code)
+		{
+			// error
+			std::cout << "Error Opening Output File Stream: " << error_code.message() << std::endl;
 			return 1;
 		}
 		else
 		{
-			std::cout << "Successfully Generated LLVM IR Code" << std::endl;
+			// write llvm ir to file
+			llvm_builder.llvm_module->print(output_file_stream, nullptr);
 
-			//std::cout << std::endl;
-			//llvm_builder.llvm_module->print(llvm::outs(), nullptr);
-			//std::cout << std::endl;
+			std::cout << "LLVM IR Was Successfully Written To File" << std::endl;
 
-			std::string output_file_name{ argv[2] };
-
-			std::error_code error_code;
-
-			// create the raw fd stream
-			llvm::raw_fd_ostream output_file_stream(output_file_name, error_code, llvm::sys::fs::CreationDisposition::CD_CreateAlways, llvm::sys::fs::FileAccess::FA_Write, llvm::sys::fs::OpenFlags::OF_TextWithCRLF);
-
-			if (error_code)
-			{
-				// error
-				std::cout << "Error Opening Output File Stream: " << error_code.message() << std::endl;
-				return 1;
-			}
-			else
-			{
-				// write llvm ir to file
-				llvm_builder.llvm_module->print(output_file_stream, nullptr);
-
-				std::cout << "LLVM IR Was Successfully Written To File" << std::endl;
-
-				// close file stream
-				output_file_stream.close();
-			}
+			// close file stream
+			output_file_stream.close();
 		}
 
-		if (file_ast != nullptr)
+		//if (file_ast != nullptr)
+		if (body_ast != nullptr)
 		{
-			delete file_ast;
+			//delete file_ast;
+			delete body_ast;
 		}
 	}
 	else
@@ -149,4 +151,4 @@ int main(int argc, char** argv)
 	}
 
 	return 0;
-}
+	}
