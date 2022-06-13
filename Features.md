@@ -19,6 +19,7 @@
 - [ ] Memory Management
 - [ ] Pointers
 - [ ] Compile Time Platform Checks
+- [ ] Program Arguments
 
 ##### Future Features
 - more types
