@@ -73,12 +73,17 @@ namespace parser
 		return c;
 	}
 
+	char Parser::peek_char()
+	{
+		return input_file.peek();
+	}
+
 	Token Parser::get_next_token()
 	{
 		identifier_string = "";
 		curr_token = Token::None;
 
-		//last_char = ' ';
+		last_char = get_char();
 		// skip whitespace
 		while (std::isspace(last_char))
 		{
@@ -89,12 +94,11 @@ namespace parser
 		if (std::isalpha(last_char))
 		{
 			identifier_string = last_char;
-			while (std::isalnum(last_char = get_char()))
+			while (std::isalnum(peek_char()))
 			{
+				last_char = get_char();
 				identifier_string += last_char;
 			}
-
-			//last_char = identifier_string.back();
 
 			types::Type type = types::is_valid_type(identifier_string);
 			if (type != types::Type::None)
@@ -127,9 +131,12 @@ namespace parser
 		if (std::isdigit(last_char) /* || types::BaseType::is_sign_char(last_char)*/)
 		{
 			identifier_string = last_char;
-			while (std::isdigit(last_char = get_char()) || types::BaseType::is_sign_char(last_char) || last_char == '.' || last_char == 'f')
+			char next_char = peek_char();
+			while (std::isdigit(next_char) || types::BaseType::is_sign_char(next_char) || next_char == '.' || next_char == 'f')
 			{
+				last_char = get_char();
 				identifier_string += last_char;
+				next_char = peek_char();
 			}
 
 			std::pair<bool, types::Type> res = types::check_type_string(identifier_string);
@@ -145,7 +152,6 @@ namespace parser
 		// end of file
 		if (last_char == std::ifstream::traits_type::eof())
 		{
-			last_char = get_char();
 			curr_token = Token::EndOfFile;
 			return curr_token;
 		}
@@ -153,7 +159,6 @@ namespace parser
 		// end of expression
 		if (last_char == ';')
 		{
-			last_char = get_char();
 			curr_token = Token::EndOfExpression;
 			return curr_token;
 		}
@@ -161,7 +166,6 @@ namespace parser
 		// start of body
 		if (last_char == '{')
 		{
-			last_char = get_char();
 			curr_token = Token::BodyStart;
 			return curr_token;
 		}
@@ -169,42 +173,36 @@ namespace parser
 		// end of body
 		if (last_char == '}')
 		{
-			last_char = get_char();
 			curr_token = Token::BodyEnd;
 			return curr_token;
 		}
 
 		if (last_char == '(')
 		{
-			last_char = get_char();
 			curr_token = Token::ParenStart;
 			return curr_token;
 		}
 
 		if (last_char == ')')
 		{
-			last_char = get_char();
 			curr_token = Token::ParenEnd;
 			return curr_token;
 		}
 
 		if (ast::is_binary_op(last_char) != ast::BinaryOp::None)
 		{
-			last_char = get_char();
 			curr_token = Token::BinaryOperator;
 			return curr_token;
 		}
 
 		if (last_char == ',')
 		{
-			last_char = get_char();
 			curr_token = Token::Comma;
 			return curr_token;
 		}
 
 		//std::cout << "identifier " << identifier_string << " " << last_char << std::endl;
 
-		last_char = get_char();
 		// anything else
 		curr_token = Token::None;
 		return curr_token;

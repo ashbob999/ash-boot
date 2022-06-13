@@ -43,6 +43,7 @@ namespace parser
 		static const std::unordered_map<char, int> binop_precedence;
 	private:
 		char get_char();
+		char peek_char();
 		Token get_next_token();
 		ast::BaseExpr* parse_body(bool is_top_level, bool has_curly_brackets);
 		ast::FunctionDefinition* parse_top_level();
@@ -62,7 +63,7 @@ namespace parser
 	private:
 		std::ifstream& input_file;
 		std::string identifier_string;
-		char last_char = ' ';
+		char last_char = '\0';
 		Token curr_token = Token::None;
 		types::Type curr_type = types::Type::None;
 		std::vector<ast::BodyExpr*> bodies;
