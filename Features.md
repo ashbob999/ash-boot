@@ -8,15 +8,15 @@
 
 
 ##### Features Required for Bootstrapping
-[ ] Classes
-[ ] Virtual Inheritance
-[ ] Vectors
-[ ] Maps
-[ ] Strings
-[ ] LLVM Interface
-[ ] Text Output
-[ ] File Reading/Writing
-[ ] Memory Management
-[ ] Pointers
-[ ] Compile Time Platform Checks
+- [ ] Classes
+- [ ] Virtual Inheritance
+- [ ] Vectors
+- [ ] Maps
+- [ ] Strings
+- [ ] LLVM Interface
+- [ ] Text Output
+- [ ] File Reading/Writing
+- [ ] Memory Management
+- [ ] Pointers
+- [ ] Compile Time Platform Checks
 
