@@ -45,7 +45,7 @@ namespace parser
 		char get_char();
 		char peek_char();
 		Token get_next_token();
-		ast::BaseExpr* parse_body(bool is_top_level, bool has_curly_brackets);
+		ast::BodyExpr* parse_body(bool is_top_level, bool has_curly_brackets);
 		ast::FunctionDefinition* parse_top_level();
 		ast::BaseExpr* parse_expression(bool for_call);
 		ast::BaseExpr* parse_primary();
@@ -58,6 +58,7 @@ namespace parser
 		ast::FunctionDefinition* parse_function_definition();
 		int get_token_precedence();
 		ast::BaseExpr* log_error(std::string error_message);
+		ast::BodyExpr* log_error_body(std::string error_message);
 		ast::FunctionPrototype* log_error_prototype(std::string error_message);
 		void log_line_info();
 	private:

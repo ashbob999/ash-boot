@@ -1,6 +1,7 @@
 #include <sstream>
 
 #include "ast.h"
+#include "scope_checker.h"
 
 namespace ast
 {
@@ -16,6 +17,11 @@ namespace ast
 	BodyExpr* BaseExpr::get_body()
 	{
 		return this->body;
+	}
+
+	void BaseExpr::set_line_info(LinePositionInfo line_info)
+	{
+		this->line_info = line_info;
 	}
 
 	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string str)
@@ -44,6 +50,25 @@ namespace ast
 		str << tabs << "}," << '\n';
 
 		return str.str();
+	}
+
+	types::Type LiteralExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = this->curr_type;
+		}
+		return result_type;
+	}
+
+	bool LiteralExpr::check_types()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = this->curr_type;
+		}
+
+		return true;
 	}
 
 	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string str, ast::BaseExpr* expr)
@@ -82,6 +107,25 @@ namespace ast
 		return str.str();
 	}
 
+	types::Type VariableDeclarationExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = this->curr_type;
+		}
+		return result_type;
+	}
+
+	bool VariableDeclarationExpr::check_types()
+	{
+		if (this->expr == nullptr || this->get_result_type() == this->expr->get_result_type())
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, std::string str)
 		: BaseExpr(AstExprType::VariableReferenceExpr, body), name(str)
 	{}
@@ -97,6 +141,20 @@ namespace ast
 		str << tabs << "}," << '\n';
 
 		return str.str();
+	}
+
+	types::Type VariableReferenceExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = this->get_body()->named_types[this->name];
+		}
+		return result_type;
+	}
+
+	bool VariableReferenceExpr::check_types()
+	{
+		return true;
 	}
 
 	BinaryOp is_binary_op(char c)
@@ -182,8 +240,27 @@ namespace ast
 		return str.str();
 	}
 
-	BodyExpr::BodyExpr()
-		: BaseExpr(AstExprType::BodyExpr, this)
+	types::Type BinaryExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = this->lhs->get_result_type();
+		}
+		return result_type;
+	}
+
+	bool BinaryExpr::check_types()
+	{
+		if (this->lhs->get_result_type() == this->rhs->get_result_type())
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	BodyExpr::BodyExpr(BodyExpr* body)
+		: BaseExpr(AstExprType::BodyExpr, body)
 	{}
 
 	BodyExpr::~BodyExpr()
@@ -221,6 +298,20 @@ namespace ast
 		return str.str();
 	}
 
+	types::Type BodyExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = this->expressions.back()->get_result_type();
+		}
+		return result_type;
+	}
+
+	bool BodyExpr::check_types()
+	{
+		return true;
+	}
+
 	void BodyExpr::add_base(BaseExpr* expr)
 	{
 		expressions.push_back(expr);
@@ -229,6 +320,7 @@ namespace ast
 	void BodyExpr::add_function(FunctionDefinition* func)
 	{
 		functions.push_back(func);
+		function_prototypes.insert({ func->prototype->name, func->prototype });
 	}
 
 	CallExpr::CallExpr(ast::BodyExpr* body, std::string callee, std::vector<BaseExpr*> args)
@@ -252,6 +344,41 @@ namespace ast
 		str << tabs << "}," << '\n';
 
 		return str.str();
+	}
+
+	types::Type CallExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = scope::get_scope(this)->function_prototypes[this->callee]->return_type;
+			//result_type = this->get_body()->function_prototypes[this->callee]->return_type;
+		}
+		return result_type;
+	}
+
+	bool CallExpr::check_types()
+	{
+		/*
+		FunctionPrototype* proto = this->get_body()->function_prototypes[this->callee];
+		if (proto == nullptr)
+		{
+			proto = this->get_body()->get_body()->function_prototypes[this->callee];
+		}
+
+		BodyExpr* b1 = this->get_body();
+		BodyExpr* b2 = this->get_body()->get_body();
+		*/
+		FunctionPrototype* proto = scope::get_scope(this)->function_prototypes[this->callee];
+
+		for (int i = 0; i < this->args.size(); i++)
+		{
+			if (this->args[i]->get_result_type() != proto->types[i])
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	FunctionPrototype::FunctionPrototype(std::string name, types::Type return_type, std::vector<types::Type> types, std::vector<std::string> args)
@@ -280,12 +407,17 @@ namespace ast
 		return str.str();
 	}
 
-	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, BaseExpr* body)
+	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, BodyExpr* body)
 		: prototype(prototype), body(body)
 	{}
 
 	FunctionDefinition::~FunctionDefinition()
 	{
+		if (prototype != nullptr)
+		{
+			delete prototype;
+		}
+
 		if (body != nullptr)
 		{
 			delete body;
@@ -312,6 +444,16 @@ namespace ast
 		str << tabs << '}' << '\n';
 
 		return str.str();
+	}
+
+	bool FunctionDefinition::check_return_type()
+	{
+		if (this->prototype->return_type == this->body->get_result_type())
+		{
+			return true;
+		}
+
+		return false;
 	}
 
 }

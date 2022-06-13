@@ -8,6 +8,7 @@
 
 #include "ast/parser.h"
 #include "ast/builder.h"
+#include "ast/type_checker.h"
 
 int main(int argc, char** argv)
 {
@@ -66,6 +67,17 @@ int main(int argc, char** argv)
 		std::cout << "File Was Parsed Successfully" << std::endl;
 
 		//std::cout << std::endl << file_ast->to_string(0) << std::endl << std::endl;
+
+		// do type checking
+		type_checker::TypeChecker tc;
+
+		if (!tc.check_types(file_ast->body))
+		{
+			std::cout << "File Failed Type Checks" << std::endl;
+			return 1;
+		}
+
+		std::cout << "File Passed Type Checks" << std::endl;
 
 		builder::LLVMBuilder llvm_builder;
 		llvm_builder.llvm_module->setSourceFileName(file_name);

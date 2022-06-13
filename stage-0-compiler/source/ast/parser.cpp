@@ -209,10 +209,10 @@ namespace parser
 	}
 
 	/// top ::= (definition | expression)*
-	ast::BaseExpr* Parser::parse_body(bool is_top_level, bool has_curly_brackets)
+	ast::BodyExpr* Parser::parse_body(bool is_top_level, bool has_curly_brackets)
 	{
 		start_;
-		ast::BodyExpr* body = new ast::BodyExpr();
+		ast::BodyExpr* body = new ast::BodyExpr(bodies.back());
 
 		if (has_curly_brackets)
 		{
@@ -220,7 +220,7 @@ namespace parser
 
 			if (curr_token != Token::BodyStart)
 			{
-				return log_error("body must start with a '{'");
+				return log_error_body("body must start with a '{'");
 			}
 		}
 
@@ -242,7 +242,7 @@ namespace parser
 					if (has_curly_brackets)
 					{
 						bodies.pop_back();
-						return log_error("body must end with a '}'");
+						return log_error_body("body must end with a '}'");
 					}
 					return body;
 				}
@@ -283,7 +283,7 @@ namespace parser
 					if (is_top_level)
 					{
 						end_;
-						return log_error("expression not allowed in top level code");
+						return log_error_body("expression not allowed in top level code");
 					}
 
 					ast::BaseExpr* base = parse_expression(false);
@@ -321,7 +321,8 @@ namespace parser
 	ast::FunctionDefinition* Parser::parse_top_level()
 	{
 		start_;
-		ast::BaseExpr* expr = parse_body(true, false);
+		bodies.push_back(nullptr);
+		ast::BodyExpr* expr = parse_body(true, false);
 		if (expr == nullptr)
 		{
 			end_;
@@ -509,9 +510,11 @@ namespace parser
 	ast::BaseExpr* Parser::parse_variable_declaration()
 	{
 		start_;
+		types::Type var_type = curr_type;
+
 		get_next_token();
 
-		if (curr_token == Token::None)
+		if (curr_token != Token::VariableReference)
 		{
 			end_;
 			return log_error("expected identifier after type");
@@ -535,7 +538,8 @@ namespace parser
 		}
 
 		end_;
-		return new ast::VariableDeclarationExpr(bodies.back(), curr_type, name, expr);
+		expr->get_body()->named_types[name] = var_type;
+		return new ast::VariableDeclarationExpr(bodies.back(), var_type, name, expr);
 	}
 
 	/// variable_reference_expr
@@ -595,7 +599,7 @@ namespace parser
 		get_next_token();
 
 		end_;
-		return new  ast::CallExpr(bodies.back(), name, args);
+		return new ast::CallExpr(bodies.back(), name, args);
 	}
 
 	ast::BaseExpr* Parser::parse_parenthesis()
@@ -740,11 +744,16 @@ namespace parser
 		}
 
 		//ast::BaseExpr* expr = parse_expression();
-		ast::BaseExpr* body = parse_body(false, true);
+		ast::BodyExpr* body = parse_body(false, true);
 		if (body == nullptr)
 		{
 			end_;
 			return nullptr;
+		}
+
+		for (int i = 0; i < proto->args.size(); i++)
+		{
+			body->named_types[proto->args[i]] = proto->types[i];
 		}
 
 		end_;
@@ -774,6 +783,15 @@ namespace parser
 	}
 
 	ast::BaseExpr* Parser::log_error(std::string error_message)
+	{
+		start_;
+		std::cout << error_message << std::endl;
+		log_line_info();
+		end_;
+		return nullptr;
+	}
+
+	ast::BodyExpr* Parser::log_error_body(std::string error_message)
 	{
 		start_;
 		std::cout << error_message << std::endl;

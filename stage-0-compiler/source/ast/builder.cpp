@@ -1,8 +1,11 @@
 #include <iostream>
 
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/DiagnosticPrinter.h"
+#include "llvm/IR/DiagnosticInfo.h"
 
 #include "builder.h"
+#include "scope_checker.h"
 
 #ifdef _WIN64
 #define __print_function__ __FUNCSIG__
@@ -21,6 +24,8 @@ namespace builder
 		llvm_context = new llvm::LLVMContext();
 		llvm_module = new llvm::Module("ash-boot", *llvm_context);
 		llvm_ir_builder = new llvm::IRBuilder<>(*llvm_context);
+
+		llvm_context->setDiagnosticHandlerCallBack(&this->diagnostic_handler_callback);
 	}
 
 	LLVMBuilder::~LLVMBuilder()
@@ -30,7 +35,7 @@ namespace builder
 		delete llvm_context;
 	}
 
-	llvm::Value* LLVMBuilder::log_error_value(const char* str)
+	llvm::Value* LLVMBuilder::log_error_value(std::string str)
 	{
 		std::cout << str << std::endl;
 		return nullptr;
@@ -70,7 +75,7 @@ namespace builder
 	llvm::Function* LLVMBuilder::generate_function_definition(ast::FunctionDefinition* function_definition)
 	{
 		// create all of the functions defined inside the current function
-		for (auto& func : function_definition->body->get_body()->functions)
+		for (auto& func : function_definition->body->functions)
 		{
 			llvm::Function* f = generate_function_definition(func);
 			if (f == nullptr)
@@ -99,8 +104,8 @@ namespace builder
 		llvm_ir_builder->SetInsertPoint(bb);
 
 		// record the functions types and arguments
-		//named_types.clear();
-		//named_values.clear();
+		//llvm_named_types.clear();
+		//llvm_named_values.clear();
 
 		for (auto& arg : the_function->args())
 		{
@@ -108,9 +113,9 @@ namespace builder
 
 			llvm_ir_builder->CreateStore(&arg, alloca);
 
-			//named_values[std::string{ arg.getName() }] = alloca;
-			function_definition->body->get_body()->named_values[std::string{ arg.getName() }] = alloca;
-			function_definition->body->get_body()->named_types[std::string{ arg.getName() }] = arg.getType();
+			//llvm_named_values[std::string{ arg.getName() }] = alloca;
+			function_definition->body->llvm_named_values[std::string{ arg.getName() }] = alloca;
+			function_definition->body->llvm_named_types[std::string{ arg.getName() }] = arg.getType();
 		}
 
 		llvm::Value* return_value = generate_code_dispatch(function_definition->body);
@@ -210,19 +215,19 @@ namespace builder
 		llvm_ir_builder->CreateStore(init_value, alloca);
 
 		// remember the old varibale binding so we can restore when the function ends
-		//old_binding = named_values[var_name];
+		//old_binding = llvm_named_values[var_name];
 		// remember the new binding
-		//named_values[var_name] = alloca;
-		//named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
-		expr->get_body()->named_values[var_name] = alloca;
-		expr->get_body()->named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
+		//llvm_named_values[var_name] = alloca;
+		//llvm_named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
+		expr->get_body()->llvm_named_values[var_name] = alloca;
+		expr->get_body()->llvm_named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
 
 		// create the body code?????????
 		// TODO: SORT
 		//llvm::Value* 
 
 		// put the variable back into scope
-		//named_values[expr->name] = old_binding;
+		//llvm_named_values[expr->name] = old_binding;
 
 		return init_value;
 		//return llvm::Constant::getNullValue(llvm::Type::getVoidTy(*llvm_context));
@@ -234,16 +239,21 @@ namespace builder
 	llvm::Value* LLVMBuilder::generate_code<ast::VariableReferenceExpr>(ast::VariableReferenceExpr* expr)
 	{
 		// lookup the variable in the function
-		//auto f = named_values.find(expr->name);
-		auto f = expr->get_body()->named_values.find(expr->name);
-		if (f == expr->get_body()->named_values.end())
+		//auto f = llvm_named_values.find(expr->name);
+		//auto f = expr->get_body()->llvm_named_values.find(expr->name);
+		auto b = scope::get_scope(expr);
+		//if (f == expr->get_body()->llvm_named_values.end())
+		if (b == nullptr)
 		{
-			return log_error_value("unknown variable name");
+			return log_error_value("unknown variable name: " + expr->name);
 		}
 
+		auto f = b->llvm_named_values.find(expr->name);
+
 		// load the value
-		//return llvm_ir_builder->CreateLoad(named_types[f->first], f->second, f->first.c_str());
-		return llvm_ir_builder->CreateLoad(expr->get_body()->named_types[f->first], f->second, f->first.c_str());
+		//return llvm_ir_builder->CreateLoad(llvm_named_types[f->first], f->second, f->first.c_str());
+		//return llvm_ir_builder->CreateLoad(expr->get_body()->llvm_named_types[f->first], f->second, f->first.c_str());
+		return llvm_ir_builder->CreateLoad(b->llvm_named_types[f->first], f->second, f->first.c_str());
 	}
 
 	template<>
@@ -268,9 +278,9 @@ namespace builder
 			}
 
 			// look up the name
-			//auto f = named_values.find(lhs_expr->name);
-			auto f = lhs_expr->get_body()->named_values.find(lhs_expr->name);
-			if (f == lhs_expr->get_body()->named_values.end())
+			//auto f = llvm_named_values.find(lhs_expr->name);
+			auto f = lhs_expr->get_body()->llvm_named_values.find(lhs_expr->name);
+			if (f == lhs_expr->get_body()->llvm_named_values.end())
 			{
 				return log_error_value("unknown variable name");
 			}
@@ -374,6 +384,13 @@ namespace builder
 		}
 		null_end;
 		return nullptr;
+	}
+
+	void LLVMBuilder::diagnostic_handler_callback(const llvm::DiagnosticInfo& di, void* context)
+	{
+		llvm::DiagnosticPrinterRawOStream printer(llvm::outs());
+
+		di.print(printer);
 	}
 
 }

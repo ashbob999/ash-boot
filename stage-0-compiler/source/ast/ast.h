@@ -21,6 +21,15 @@ namespace ast
 		CallExpr,
 	};
 
+	struct LinePositionInfo
+	{
+		int start_line;
+		int end_line;
+		int start_pos;
+		int end_pos;
+		std::string line;
+	};
+
 	// TODO: delete all copy/move construcotrs or use smart pointers
 
 	class BaseExpr;
@@ -40,14 +49,19 @@ namespace ast
 	protected:
 		AstExprType ast_type = AstExprType::BaseExpr;
 		BodyExpr* body;
+		types::Type result_type = types::Type::None;
+		LinePositionInfo line_info;
 
 	public:
 		BaseExpr(AstExprType ast_type, BodyExpr* body);
 		virtual ~BaseExpr() = default;
 		virtual std::string to_string(int depth) = 0;
+		virtual types::Type get_result_type() = 0;
+		virtual bool check_types() = 0;
 
 		virtual AstExprType get_type() final;
 		virtual BodyExpr* get_body() final;
+		virtual void set_line_info(LinePositionInfo line_info) final;
 	};
 
 	// Any literal value
@@ -57,6 +71,8 @@ namespace ast
 		LiteralExpr(BodyExpr* body, types::Type curr_type, std::string str);
 		~LiteralExpr() override;
 		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
 
 		types::Type curr_type;
 		types::BaseType* value_type;
@@ -66,17 +82,22 @@ namespace ast
 	class BodyExpr : public BaseExpr
 	{
 	public:
-		BodyExpr();
+		BodyExpr(BodyExpr* body);
 		~BodyExpr() override;
 		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
 
 		void add_base(BaseExpr* expr);
 		void add_function(FunctionDefinition* func);
 
 		std::vector<BaseExpr*> expressions;
 		std::vector<FunctionDefinition*> functions;
-		std::map<std::string, llvm::Type*> named_types;
-		std::map<std::string, llvm::AllocaInst*> named_values;
+		std::map<std::string, FunctionPrototype*> function_prototypes;
+		//std::map<std::string, FunctionDefinition*> functions;
+		std::map<std::string, types::Type> named_types;
+		std::map<std::string, llvm::Type*> llvm_named_types;
+		std::map<std::string, llvm::AllocaInst*> llvm_named_values;
 	};
 
 	// Any variable declaration
@@ -86,6 +107,8 @@ namespace ast
 		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string str, ast::BaseExpr* expr);
 		~VariableDeclarationExpr() override;
 		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
 
 		types::Type curr_type;
 		std::string name;
@@ -98,6 +121,8 @@ namespace ast
 	public:
 		VariableReferenceExpr(BodyExpr* body, std::string str);
 		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
 
 		std::string name;
 	};
@@ -123,6 +148,8 @@ namespace ast
 		BinaryExpr(BodyExpr* body, BinaryOp binop, BaseExpr* lhs, BaseExpr* rhs);
 		~BinaryExpr() override;
 		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
 
 		BinaryOp binop;
 		BaseExpr* lhs;
@@ -134,6 +161,8 @@ namespace ast
 	public:
 		CallExpr(ast::BodyExpr* body, std::string callee, std::vector<BaseExpr*> args);
 		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
 
 		std::string callee;
 		std::vector<BaseExpr*> args;
@@ -156,11 +185,12 @@ namespace ast
 	class FunctionDefinition
 	{
 	public:
-		FunctionDefinition(FunctionPrototype* prototype, BaseExpr* body);
+		FunctionDefinition(FunctionPrototype* prototype, BodyExpr* body);
 		~FunctionDefinition();
 		std::string to_string(int depth);
+		bool check_return_type();
 
 		FunctionPrototype* prototype;
-		BaseExpr* body;
+		BodyExpr* body;
 	};
 }
