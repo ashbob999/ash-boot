@@ -16,16 +16,7 @@ int main(int argc, char** argv)
 	// argv[2] is output file
 	if (argc >= 3 || true) // TODO: temp
 	{
-		//std::string file_name{ argv[1] };
-		std::string file_name; // TODO: temp
-
-		// TODO: temp
-#ifdef _WIN64
-		file_name = "C:/Users/ashbo/Documents/ash-boot/stage-0-compiler/test.txt";
-#endif
-#ifdef __linux__
-		file_name = "/mnt/c/Users/ashbo/Documents/ash-boot/stage-0-compiler/test.txt";
-#endif
+		std::string file_name{ argv[1] };
 
 		std::filesystem::path file_path{ file_name };
 		file_path = std::filesystem::canonical(file_name);
@@ -95,16 +86,7 @@ int main(int argc, char** argv)
 			//llvm_builder.llvm_module->print(llvm::outs(), nullptr);
 			//std::cout << std::endl;
 
-			//std::string output_file_name{ argv[1] };
-			std::string output_file_name; // TODO: temp
-
-			// TODO: temp
-#ifdef _WIN64
-			output_file_name = "C:/Users/ashbo/Documents/ash-boot/stage-0-compiler/output.ll";
-#endif
-#ifdef __linux__
-			output_file_name = "/mnt/c/Users/ashbo/Documents/ash-boot/stage-0-compiler/output.ll";
-#endif
+			std::string output_file_name{ argv[2] };
 
 			std::error_code error_code;
 
@@ -136,7 +118,6 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-
 		if (argc < 2)
 		{
 			std::cout << "No input file specified." << std::endl;
