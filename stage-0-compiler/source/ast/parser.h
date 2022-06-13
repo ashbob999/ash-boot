@@ -62,7 +62,7 @@ namespace parser
 	private:
 		std::ifstream& input_file;
 		std::string identifier_string;
-		char last_char = '\0';
+		char last_char = ' ';
 		Token curr_token = Token::None;
 		types::Type curr_type = types::Type::None;
 		std::vector<ast::BodyExpr*> bodies;
