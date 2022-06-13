@@ -44,7 +44,7 @@ namespace parser
 	private:
 		char get_char();
 		Token get_next_token();
-		ast::BaseExpr* parse_body(bool has_curly_brackets);
+		ast::BaseExpr* parse_body(bool is_top_level, bool has_curly_brackets);
 		ast::FunctionDefinition* parse_top_level();
 		ast::BaseExpr* parse_expression(bool for_call);
 		ast::BaseExpr* parse_primary();

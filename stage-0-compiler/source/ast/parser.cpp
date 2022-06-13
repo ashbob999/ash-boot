@@ -27,7 +27,7 @@ namespace parser
 
 	ast::BaseExpr* Parser::parse_file()
 	{
-		ast::BaseExpr* file_body = parse_body(false);
+		ast::BaseExpr* file_body = parse_body(true, false);
 
 		return file_body;
 	}
@@ -202,7 +202,7 @@ namespace parser
 	}
 
 	/// top ::= (definition | expression)*
-	ast::BaseExpr* Parser::parse_body(bool has_curly_brackets)
+	ast::BaseExpr* Parser::parse_body(bool is_top_level, bool has_curly_brackets)
 	{
 		start_;
 		ast::BodyExpr* body = new ast::BodyExpr();
@@ -273,12 +273,22 @@ namespace parser
 				}
 				default:
 				{
+					if (is_top_level)
+					{
+						end_;
+						return log_error("expression not allowed in top level code");
+					}
+
 					ast::BaseExpr* base = parse_expression(false);
 					if (base == nullptr)
 					{
+#ifdef __debug
 						std::cout << "base was null";
+#endif
+						end_;
 						return nullptr;
 					}
+
 #ifdef __debug
 					std::cout << "added base" << std::endl;
 #endif
@@ -304,7 +314,7 @@ namespace parser
 	ast::FunctionDefinition* Parser::parse_top_level()
 	{
 		start_;
-		ast::BaseExpr* expr = parse_body(false);
+		ast::BaseExpr* expr = parse_body(true, false);
 		if (expr == nullptr)
 		{
 			end_;
@@ -723,7 +733,7 @@ namespace parser
 		}
 
 		//ast::BaseExpr* expr = parse_expression();
-		ast::BaseExpr* body = parse_body(true);
+		ast::BaseExpr* body = parse_body(false, true);
 		if (body == nullptr)
 		{
 			end_;
