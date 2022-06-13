@@ -20,3 +20,11 @@
 - [ ] Pointers
 - [ ] Compile Time Platform Checks
 
+##### Future Features
+- more types
+- class & inheritance
+- custom types
+- extern functions
+- modules
+- multiple source files
+
