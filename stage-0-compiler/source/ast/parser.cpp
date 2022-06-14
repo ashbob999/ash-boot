@@ -101,6 +101,8 @@ namespace parser
 			last_char = get_char();
 		}
 
+		line_info.line_pos_start = line_info.line_pos;
+
 		// identifier: [a-zA-Z][a-zA-Z0-9]*
 		if (std::isalpha(last_char))
 		{
@@ -193,24 +195,28 @@ namespace parser
 			return curr_token;
 		}
 
+		// paren start
 		if (last_char == '(')
 		{
 			curr_token = Token::ParenStart;
 			return curr_token;
 		}
 
+		// paren end
 		if (last_char == ')')
 		{
 			curr_token = Token::ParenEnd;
 			return curr_token;
 		}
 
+		// binary operator
 		if (ast::is_binary_op(last_char) != ast::BinaryOp::None)
 		{
 			curr_token = Token::BinaryOperator;
 			return curr_token;
 		}
 
+		// comma
 		if (last_char == ',')
 		{
 			curr_token = Token::Comma;
@@ -236,8 +242,7 @@ namespace parser
 
 			if (curr_token != Token::BodyStart)
 			{
-				//delete body;
-				return log_error_body("body must start with a '{'");
+				return log_error_body("Body must start with a '{'");
 			}
 		}
 
@@ -259,8 +264,7 @@ namespace parser
 					if (has_curly_brackets)
 					{
 						bodies.pop_back();
-						//delete body;
-						return log_error_body("body must end with a '}'");
+						return log_error_body("Body must end with a '}'");
 					}
 					return body;
 				}
@@ -286,14 +290,12 @@ namespace parser
 						}
 						else
 						{
-							//return body;
-							//delete body;
 							return nullptr;
 						}
 					}
 					else
 					{
-						return log_error_body("functions are currently only allowed in top loevel code");
+						return log_error_body("Functions are currently only allowed in top level code");
 					}
 
 					break;
@@ -322,8 +324,7 @@ namespace parser
 					if (is_top_level)
 					{
 						end_;
-						//delete body;
-						return log_error_body("expression not allowed in top level code");
+						return log_error_body("Expressions are not allowed in top level code");
 					}
 
 					shared_ptr<ast::BaseExpr> base = parse_expression(false);
@@ -333,7 +334,6 @@ namespace parser
 						std::cout << "base was null";
 #endif
 						end_;
-						//delete body;
 						return nullptr;
 					}
 
@@ -344,8 +344,7 @@ namespace parser
 
 					if (curr_token != Token::EndOfExpression)
 					{
-						//delete body;
-						return log_error_body("expected end of line ';'");
+						return log_error_body("Expected end of expression, missing ';'");
 					}
 
 					break;
@@ -422,8 +421,7 @@ namespace parser
 		}
 
 		end_;
-		//delete lhs;
-		return log_error("expected end of line ';'");
+		return log_error("Expected end of expression, missing ';'");
 	}
 
 	/// primary
@@ -459,7 +457,7 @@ namespace parser
 			default:
 			{
 				end_;
-				return log_error("unknown token when expecting an expression");
+				return log_error("Unknown token when expecting an expression");
 			}
 		}
 		end_;
@@ -494,8 +492,7 @@ namespace parser
 			if (binop_type == ast::BinaryOp::None)
 			{
 				end_;
-				//delete lhs;
-				return log_error("binary op is invalid");
+				return log_error("Binary operator is invalid");
 			}
 
 			get_next_token();
@@ -505,7 +502,6 @@ namespace parser
 			if (rhs == nullptr)
 			{
 				end_;
-				//delete lhs;
 				return nullptr;
 			}
 
@@ -526,7 +522,6 @@ namespace parser
 				if (rhs == nullptr)
 				{
 					end_;
-					//delete lhs;
 					return nullptr;
 				}
 			}
@@ -535,7 +530,6 @@ namespace parser
 		}
 
 		end_;
-		//delete lhs;
 		return nullptr;
 	}
 
@@ -546,7 +540,7 @@ namespace parser
 		if (curr_type == types::Type::None)
 		{
 			end_;
-			return log_error("literal is of invalid type");
+			return log_error("Literal is not a valid type");
 		}
 
 		std::string literal_string = identifier_string;
@@ -570,7 +564,7 @@ namespace parser
 		if (curr_token != Token::VariableReference)
 		{
 			end_;
-			return log_error("expected identifier after type");
+			return log_error("Expected identifier after type");
 		}
 
 		std::string name = identifier_string;
@@ -586,7 +580,7 @@ namespace parser
 			if (expr == nullptr)
 			{
 				end_;
-				return log_error("variable expression was incorrect");
+				return nullptr;
 			}
 		}
 
@@ -642,11 +636,7 @@ namespace parser
 				if (curr_token != Token::Comma)
 				{
 					end_;
-					for (auto& arg : args)
-					{
-						//delete arg;
-					}
-					return log_error("expected ')' or ',' in argument list");
+					return log_error("Expected ')' or ',' in function argument list");
 				}
 
 				get_next_token();
@@ -669,8 +659,7 @@ namespace parser
 		if (curr_token != Token::ParenEnd)
 		{
 			end_;
-			//delete expr;
-			return log_error("expected ')'");
+			return log_error("Expected ')' after expression");
 		}
 
 		if (expr == nullptr)
@@ -692,7 +681,7 @@ namespace parser
 		if (curr_token != Token::VariableDeclaration)
 		{
 			end_;
-			log_error_empty("expected function return type");
+			log_error_empty("Return type for function prototype is invalid");
 			return nullptr;
 		}
 
@@ -703,7 +692,7 @@ namespace parser
 		if (curr_token != Token::VariableReference)
 		{
 			end_;
-			log_error_empty("expected function name in prototype");
+			log_error_empty("Expected function name in function prototype");
 			return nullptr;
 		}
 
@@ -714,7 +703,7 @@ namespace parser
 		if (curr_token != Token::ParenStart)
 		{
 			end_;
-			log_error_empty("expected '(' in prototype");
+			log_error_empty("Expected '(' in function prototype");
 			return nullptr;
 		}
 
@@ -730,8 +719,7 @@ namespace parser
 				if (curr_token != Token::VariableDeclaration)
 				{
 					end_;
-					// TODO: make clearer whether it is variable or ')'
-					log_error_empty("expected a variable type");
+					log_error_empty("Expected variable declaration in function prototype");
 					return nullptr;
 				}
 
@@ -741,7 +729,7 @@ namespace parser
 				if (curr_token != Token::VariableReference)
 				{
 					end_;
-					log_error_empty("expected a variable identifier");
+					log_error_empty("Expected a variable identifier in function prototype");
 					return nullptr;
 				}
 
@@ -763,28 +751,10 @@ namespace parser
 					else
 					{
 						end_;
-						log_error_empty("invalid char in prototype");
+						log_error_empty("Invalid character in function prototype");
 						return nullptr;
 					}
 				}
-
-				/*	if (curr_token == Token::None)
-					{
-						if (last_char == ',')
-						{
-							get_next_token();
-							continue;
-						}
-						else if (last_char == ')')
-						{
-							break;
-						}
-						else
-						{
-							end_;
-							return log_error_prototype("invalid char in prototype");
-						}
-					}*/
 			}
 		}
 
@@ -804,7 +774,7 @@ namespace parser
 		if (curr_token == Token::EndOfExpression)
 		{
 			end_;
-			log_error_empty("expected end of line ';'");
+			log_error_empty("Expected end of expression, missing ';'");
 			return nullptr;
 		}
 
@@ -825,7 +795,6 @@ namespace parser
 			return nullptr;
 		}
 
-		//ast::BaseExpr* expr = parse_expression();
 		shared_ptr<ast::BodyExpr> body = parse_body(false, true);
 		if (body == nullptr)
 		{
@@ -867,28 +836,19 @@ namespace parser
 
 	shared_ptr<ast::BaseExpr> Parser::log_error(std::string error_message)
 	{
-		start_;
-		std::cout << error_message << std::endl;
-		log_line_info();
-		end_;
+		log_error_empty(error_message);
 		return nullptr;
 	}
 
 	shared_ptr<ast::BodyExpr> Parser::log_error_body(std::string error_message)
 	{
-		start_;
-		std::cout << error_message << std::endl;
-		log_line_info();
-		end_;
+		log_error_empty(error_message);
 		return nullptr;
 	}
 
 	shared_ptr<ast::FunctionPrototype> Parser::log_error_prototype(std::string error_message)
 	{
-		start_;
-		std::cout << error_message << std::endl;
-		log_line_info();
-		end_;
+		log_error_empty(error_message);
 		return nullptr;
 	}
 
@@ -902,11 +862,28 @@ namespace parser
 
 	void Parser::log_line_info()
 	{
-		std::cout << '\t' << "curr token: " << (int) curr_token << ", last char: " << last_char << std::endl;
-		std::cout << '\t' << "identifier string: " << identifier_string << std::endl;
-		std::cout << '\t' << "at line: " << line_info.line_count << " at pos: " << line_info.line_pos << std::endl;
+#ifdef __debug
+		std::cout << '\t' << "Current Token ID: " << (int) curr_token << std::endl;
+#endif
+		std::cout << '\t' << "Current Character: " << last_char << std::endl;
+		//std::cout << '\t' << "curr token: " << (int) curr_token << ", last char: " << last_char << std::endl;
+		if (identifier_string != "")
+		{
+			std::cout << '\t' << "Identifier String: " << identifier_string << std::endl;
+		}
+		else
+		{
+#ifdef __debug
+			std::cout << '\t' << "Identifier String: <empty>" << std::endl;
+#endif
+		}
+
+		std::cout << '\t' << "At Line: " << line_info.line_count << " Position: " << line_info.line_pos << std::endl;
+
 		std::cout << '\t' << line_info.line << std::endl;
-		std::cout << '\t' << std::setfill(' ') << std::setw(line_info.line_pos) << '^' << std::endl;
+		std::cout << '\t' << std::setfill(' ') << std::setw(line_info.line_pos_start - 1) << "";
+		std::cout << std::setfill('~') << std::setw(line_info.line_pos - line_info.line_pos_start + 1);
+		std::cout << '^' << std::endl;
 		std::cout << std::endl;
 	}
 

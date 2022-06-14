@@ -30,6 +30,7 @@ namespace parser
 	{
 	public:
 		int line_count = 0;
+		int line_pos_start = 0;
 		int line_pos = 0;
 		std::string line;
 	};
