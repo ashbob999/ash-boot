@@ -55,12 +55,13 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_variable_declaration();
 		shared_ptr<ast::BaseExpr> parse_variable_reference();
 		shared_ptr<ast::BaseExpr> parse_parenthesis();
-		shared_ptr<ast::FunctionPrototype> parse_function_prototype();
+		ast::FunctionPrototype* parse_function_prototype();
 		shared_ptr<ast::FunctionDefinition> parse_function_definition();
 		int get_token_precedence();
 		shared_ptr<ast::BaseExpr> log_error(std::string error_message);
 		shared_ptr<ast::BodyExpr> log_error_body(std::string error_message);
 		shared_ptr<ast::FunctionPrototype> log_error_prototype(std::string error_message);
+		void log_error_empty(std::string error_message);
 		void log_line_info();
 	private:
 		std::ifstream& input_file;
@@ -68,7 +69,7 @@ namespace parser
 		char last_char = '\0';
 		Token curr_token = Token::None;
 		types::Type curr_type = types::Type::None;
-		std::vector<shared_ptr<ast::BodyExpr>> bodies;
+		std::vector<ast::BodyExpr*> bodies;
 		LineInfo line_info;
 	};
 }

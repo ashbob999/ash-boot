@@ -51,19 +51,19 @@ namespace ast
 	{
 	protected:
 		AstExprType ast_type = AstExprType::BaseExpr;
-		shared_ptr<BodyExpr> body;
+		BodyExpr* body;
 		types::Type result_type = types::Type::None;
 		LinePositionInfo line_info;
 
 	public:
-		BaseExpr(AstExprType ast_type, shared_ptr<BodyExpr> body);
+		BaseExpr(AstExprType ast_type, BodyExpr* body);
 		virtual ~BaseExpr() = default;
 		virtual std::string to_string(int depth) = 0;
 		virtual types::Type get_result_type() = 0;
 		virtual bool check_types() = 0;
 
 		virtual AstExprType get_type() final;
-		virtual shared_ptr<BodyExpr> get_body() final;
+		virtual BodyExpr* get_body() final;
 		virtual void set_line_info(LinePositionInfo line_info) final;
 	};
 
@@ -71,21 +71,21 @@ namespace ast
 	class LiteralExpr : public BaseExpr
 	{
 	public:
-		LiteralExpr(shared_ptr<BodyExpr> body, types::Type curr_type, std::string str);
+		LiteralExpr(BodyExpr* body, types::Type curr_type, std::string str);
 		~LiteralExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		types::Type curr_type;
-		types::BaseType* value_type;
+		shared_ptr<types::BaseType> value_type;
 	};
 
 	// A collection of multiple BaseExpr
 	class BodyExpr : public BaseExpr
 	{
 	public:
-		BodyExpr(shared_ptr<BodyExpr> body);
+		BodyExpr(BodyExpr* body);
 		~BodyExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -93,11 +93,12 @@ namespace ast
 
 		void add_base(shared_ptr<BaseExpr> expr);
 		void add_function(shared_ptr<FunctionDefinition> func);
+		// TODO: remove?
 		llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, std::string str);
 
 		std::vector<shared_ptr<BaseExpr>> expressions;
 		std::vector<shared_ptr<FunctionDefinition>> functions;
-		std::map<std::string, shared_ptr<FunctionPrototype>> function_prototypes;
+		std::map<std::string, FunctionPrototype*> function_prototypes;
 		//std::map<std::string, FunctionDefinition*> functions;
 		std::map<std::string, types::Type> named_types;
 		std::map<std::string, llvm::Type*> llvm_named_types;
@@ -108,7 +109,7 @@ namespace ast
 	class VariableDeclarationExpr : public BaseExpr
 	{
 	public:
-		VariableDeclarationExpr(shared_ptr<BodyExpr> body, types::Type curr_type, std::string str, shared_ptr<BaseExpr> expr);
+		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string str, shared_ptr<BaseExpr> expr);
 		~VariableDeclarationExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -123,7 +124,7 @@ namespace ast
 	class VariableReferenceExpr : public BaseExpr
 	{
 	public:
-		VariableReferenceExpr(shared_ptr<BodyExpr> body, std::string str);
+		VariableReferenceExpr(BodyExpr* body, std::string str);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
@@ -149,7 +150,7 @@ namespace ast
 	class BinaryExpr : public BaseExpr
 	{
 	public:
-		BinaryExpr(shared_ptr<BodyExpr> body, BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs);
+		BinaryExpr(BodyExpr* body, BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs);
 		~BinaryExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -163,7 +164,7 @@ namespace ast
 	class CallExpr : public BaseExpr, std::enable_shared_from_this<CallExpr>
 	{
 	public:
-		CallExpr(shared_ptr<BodyExpr> body, std::string callee, std::vector<shared_ptr<BaseExpr>> args);
+		CallExpr(BodyExpr* body, std::string callee, std::vector<shared_ptr<BaseExpr>> args);
 		~CallExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -179,6 +180,7 @@ namespace ast
 	public:
 		FunctionPrototype(std::string name, types::Type return_type, std::vector<types::Type> types, std::vector<std::string> args);
 		std::string to_string(int depth);
+		FunctionPrototype(const FunctionPrototype&) = delete;
 
 		std::string name;
 		types::Type return_type;
@@ -190,12 +192,12 @@ namespace ast
 	class FunctionDefinition
 	{
 	public:
-		FunctionDefinition(shared_ptr<FunctionPrototype> prototype, shared_ptr<BodyExpr> body);
+		FunctionDefinition(FunctionPrototype* prototype, shared_ptr<BodyExpr> body);
 		~FunctionDefinition();
 		std::string to_string(int depth);
 		bool check_return_type();
 
-		shared_ptr<FunctionPrototype> prototype;
+		FunctionPrototype* prototype;
 		shared_ptr<BodyExpr> body;
 	};
 }

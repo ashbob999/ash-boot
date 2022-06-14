@@ -2,8 +2,11 @@
 
 #include <string>
 #include <utility>
+#include <memory>
 
 #include "llvm/IR/Constants.h"
+
+using std::shared_ptr;
 
 namespace types
 {
@@ -40,7 +43,7 @@ namespace types
 		virtual std::string to_string() = 0;
 
 	public:
-		static BaseType* create_type(Type curr_type, std::string str);
+		static shared_ptr<BaseType> create_type(Type curr_type, std::string str);
 		static bool is_sign_char(char c);
 		static bool is_digit(char c);
 	};

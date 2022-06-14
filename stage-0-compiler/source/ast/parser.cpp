@@ -236,7 +236,7 @@ namespace parser
 			}
 		}
 
-		bodies.push_back(body);
+		bodies.push_back(body.get());
 
 		curr_token = get_next_token();
 
@@ -318,7 +318,7 @@ namespace parser
 						end_;
 						//delete body;
 						return nullptr;
-				}
+					}
 
 #ifdef __debug
 					std::cout << "added base" << std::endl;
@@ -332,18 +332,18 @@ namespace parser
 					}
 
 					break;
+				}
 			}
-		}
 
 			if (curr_token == Token::EndOfExpression)
 			{
 #ifdef __debug
 				std::cout << "end of expression" << std::endl;
 #endif
-	}
+			}
 
 			curr_token = get_next_token();
-}
+		}
 
 		end_;
 		return body;
@@ -360,7 +360,7 @@ namespace parser
 			return nullptr;
 		}
 
-		shared_ptr<ast::FunctionPrototype> proto = make_shared<ast::FunctionPrototype>("", types::Type::Void, std::vector<types::Type>{}, std::vector < std::string>{});
+		ast::FunctionPrototype* proto = new ast::FunctionPrototype("", types::Type::Void, std::vector<types::Type>{}, std::vector < std::string>{});
 		end_;
 		return make_shared<ast::FunctionDefinition>(proto, expr);
 	}
@@ -669,13 +669,14 @@ namespace parser
 
 	/// prototype
 	///   ::= type id '(' [type id,]* ')'
-	shared_ptr<ast::FunctionPrototype> Parser::parse_function_prototype()
+	ast::FunctionPrototype* Parser::parse_function_prototype()
 	{
 		start_;
 		if (curr_token != Token::VariableDeclaration)
 		{
 			end_;
-			return log_error_prototype("expected function return type");
+			log_error_empty("expected function return type");
+			return nullptr;
 		}
 
 		types::Type return_type = curr_type;
@@ -685,7 +686,8 @@ namespace parser
 		if (curr_token != Token::VariableReference)
 		{
 			end_;
-			return log_error_prototype("expected function name in prototype");
+			log_error_empty("expected function name in prototype");
+			return nullptr;
 		}
 
 		std::string name = identifier_string;
@@ -695,7 +697,8 @@ namespace parser
 		if (curr_token != Token::ParenStart)
 		{
 			end_;
-			return log_error_prototype("expected '(' in prototype");
+			log_error_empty("expected '(' in prototype");
+			return nullptr;
 		}
 
 		std::vector<types::Type> types;
@@ -711,7 +714,8 @@ namespace parser
 				{
 					end_;
 					// TODO: make clearer whether it is variable or ')'
-					return log_error_prototype("expected a variable type");
+					log_error_empty("expected a variable type");
+					return nullptr;
 				}
 
 				types.push_back(curr_type);
@@ -720,7 +724,8 @@ namespace parser
 				if (curr_token != Token::VariableReference)
 				{
 					end_;
-					return log_error_prototype("expected a variable identifier");
+					log_error_empty("expected a variable identifier");
+					return nullptr;
 				}
 
 				args.push_back(identifier_string);
@@ -741,7 +746,8 @@ namespace parser
 					else
 					{
 						end_;
-						return log_error_prototype("invalid char in prototype");
+						log_error_empty("invalid char in prototype");
+						return nullptr;
 					}
 				}
 
@@ -768,7 +774,7 @@ namespace parser
 		//get_next_token();
 
 		end_;
-		return make_shared<ast::FunctionPrototype>(name, return_type, types, args);
+		return new ast::FunctionPrototype(name, return_type, types, args);
 	}
 
 	/// definition ::= 'function' prototype expression
@@ -777,7 +783,7 @@ namespace parser
 		get_next_token();
 
 		start_;
-		shared_ptr<ast::FunctionPrototype> proto = parse_function_prototype();
+		ast::FunctionPrototype* proto = parse_function_prototype();
 		if (proto == nullptr)
 		{
 			end_;
@@ -789,7 +795,7 @@ namespace parser
 		if (body == nullptr)
 		{
 			end_;
-			//delete proto;
+			delete proto;
 			return nullptr;
 		}
 
@@ -849,6 +855,14 @@ namespace parser
 		log_line_info();
 		end_;
 		return nullptr;
+	}
+
+	void Parser::log_error_empty(std::string error_message)
+	{
+		start_;
+		std::cout << error_message << std::endl;
+		log_line_info();
+		end_;
 	}
 
 	void Parser::log_line_info()

@@ -92,7 +92,7 @@ namespace builder
 
 		if (the_function == nullptr)
 		{
-			the_function = generate_function_prototype(function_definition->prototype.get());
+			the_function = generate_function_prototype(function_definition->prototype);
 		}
 
 		if (the_function == nullptr)

@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+using std::make_shared;
+
 namespace types
 {
 	Type is_valid_type(std::string str)
@@ -110,25 +112,21 @@ namespace types
 		}
 	}
 
-	BaseType* BaseType::create_type(Type curr_type, std::string str)
+	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string str)
 	{
-		BaseType* base = nullptr;
-
 		switch (curr_type)
 		{
 			case types::Type::Int:
 			{
-				base = new IntType(str);
-				break;
+				return make_shared<IntType>(str);
 			}
 			case types::Type::Float:
 			{
-				base = new FloatType(str);
-				break;
+				return make_shared<FloatType>(str);
 			}
 		}
 
-		return base;;
+		return nullptr;
 	}
 
 	bool BaseType::is_sign_char(char c)
