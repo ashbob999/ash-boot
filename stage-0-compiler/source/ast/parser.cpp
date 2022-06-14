@@ -103,14 +103,16 @@ namespace parser
 
 		line_info.line_pos_start = line_info.line_pos;
 
-		// identifier: [a-zA-Z][a-zA-Z0-9]*
-		if (std::isalpha(last_char))
+		// identifier: [a-zA-Z_][a-zA-Z0-9_]*
+		if (std::isalpha(last_char) || last_char == '_')
 		{
 			identifier_string = last_char;
-			while (std::isalnum(peek_char()))
+			char next_char = peek_char();
+			while (std::isalnum(next_char) || next_char == '_')
 			{
 				last_char = get_char();
 				identifier_string += last_char;
+				next_char = peek_char();
 			}
 
 			types::Type type = types::is_valid_type(identifier_string);
