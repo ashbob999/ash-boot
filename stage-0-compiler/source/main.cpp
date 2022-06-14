@@ -20,19 +20,18 @@ int main(int argc, char** argv)
 		std::string file_name{ argv[1] };
 
 		std::filesystem::path file_path{ file_name };
-		file_path = std::filesystem::canonical(file_name);
 
 		// check if the file path exists
 		if (!std::filesystem::exists(file_path))
 		{
-			std::cout << "File: \"" << file_path.c_str() << "\" does not exist.";
+			std::cout << "File: \"" << file_path.c_str() << "\" does not exist." << std::endl;
 			return 1;
 		}
 
 		// check if the file path is an actual file
 		if (!std::filesystem::is_regular_file(file_path))
 		{
-			std::cout << "File: \"" << file_path.c_str() << "\" must be a regular text file.";
+			std::cout << "File: \"" << file_path.c_str() << "\" must be a regular text file." << std::endl;;
 			return 1;
 		}
 
@@ -44,7 +43,7 @@ int main(int argc, char** argv)
 
 		if (!file_stream.is_open())
 		{
-			std::cout << "File: \"" << file_path.c_str() << "\" could not be opened.";
+			std::cout << "File: \"" << file_path.c_str() << "\" could not be opened." << std::endl;
 			return 1;
 		}
 
@@ -53,8 +52,6 @@ int main(int argc, char** argv)
 		ast::BodyExpr* body_ast = parser.parse_file_as_body();
 
 		file_stream.close();
-
-		//std::cout << std::endl;
 
 		if (body_ast == nullptr)
 		{
@@ -123,10 +120,8 @@ int main(int argc, char** argv)
 			output_file_stream.close();
 		}
 
-		//if (file_ast != nullptr)
 		if (body_ast != nullptr)
 		{
-			//delete file_ast;
 			delete body_ast;
 		}
 	}
@@ -151,4 +146,4 @@ int main(int argc, char** argv)
 	}
 
 	return 0;
-	}
+}
