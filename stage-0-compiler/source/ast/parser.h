@@ -38,29 +38,29 @@ namespace parser
 	public:
 		Parser(std::ifstream& input_file);
 
-		ast::BaseExpr* parse_file();
-		ast::FunctionDefinition* parse_file_as_func();
-		ast::BodyExpr* parse_file_as_body();
+		shared_ptr<ast::BaseExpr> parse_file();
+		shared_ptr<ast::FunctionDefinition> parse_file_as_func();
+		shared_ptr<ast::BodyExpr> parse_file_as_body();
 		static const std::unordered_map<char, int> binop_precedence;
 	private:
 		char get_char();
 		char peek_char();
 		Token get_next_token();
-		ast::BodyExpr* parse_body(bool is_top_level, bool has_curly_brackets);
-		ast::FunctionDefinition* parse_top_level();
-		ast::BaseExpr* parse_expression(bool for_call);
-		ast::BaseExpr* parse_primary();
-		ast::BaseExpr* parse_binop_rhs(int precedence, ast::BaseExpr* lhs);
-		ast::BaseExpr* parse_literal();
-		ast::BaseExpr* parse_variable_declaration();
-		ast::BaseExpr* parse_variable_reference();
-		ast::BaseExpr* parse_parenthesis();
-		ast::FunctionPrototype* parse_function_prototype();
-		ast::FunctionDefinition* parse_function_definition();
+		shared_ptr<ast::BodyExpr> parse_body(bool is_top_level, bool has_curly_brackets);
+		shared_ptr<ast::FunctionDefinition> parse_top_level();
+		shared_ptr<ast::BaseExpr> parse_expression(bool for_call);
+		shared_ptr<ast::BaseExpr> parse_primary();
+		shared_ptr<ast::BaseExpr> parse_binop_rhs(int precedence, shared_ptr<ast::BaseExpr> lhs);
+		shared_ptr<ast::BaseExpr> parse_literal();
+		shared_ptr<ast::BaseExpr> parse_variable_declaration();
+		shared_ptr<ast::BaseExpr> parse_variable_reference();
+		shared_ptr<ast::BaseExpr> parse_parenthesis();
+		shared_ptr<ast::FunctionPrototype> parse_function_prototype();
+		shared_ptr<ast::FunctionDefinition> parse_function_definition();
 		int get_token_precedence();
-		ast::BaseExpr* log_error(std::string error_message);
-		ast::BodyExpr* log_error_body(std::string error_message);
-		ast::FunctionPrototype* log_error_prototype(std::string error_message);
+		shared_ptr<ast::BaseExpr> log_error(std::string error_message);
+		shared_ptr<ast::BodyExpr> log_error_body(std::string error_message);
+		shared_ptr<ast::FunctionPrototype> log_error_prototype(std::string error_message);
 		void log_line_info();
 	private:
 		std::ifstream& input_file;
@@ -68,7 +68,7 @@ namespace parser
 		char last_char = '\0';
 		Token curr_token = Token::None;
 		types::Type curr_type = types::Type::None;
-		std::vector<ast::BodyExpr*> bodies;
+		std::vector<shared_ptr<ast::BodyExpr>> bodies;
 		LineInfo line_info;
 	};
 }

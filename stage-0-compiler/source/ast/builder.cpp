@@ -7,6 +7,8 @@
 #include "builder.h"
 #include "scope_checker.h"
 
+using std::dynamic_pointer_cast;
+
 #ifdef _WIN64
 #define __print_function__ __FUNCSIG__
 #endif
@@ -77,7 +79,7 @@ namespace builder
 		// create all of the functions defined inside the current function
 		for (auto& func : function_definition->body->functions)
 		{
-			llvm::Function* f = generate_function_definition(func);
+			llvm::Function* f = generate_function_definition(func.get());
 			if (f == nullptr)
 			{
 				null_end;
@@ -90,7 +92,7 @@ namespace builder
 
 		if (the_function == nullptr)
 		{
-			the_function = generate_function_prototype(function_definition->prototype);
+			the_function = generate_function_prototype(function_definition->prototype.get());
 		}
 
 		if (the_function == nullptr)
@@ -118,7 +120,7 @@ namespace builder
 			function_definition->body->llvm_named_types[std::string{ arg.getName() }] = arg.getType();
 		}
 
-		llvm::Value* return_value = generate_code_dispatch(function_definition->body);
+		llvm::Value* return_value = generate_code_dispatch(function_definition->body.get());
 
 		if (return_value != nullptr)
 		{
@@ -165,7 +167,7 @@ namespace builder
 
 		for (auto& e : expr->expressions)
 		{
-			value = generate_code_dispatch(e);
+			value = generate_code_dispatch(e.get());
 			if (value == nullptr)
 			{
 				null_end;
@@ -185,7 +187,7 @@ namespace builder
 
 		// register the variable and emit its initialiser
 		const std::string& var_name = expr->name;
-		ast::BaseExpr* init = expr->expr;
+		ast::BaseExpr* init = expr->expr.get();
 
 		// Emit the initializer before adding the variable to scope, this prevents
 		// the initializer from referencing the variable itself, and permits stuff
@@ -253,7 +255,7 @@ namespace builder
 		// load the value
 		//return llvm_ir_builder->CreateLoad(llvm_named_types[f->first], f->second, f->first.c_str());
 		//return llvm_ir_builder->CreateLoad(expr->get_body()->llvm_named_types[f->first], f->second, f->first.c_str());
-		return llvm_ir_builder->CreateLoad(b->llvm_named_types[f->first], f->second, f->first.c_str());
+		return llvm_ir_builder->CreateLoad(b->get_llvm_type(*llvm_context, f->first), f->second, f->first.c_str());
 	}
 
 	template<>
@@ -263,14 +265,14 @@ namespace builder
 		if (expr->binop == ast::BinaryOp::Assignment)
 		{
 			// lhs must be a variable definition or declaration
-			ast::VariableReferenceExpr* lhs_expr = dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs);
+			ast::VariableReferenceExpr* lhs_expr = dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get());
 			if (lhs_expr == nullptr)
 			{
 				return log_error_value("destination of '=' must be an identifier");
 			}
 
 			// create the rhs code
-			llvm::Value* rhs = generate_code_dispatch(expr->rhs);
+			llvm::Value* rhs = generate_code_dispatch(expr->rhs.get());
 			if (rhs == nullptr)
 			{
 				null_end;
@@ -289,8 +291,8 @@ namespace builder
 			return rhs;
 		}
 
-		llvm::Value* lhs = generate_code_dispatch(expr->lhs);
-		llvm::Value* rhs = generate_code_dispatch(expr->rhs);
+		llvm::Value* lhs = generate_code_dispatch(expr->lhs.get());
+		llvm::Value* rhs = generate_code_dispatch(expr->rhs.get());
 
 		if (lhs == nullptr || rhs == nullptr)
 		{
@@ -342,7 +344,7 @@ namespace builder
 		std::vector<llvm::Value*> args;
 		for (int i = 0; i < expr->args.size(); i++)
 		{
-			args.push_back(generate_code_dispatch(expr->args[i]));
+			args.push_back(generate_code_dispatch(expr->args[i].get()));
 			if (args.back() == nullptr)
 			{
 				null_end;

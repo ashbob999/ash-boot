@@ -31,7 +31,7 @@ namespace type_checker
 		*/
 
 		// check function body
-		if (!check_expression_dispatch(func->body))
+		if (!check_expression_dispatch(func->body.get()))
 		{
 			return log_error("function body has invalid types");
 		}
@@ -71,7 +71,7 @@ namespace type_checker
 		// check each function
 		for (auto& f : body->functions)
 		{
-			if (!check_function(f))
+			if (!check_function(f.get()))
 			{
 				return false;
 			}
@@ -80,7 +80,7 @@ namespace type_checker
 		// check each expression
 		for (auto& e : body->expressions)
 		{
-			if (!check_expression_dispatch(e))
+			if (!check_expression_dispatch(e.get()))
 			{
 				return false;
 			}
@@ -93,7 +93,7 @@ namespace type_checker
 	bool TypeChecker::check_expression<ast::VariableDeclarationExpr>(ast::VariableDeclarationExpr* expr)
 	{
 		// check value expression
-		if (expr->expr != nullptr && !check_expression_dispatch(expr->expr))
+		if (expr->expr != nullptr && !check_expression_dispatch(expr->expr.get()))
 		{
 			return log_error("variable declaration value failed type checks");
 		}
@@ -145,13 +145,13 @@ namespace type_checker
 	bool TypeChecker::check_expression<ast::BinaryExpr>(ast::BinaryExpr* expr)
 	{
 		// check lhs
-		if (!check_expression_dispatch(expr->lhs))
+		if (!check_expression_dispatch(expr->lhs.get()))
 		{
 			return log_error("binary op lhs type check failed");
 		}
 
 		// check rhs
-		if (!check_expression_dispatch(expr->rhs))
+		if (!check_expression_dispatch(expr->rhs.get()))
 		{
 			return log_error("binary op rhs type check failed");
 		}

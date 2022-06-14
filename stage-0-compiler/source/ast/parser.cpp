@@ -12,6 +12,8 @@
 #define end_
 #endif
 
+using std::make_shared;
+
 namespace parser
 {
 	// the operator precedences, higher binds tighter, same binds to the left
@@ -25,25 +27,25 @@ namespace parser
 	Parser::Parser(std::ifstream& input_file) : input_file(input_file)
 	{}
 
-	ast::BaseExpr* Parser::parse_file()
+	shared_ptr<ast::BaseExpr> Parser::parse_file()
 	{
-		ast::BaseExpr* file_body = parse_body(true, false);
+		shared_ptr<ast::BaseExpr> file_body = parse_body(true, false);
 
 		return file_body;
 	}
 
-	ast::FunctionDefinition* Parser::parse_file_as_func()
+	shared_ptr<ast::FunctionDefinition> Parser::parse_file_as_func()
 	{
-		ast::FunctionDefinition* func = parse_top_level();
+		shared_ptr<ast::FunctionDefinition> func = parse_top_level();
 
 		return func;
 	}
 
-	ast::BodyExpr* Parser::parse_file_as_body()
+	shared_ptr<ast::BodyExpr> Parser::parse_file_as_body()
 	{
 		start_;
 		bodies.push_back(nullptr);
-		ast::BodyExpr* body = parse_body(true, false);
+		shared_ptr<ast::BodyExpr> body = parse_body(true, false);
 		end_;
 		return body;
 	}
@@ -218,10 +220,10 @@ namespace parser
 	}
 
 	/// top ::= (definition | expression)*
-	ast::BodyExpr* Parser::parse_body(bool is_top_level, bool has_curly_brackets)
+	shared_ptr<ast::BodyExpr> Parser::parse_body(bool is_top_level, bool has_curly_brackets)
 	{
 		start_;
-		ast::BodyExpr* body = new ast::BodyExpr(bodies.back());
+		shared_ptr<ast::BodyExpr> body = make_shared<ast::BodyExpr>(bodies.back());
 
 		if (has_curly_brackets)
 		{
@@ -229,6 +231,7 @@ namespace parser
 
 			if (curr_token != Token::BodyStart)
 			{
+				//delete body;
 				return log_error_body("body must start with a '{'");
 			}
 		}
@@ -251,6 +254,7 @@ namespace parser
 					if (has_curly_brackets)
 					{
 						bodies.pop_back();
+						//delete body;
 						return log_error_body("body must end with a '}'");
 					}
 					return body;
@@ -265,19 +269,28 @@ namespace parser
 				}
 				case Token::FunctionDefinition:
 				{
-					ast::FunctionDefinition* fd = parse_function_definition();
-					if (fd != nullptr)
+					if (is_top_level)
 					{
+						shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
+						if (fd != nullptr)
+						{
 #ifdef __debug
-						std::cout << "added function" << std::endl;
+							std::cout << "added function" << std::endl;
 #endif
-						body->add_function(fd);
+							body->add_function(fd);
+						}
+						else
+						{
+							//return body;
+							//delete body;
+							return nullptr;
+						}
 					}
 					else
 					{
-						//return body;
-						return nullptr;
+						return log_error_body("functions are currently only allowed in top loevel code");
 					}
+
 					break;
 				}
 				case Token::BodyEnd:
@@ -292,63 +305,72 @@ namespace parser
 					if (is_top_level)
 					{
 						end_;
+						//delete body;
 						return log_error_body("expression not allowed in top level code");
 					}
 
-					ast::BaseExpr* base = parse_expression(false);
+					shared_ptr<ast::BaseExpr> base = parse_expression(false);
 					if (base == nullptr)
 					{
 #ifdef __debug
 						std::cout << "base was null";
 #endif
 						end_;
+						//delete body;
 						return nullptr;
-					}
+				}
 
 #ifdef __debug
 					std::cout << "added base" << std::endl;
 #endif
 					body->add_base(base);
+
+					if (curr_token != Token::EndOfExpression)
+					{
+						//delete body;
+						return log_error_body("expected end of line ';'");
+					}
+
 					break;
-				}
 			}
+		}
 
 			if (curr_token == Token::EndOfExpression)
 			{
 #ifdef __debug
 				std::cout << "end of expression" << std::endl;
 #endif
-			}
+	}
 
 			curr_token = get_next_token();
-		}
+}
 
 		end_;
 		return body;
 	}
 
-	ast::FunctionDefinition* Parser::parse_top_level()
+	shared_ptr<ast::FunctionDefinition> Parser::parse_top_level()
 	{
 		start_;
 		bodies.push_back(nullptr);
-		ast::BodyExpr* expr = parse_body(true, false);
+		shared_ptr<ast::BodyExpr> expr = parse_body(true, false);
 		if (expr == nullptr)
 		{
 			end_;
 			return nullptr;
 		}
 
-		ast::FunctionPrototype* proto = new ast::FunctionPrototype("", types::Type::Void, {}, {});
+		shared_ptr<ast::FunctionPrototype> proto = make_shared<ast::FunctionPrototype>("", types::Type::Void, std::vector<types::Type>{}, std::vector < std::string>{});
 		end_;
-		return new ast::FunctionDefinition(proto, expr);
+		return make_shared<ast::FunctionDefinition>(proto, expr);
 	}
 
 	/// expression
 	///   ::= primary binop_rhs
-	ast::BaseExpr* Parser::parse_expression(bool for_call)
+	shared_ptr<ast::BaseExpr> Parser::parse_expression(bool for_call)
 	{
 		start_;
-		ast::BaseExpr* lhs = parse_primary();
+		shared_ptr<ast::BaseExpr> lhs = parse_primary();
 		if (lhs == nullptr)
 		{
 			end_;
@@ -383,6 +405,7 @@ namespace parser
 		}
 
 		end_;
+		//delete lhs;
 		return log_error("expected end of line ';'");
 	}
 
@@ -391,7 +414,7 @@ namespace parser
 	///   ::= variable_reference_expr
 	///   ::= literal_expr
 	///   ::= parenthesis_expr
-	ast::BaseExpr* Parser::parse_primary()
+	shared_ptr<ast::BaseExpr> Parser::parse_primary()
 	{
 		start_;
 		switch (curr_token)
@@ -428,7 +451,7 @@ namespace parser
 
 	/// binop_rhs
 	///   ::= ('+' primary)*
-	ast::BaseExpr* Parser::parse_binop_rhs(int expr_precedence, ast::BaseExpr* lhs)
+	shared_ptr<ast::BaseExpr> Parser::parse_binop_rhs(int expr_precedence, shared_ptr<ast::BaseExpr> lhs)
 	{
 		start_;
 
@@ -454,16 +477,18 @@ namespace parser
 			if (binop_type == ast::BinaryOp::None)
 			{
 				end_;
+				//delete lhs;
 				return log_error("binary op is invalid");
 			}
 
 			get_next_token();
 
-			ast::BaseExpr* rhs = parse_primary();
+			shared_ptr<ast::BaseExpr> rhs = parse_primary();
 
 			if (rhs == nullptr)
 			{
 				end_;
+				//delete lhs;
 				return nullptr;
 			}
 
@@ -484,19 +509,21 @@ namespace parser
 				if (rhs == nullptr)
 				{
 					end_;
+					//delete lhs;
 					return nullptr;
 				}
 			}
 
-			lhs = new ast::BinaryExpr(bodies.back(), binop_type, lhs, rhs);
+			lhs = make_shared<ast::BinaryExpr>(bodies.back(), binop_type, lhs, rhs);
 		}
 
 		end_;
+		//delete lhs;
 		return nullptr;
 	}
 
 	/// literal_expr ::= 'curr_type'
-	ast::BaseExpr* Parser::parse_literal()
+	shared_ptr<ast::BaseExpr> Parser::parse_literal()
 	{
 		start_;
 		if (curr_type == types::Type::None)
@@ -512,11 +539,11 @@ namespace parser
 		get_next_token();
 
 		end_;
-		return new ast::LiteralExpr(bodies.back(), curr_type, literal_string);
+		return make_shared<ast::LiteralExpr>(bodies.back(), curr_type, literal_string);
 	}
 
 	/// variable_declaration_expr ::= 'curr_type' identifier ('=' expression)?
-	ast::BaseExpr* Parser::parse_variable_declaration()
+	shared_ptr<ast::BaseExpr> Parser::parse_variable_declaration()
 	{
 		start_;
 		types::Type var_type = curr_type;
@@ -532,7 +559,7 @@ namespace parser
 		std::string name = identifier_string;
 		get_next_token();
 
-		ast::BaseExpr* expr = nullptr;
+		shared_ptr<ast::BaseExpr> expr = nullptr;
 
 		if (last_char == '=')
 		{
@@ -548,13 +575,13 @@ namespace parser
 
 		end_;
 		expr->get_body()->named_types[name] = var_type;
-		return new ast::VariableDeclarationExpr(bodies.back(), var_type, name, expr);
+		return make_shared<ast::VariableDeclarationExpr>(bodies.back(), var_type, name, expr);
 	}
 
 	/// variable_reference_expr
 	///   ::= identifier
 	///   ::= identifier '(' expression* ')'
-	ast::BaseExpr* Parser::parse_variable_reference()
+	shared_ptr<ast::BaseExpr> Parser::parse_variable_reference()
 	{
 		start_;
 		std::string name = identifier_string;
@@ -565,7 +592,7 @@ namespace parser
 		if (curr_token != Token::ParenStart)
 		{
 			end_;
-			return new ast::VariableReferenceExpr(bodies.back(), name);
+			return make_shared<ast::VariableReferenceExpr>(bodies.back(), name);
 		}
 
 		get_next_token();
@@ -574,12 +601,12 @@ namespace parser
 #ifdef __debug
 		std::cout << "creating function call" << std::endl;
 #endif
-		std::vector<ast::BaseExpr*> args;
+		std::vector<shared_ptr<ast::BaseExpr>> args;
 		if (curr_token != Token::ParenEnd)
 		{
 			while (true)
 			{
-				ast::BaseExpr* arg = parse_expression(true);
+				shared_ptr<ast::BaseExpr> arg = parse_expression(true);
 				if (arg != nullptr)
 				{
 					args.push_back(arg);
@@ -598,6 +625,10 @@ namespace parser
 				if (curr_token != Token::Comma)
 				{
 					end_;
+					for (auto& arg : args)
+					{
+						//delete arg;
+					}
 					return log_error("expected ')' or ',' in argument list");
 				}
 
@@ -608,19 +639,20 @@ namespace parser
 		get_next_token();
 
 		end_;
-		return new ast::CallExpr(bodies.back(), name, args);
+		return make_shared<ast::CallExpr>(bodies.back(), name, args);
 	}
 
-	ast::BaseExpr* Parser::parse_parenthesis()
+	shared_ptr<ast::BaseExpr> Parser::parse_parenthesis()
 	{
 		start_;
 		get_next_token();
 
-		ast::BaseExpr* expr = parse_expression(false);
+		shared_ptr<ast::BaseExpr> expr = parse_expression(false);
 
 		if (curr_token != Token::ParenEnd)
 		{
 			end_;
+			//delete expr;
 			return log_error("expected ')'");
 		}
 
@@ -637,7 +669,7 @@ namespace parser
 
 	/// prototype
 	///   ::= type id '(' [type id,]* ')'
-	ast::FunctionPrototype* Parser::parse_function_prototype()
+	shared_ptr<ast::FunctionPrototype> Parser::parse_function_prototype()
 	{
 		start_;
 		if (curr_token != Token::VariableDeclaration)
@@ -736,16 +768,16 @@ namespace parser
 		//get_next_token();
 
 		end_;
-		return new ast::FunctionPrototype(name, return_type, types, args);
+		return make_shared<ast::FunctionPrototype>(name, return_type, types, args);
 	}
 
 	/// definition ::= 'function' prototype expression
-	ast::FunctionDefinition* Parser::parse_function_definition()
+	shared_ptr<ast::FunctionDefinition> Parser::parse_function_definition()
 	{
 		get_next_token();
 
 		start_;
-		ast::FunctionPrototype* proto = parse_function_prototype();
+		shared_ptr<ast::FunctionPrototype> proto = parse_function_prototype();
 		if (proto == nullptr)
 		{
 			end_;
@@ -753,10 +785,11 @@ namespace parser
 		}
 
 		//ast::BaseExpr* expr = parse_expression();
-		ast::BodyExpr* body = parse_body(false, true);
+		shared_ptr<ast::BodyExpr> body = parse_body(false, true);
 		if (body == nullptr)
 		{
 			end_;
+			//delete proto;
 			return nullptr;
 		}
 
@@ -766,7 +799,7 @@ namespace parser
 		}
 
 		end_;
-		return new ast::FunctionDefinition(proto, body);
+		return make_shared<ast::FunctionDefinition>(proto, body);
 	}
 
 	int Parser::get_token_precedence()
@@ -791,7 +824,7 @@ namespace parser
 		return token_precedence;
 	}
 
-	ast::BaseExpr* Parser::log_error(std::string error_message)
+	shared_ptr<ast::BaseExpr> Parser::log_error(std::string error_message)
 	{
 		start_;
 		std::cout << error_message << std::endl;
@@ -800,7 +833,7 @@ namespace parser
 		return nullptr;
 	}
 
-	ast::BodyExpr* Parser::log_error_body(std::string error_message)
+	shared_ptr<ast::BodyExpr> Parser::log_error_body(std::string error_message)
 	{
 		start_;
 		std::cout << error_message << std::endl;
@@ -809,7 +842,7 @@ namespace parser
 		return nullptr;
 	}
 
-	ast::FunctionPrototype* Parser::log_error_prototype(std::string error_message)
+	shared_ptr<ast::FunctionPrototype> Parser::log_error_prototype(std::string error_message)
 	{
 		start_;
 		std::cout << error_message << std::endl;

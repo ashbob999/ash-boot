@@ -5,7 +5,7 @@
 
 namespace ast
 {
-	BaseExpr::BaseExpr(AstExprType ast_type, BodyExpr* body)
+	BaseExpr::BaseExpr(AstExprType ast_type, shared_ptr<BodyExpr> body)
 		: ast_type(ast_type), body(body)
 	{}
 
@@ -14,7 +14,7 @@ namespace ast
 		return this->ast_type;
 	}
 
-	BodyExpr* BaseExpr::get_body()
+	shared_ptr<BodyExpr> BaseExpr::get_body()
 	{
 		return this->body;
 	}
@@ -24,7 +24,7 @@ namespace ast
 		this->line_info = line_info;
 	}
 
-	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string str)
+	LiteralExpr::LiteralExpr(shared_ptr<BodyExpr> body, types::Type curr_type, std::string str)
 		: BaseExpr(AstExprType::LiteralExpr, body), curr_type(curr_type)
 	{
 		value_type = types::BaseType::create_type(curr_type, str);
@@ -71,7 +71,7 @@ namespace ast
 		return true;
 	}
 
-	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string str, ast::BaseExpr* expr)
+	VariableDeclarationExpr::VariableDeclarationExpr(shared_ptr<BodyExpr> body, types::Type curr_type, std::string str, shared_ptr<BaseExpr> expr)
 		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name(str), expr(expr)
 	{}
 
@@ -79,7 +79,7 @@ namespace ast
 	{
 		if (expr != nullptr)
 		{
-			delete expr;
+			//delete expr;
 		}
 	}
 
@@ -126,7 +126,7 @@ namespace ast
 		return false;
 	}
 
-	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, std::string str)
+	VariableReferenceExpr::VariableReferenceExpr(shared_ptr<BodyExpr> body, std::string str)
 		: BaseExpr(AstExprType::VariableReferenceExpr, body), name(str)
 	{}
 
@@ -147,7 +147,8 @@ namespace ast
 	{
 		if (result_type == types::Type::None)
 		{
-			result_type = this->get_body()->named_types[this->name];
+			//result_type = this->get_body()->named_types[this->name];
+			result_type = scope::get_scope(this)->named_types[this->name];
 		}
 		return result_type;
 	}
@@ -205,7 +206,7 @@ namespace ast
 		}
 	}
 
-	BinaryExpr::BinaryExpr(BodyExpr* body, BinaryOp binop, BaseExpr* lhs, BaseExpr* rhs)
+	BinaryExpr::BinaryExpr(shared_ptr<BodyExpr> body, BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs)
 		: BaseExpr(AstExprType::BinaryExpr, body), binop(binop), lhs(lhs), rhs(rhs)
 	{}
 
@@ -213,11 +214,11 @@ namespace ast
 	{
 		if (lhs != nullptr)
 		{
-			delete lhs;
+			//delete lhs;
 		}
 		if (rhs != nullptr)
 		{
-			delete rhs;
+			//delete rhs;
 		}
 	}
 
@@ -259,7 +260,7 @@ namespace ast
 		return false;
 	}
 
-	BodyExpr::BodyExpr(BodyExpr* body)
+	BodyExpr::BodyExpr(shared_ptr<BodyExpr> body)
 		: BaseExpr(AstExprType::BodyExpr, body)
 	{}
 
@@ -269,7 +270,7 @@ namespace ast
 		{
 			if (base != nullptr)
 			{
-				delete base;
+				//delete base;
 			}
 		}
 
@@ -277,7 +278,7 @@ namespace ast
 		{
 			if (func != nullptr)
 			{
-				delete func;
+				//delete func;
 			}
 		}
 	}
@@ -312,20 +313,43 @@ namespace ast
 		return true;
 	}
 
-	void BodyExpr::add_base(BaseExpr* expr)
+	void BodyExpr::add_base(shared_ptr<BaseExpr> expr)
 	{
 		expressions.push_back(expr);
 	}
 
-	void BodyExpr::add_function(FunctionDefinition* func)
+	void BodyExpr::add_function(shared_ptr<FunctionDefinition> func)
 	{
 		functions.push_back(func);
 		function_prototypes.insert({ func->prototype->name, func->prototype });
 	}
 
-	CallExpr::CallExpr(ast::BodyExpr* body, std::string callee, std::vector<BaseExpr*> args)
+	llvm::Type* BodyExpr::get_llvm_type(llvm::LLVMContext& llvm_context, std::string str)
+	{
+		auto f = this->llvm_named_types.find(str);
+		if (f != this->llvm_named_types.end())
+		{
+			return f->second;
+		}
+		llvm::Type* type = types::get_llvm_type(llvm_context, this->named_types[str]);
+		this->llvm_named_types[str] = type;
+		return type;
+	}
+
+	CallExpr::CallExpr(shared_ptr<BodyExpr> body, std::string callee, std::vector<shared_ptr<BaseExpr>> args)
 		: BaseExpr(AstExprType::CallExpr, body), callee(callee), args(args)
 	{}
+
+	CallExpr::~CallExpr()
+	{
+		for (auto& e : args)
+		{
+			if (e != nullptr)
+			{
+				//delete e;
+			}
+		}
+	}
 
 	std::string CallExpr::to_string(int depth)
 	{
@@ -350,6 +374,7 @@ namespace ast
 	{
 		if (result_type == types::Type::None)
 		{
+			//result_type = scope::get_scope(shared_ptr<CallExpr>(this))->function_prototypes[this->callee]->return_type;
 			result_type = scope::get_scope(this)->function_prototypes[this->callee]->return_type;
 			//result_type = this->get_body()->function_prototypes[this->callee]->return_type;
 		}
@@ -368,7 +393,8 @@ namespace ast
 		BodyExpr* b1 = this->get_body();
 		BodyExpr* b2 = this->get_body()->get_body();
 		*/
-		FunctionPrototype* proto = scope::get_scope(this)->function_prototypes[this->callee];
+		//shared_ptr<FunctionPrototype> proto = scope::get_scope(shared_ptr<CallExpr>(this))->function_prototypes[this->callee];
+		FunctionPrototype* proto = scope::get_scope(this)->function_prototypes[this->callee].get();
 
 		for (int i = 0; i < this->args.size(); i++)
 		{
@@ -407,7 +433,7 @@ namespace ast
 		return str.str();
 	}
 
-	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, BodyExpr* body)
+	FunctionDefinition::FunctionDefinition(shared_ptr<FunctionPrototype> prototype, shared_ptr<BodyExpr> body)
 		: prototype(prototype), body(body)
 	{}
 
@@ -415,12 +441,12 @@ namespace ast
 	{
 		if (prototype != nullptr)
 		{
-			delete prototype;
+			//delete prototype;
 		}
 
 		if (body != nullptr)
 		{
-			delete body;
+			//delete body;
 		}
 	}
 
@@ -430,7 +456,7 @@ namespace ast
 
 		std::stringstream str;
 
-		for (auto& f : this->body->get_body()->functions)
+		for (auto& f : this->body->functions)
 		{
 			str << f->to_string(0);
 			str << '\n';

@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
 		// TODO: handle parse errors
 		parser::Parser parser{ file_stream };
-		ast::BodyExpr* body_ast = parser.parse_file_as_body();
+		shared_ptr<ast::BodyExpr> body_ast = parser.parse_file_as_body();
 
 		file_stream.close();
 
@@ -62,12 +62,10 @@ int main(int argc, char** argv)
 
 		std::cout << "File Was Parsed Successfully" << std::endl;
 
-		//std::cout << std::endl << file_ast->to_string(0) << std::endl << std::endl;
-
 		// do type checking
 		type_checker::TypeChecker tc;
 
-		if (!tc.check_types(body_ast))
+		if (!tc.check_types(body_ast.get()))
 		{
 			std::cout << "File Failed Type Checks" << std::endl;
 			return 1;
@@ -82,16 +80,18 @@ int main(int argc, char** argv)
 
 		for (auto& f : body_ast->functions)
 		{
-			auto func = llvm_builder.generate_function_definition(f);
+			auto func = llvm_builder.generate_function_definition(f.get());
 
 			if (f == nullptr)
 			{
 				std::cout << "Failed To Generate LLVM IR Code For Function: " << f->prototype->name << std::endl;
 
-				delete body_ast;
+				//delete body_ast;
 
 				return 1;
 			}
+
+			//std::cout << std::endl << f->to_string(0) << std::endl << std::endl;
 		}
 
 		std::cout << "Successfully Generated LLVM IR Code" << std::endl;
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
 		if (body_ast != nullptr)
 		{
-			delete body_ast;
+			//delete body_ast;
 		}
 	}
 	else
