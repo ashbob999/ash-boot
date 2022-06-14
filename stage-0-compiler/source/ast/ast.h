@@ -93,6 +93,7 @@ namespace ast
 
 		void add_base(shared_ptr<BaseExpr> expr);
 		void add_function(shared_ptr<FunctionDefinition> func);
+		void add_prototype(FunctionPrototype* proto);
 		// TODO: remove?
 		llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, std::string str);
 

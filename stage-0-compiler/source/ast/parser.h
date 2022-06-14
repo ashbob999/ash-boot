@@ -17,6 +17,7 @@ namespace parser
 		LiteralValue,
 		BinaryOperator,
 		FunctionDefinition,
+		ExternFunction,
 		BodyStart,
 		BodyEnd,
 		ParenStart,
@@ -56,6 +57,7 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_variable_reference();
 		shared_ptr<ast::BaseExpr> parse_parenthesis();
 		ast::FunctionPrototype* parse_function_prototype();
+		ast::FunctionPrototype* parse_extern();
 		shared_ptr<ast::FunctionDefinition> parse_function_definition();
 		int get_token_precedence();
 		shared_ptr<ast::BaseExpr> log_error(std::string error_message);

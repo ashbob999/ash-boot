@@ -17,11 +17,11 @@ namespace builder
 		~LLVMBuilder();
 
 		llvm::Function* generate_function_definition(ast::FunctionDefinition* function);
+		llvm::Function* generate_function_prototype(ast::FunctionPrototype* prototype);
 		llvm::Value* log_error_value(std::string str);
 
 	private:
 		static llvm::AllocaInst* create_entry_block_alloca(llvm::Function* the_function, llvm::Type* type, llvm::StringRef name);
-		llvm::Function* generate_function_prototype(ast::FunctionPrototype* prototype);
 		llvm::Value* generate_code_dispatch(ast::BaseExpr* expr);
 		template<class T, typename = std::enable_if_t<std::is_base_of_v<ast::BaseExpr, T>>>
 		llvm::Value* generate_code(T* expr);

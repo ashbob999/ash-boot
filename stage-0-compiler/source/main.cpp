@@ -78,11 +78,25 @@ int main(int argc, char** argv)
 
 		llvm::Function* func = nullptr;
 
+		// generate all of the function prototypes
+		for (auto& p : body_ast->function_prototypes)
+		{
+			auto proto = llvm_builder.generate_function_prototype(p.second);
+
+			if (proto == nullptr)
+			{
+				std::cout << "Failed To Generate LLVM IR Code For Function Prototype: " << p.second->name << std::endl;
+
+				return 1;
+			}
+		}
+
+		// generate all of the top level functions
 		for (auto& f : body_ast->functions)
 		{
 			auto func = llvm_builder.generate_function_definition(f.get());
 
-			if (f == nullptr)
+			if (func == nullptr)
 			{
 				std::cout << "Failed To Generate LLVM IR Code For Function: " << f->prototype->name << std::endl;
 

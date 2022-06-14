@@ -125,6 +125,11 @@ namespace parser
 					curr_token = Token::FunctionDefinition;
 					return Token::FunctionDefinition;
 				}
+				else if (identifier_string == "extern")
+				{
+					curr_token = Token::ExternFunction;
+					return curr_token;
+				}
 				else
 				{
 #ifdef __debug
@@ -291,6 +296,18 @@ namespace parser
 						return log_error_body("functions are currently only allowed in top loevel code");
 					}
 
+					break;
+				}
+				case Token::ExternFunction:
+				{
+					ast::FunctionPrototype* proto = parse_extern();
+
+					if (proto == nullptr)
+					{
+						return nullptr;
+					}
+
+					body->add_prototype(proto);
 					break;
 				}
 				case Token::BodyEnd:
@@ -775,6 +792,24 @@ namespace parser
 
 		end_;
 		return new ast::FunctionPrototype(name, return_type, types, args);
+	}
+
+	/// external ::= 'extern' prototype
+	ast::FunctionPrototype* Parser::parse_extern()
+	{
+		get_next_token();
+
+		ast::FunctionPrototype* proto = parse_function_prototype();
+
+		if (curr_token == Token::EndOfExpression)
+		{
+			end_;
+			log_error_empty("expected end of line ';'");
+			return nullptr;
+		}
+
+		end_;
+		return proto;
 	}
 
 	/// definition ::= 'function' prototype expression

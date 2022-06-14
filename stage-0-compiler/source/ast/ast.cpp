@@ -298,6 +298,11 @@ namespace ast
 		function_prototypes[func->prototype->name] = func->prototype;
 	}
 
+	void BodyExpr::add_prototype(FunctionPrototype* proto)
+	{
+		function_prototypes[proto->name] = proto;
+	}
+
 	llvm::Type* BodyExpr::get_llvm_type(llvm::LLVMContext& llvm_context, std::string str)
 	{
 		auto f = this->llvm_named_types.find(str);

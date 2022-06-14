@@ -9,6 +9,9 @@
 
 using std::dynamic_pointer_cast;
 
+#define __debug
+
+#ifdef __debug
 #ifdef _WIN64
 #define __print_function__ __FUNCSIG__
 #endif
@@ -18,6 +21,10 @@ using std::dynamic_pointer_cast;
 
 #define null_end std::cout << "value is null\n" << __print_function__ << std::endl;
 #define here_ std::cout << "here" << std::endl;
+#else
+#define null_end
+#define here_
+#endif
 
 namespace builder
 {
@@ -76,6 +83,17 @@ namespace builder
 
 	llvm::Function* LLVMBuilder::generate_function_definition(ast::FunctionDefinition* function_definition)
 	{
+		// create all of the function prototypes inside the current function
+		for (auto& proto : function_definition->body->function_prototypes)
+		{
+			llvm::Function* p = generate_function_prototype(proto.second);
+			if (p == nullptr)
+			{
+				null_end;
+				return nullptr;
+			}
+		}
+
 		// create all of the functions defined inside the current function
 		for (auto& func : function_definition->body->functions)
 		{
@@ -333,7 +351,7 @@ namespace builder
 
 		if (callee_func == nullptr)
 		{
-			return log_error_value("unknown function referenced");
+			return log_error_value("unknown function referenced: " + expr->callee);
 		}
 
 		if (callee_func->arg_size() != expr->args.size())
