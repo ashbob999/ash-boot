@@ -5,6 +5,7 @@
 - simple types (int, float)
 - simple binary operations (=, +, -, *)
 - basic scope
+- extern functions
 
 
 ##### Features Required for Bootstrapping
@@ -25,7 +26,7 @@
 - more types
 - class & inheritance
 - custom types
-- extern functions
 - modules
 - multiple source files
+- nested functions
 
