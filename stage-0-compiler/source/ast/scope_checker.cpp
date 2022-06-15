@@ -41,6 +41,52 @@ namespace scope
 		return body;
 	}
 
+	bool is_variable_defined(ast::BaseExpr* expr, std::string name, ast::ReferenceType type)
+	{
+		// TODO: handle generic functions and overloading
+
+		ast::BodyExpr* body = nullptr;
+
+		if (expr->get_type() == ast::AstExprType::BodyExpr)
+		{
+			body = dynamic_cast<ast::BodyExpr*>(expr);
+		}
+		else
+		{
+			body = expr->get_body();
+		}
+
+		if (body == nullptr)
+		{
+			return false;
+		}
+
+		std::pair<std::string, ast::ReferenceType> p{ name, type };
+
+		auto f = std::find(body->in_scope_vars.begin(), body->in_scope_vars.end(), p);
+		while (body != nullptr && (type == ast::ReferenceType::Function || !body->is_function_body) && f == body->in_scope_vars.end())
+		{
+			body = body->get_body();
+
+			if (body != nullptr)
+			{
+				f = std::find(body->in_scope_vars.begin(), body->in_scope_vars.end(), p);
+			}
+		}
+
+		if (body == nullptr)
+		{
+			return false;
+		}
+
+		if (f == body->in_scope_vars.end())
+		{
+			return false;
+		}
+
+		return true;
+	}
+
 	void scope_error(std::string str)
 	{
 		std::cout << str << std::endl;

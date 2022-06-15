@@ -280,24 +280,18 @@ namespace parser
 				}
 				case Token::FunctionDefinition:
 				{
-					if (is_top_level)
+
+					shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
+					if (fd != nullptr)
 					{
-						shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
-						if (fd != nullptr)
-						{
 #ifdef __debug
-							std::cout << "added function" << std::endl;
+						std::cout << "added function" << std::endl;
 #endif
-							body->add_function(fd);
-						}
-						else
-						{
-							return nullptr;
-						}
+						body->add_function(fd);
 					}
 					else
 					{
-						return log_error_body("Functions are currently only allowed in top level code");
+						return nullptr;
 					}
 
 					break;
@@ -807,6 +801,8 @@ namespace parser
 		{
 			body->named_types[proto->args[i]] = proto->types[i];
 		}
+
+		body->is_function_body = true;
 
 		end_;
 		return make_shared<ast::FunctionDefinition>(proto, body);

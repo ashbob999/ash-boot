@@ -33,6 +33,12 @@ namespace ast
 		std::string line;
 	};
 
+	enum class ReferenceType
+	{
+		Variable,
+		Function,
+	};
+
 	// TODO: delete all copy/move construcotrs or use smart pointers
 
 	class BaseExpr;
@@ -98,6 +104,8 @@ namespace ast
 		// TODO: remove?
 		llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, std::string str);
 
+		bool is_function_body = false;
+		std::vector<std::pair<std::string, ReferenceType>> in_scope_vars; // only used for checking vars are in scope, and order of defines
 		std::vector<shared_ptr<BaseExpr>> expressions;
 		std::vector<shared_ptr<FunctionDefinition>> functions;
 		std::map<std::string, FunctionPrototype*> function_prototypes;

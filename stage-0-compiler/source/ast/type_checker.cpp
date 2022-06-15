@@ -91,6 +91,17 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::BodyExpr>(ast::BodyExpr* body)
 	{
+		// check all function prototypes to make sure there are no redefinitions
+		for (auto& p : body->function_prototypes)
+		{
+			if (scope::is_variable_defined(body, p.first, ast::ReferenceType::Function))
+			{
+				return log_error(body, "Function: " + p.first + ", is already defined");
+			}
+
+			body->in_scope_vars.push_back({ p.first, ast::ReferenceType::Function });
+		}
+
 		// check each function
 		for (auto& f : body->functions)
 		{
@@ -115,6 +126,20 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::VariableDeclarationExpr>(ast::VariableDeclarationExpr* expr)
 	{
+		// check to see if we are redefining the variable, but only in the current scope
+		for (auto& p : expr->get_body()->in_scope_vars)
+		{
+			if (p.second == ast::ReferenceType::Variable)
+			{
+				if (p.first == expr->name)
+				{
+					return log_error(expr, "Variable: " + expr->name + ", has already been defined");
+				}
+			}
+		}
+
+		expr->get_body()->in_scope_vars.push_back({ expr->name, ast::ReferenceType::Variable });
+
 		// check value expression
 		if (expr->expr != nullptr && !check_expression_dispatch(expr->expr.get()))
 		{
@@ -135,6 +160,12 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::VariableReferenceExpr>(ast::VariableReferenceExpr* expr)
 	{
+		// check variable has already been defined
+		if (!scope::is_variable_defined(expr, expr->name, ast::ReferenceType::Variable))
+		{
+			return log_error(expr, "Variable reference for: " + expr->name + ", is not in scope (not defined)");
+		}
+
 		// check variable is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
@@ -179,6 +210,12 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::CallExpr>(ast::CallExpr* expr)
 	{
+		// check function has been defined
+		if (!scope::is_variable_defined(expr, expr->callee, ast::ReferenceType::Function))
+		{
+			return log_error(expr, "Function call for: " + expr->callee + ", is not in scope (not defined)");
+		}
+
 		// check function is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
