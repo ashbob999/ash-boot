@@ -152,7 +152,7 @@ namespace parser
 		{
 			identifier_string = last_char;
 			char next_char = peek_char();
-			while (std::isdigit(next_char) || types::BaseType::is_sign_char(next_char) || next_char == '.' || next_char == 'f')
+			while (std::isdigit(next_char) /*|| types::BaseType::is_sign_char(next_char)*/ || next_char == '.' || next_char == 'f')
 			{
 				last_char = get_char();
 				identifier_string += last_char;
@@ -546,8 +546,6 @@ namespace parser
 		}
 
 		std::string literal_string = identifier_string;
-
-		int a = 5;
 
 		get_next_token();
 
