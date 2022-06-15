@@ -24,12 +24,12 @@ namespace ast
 		CallExpr,
 	};
 
-	struct LinePositionInfo
+	struct ExpressionLineInfo
 	{
-		int start_line;
-		int end_line;
-		int start_pos;
-		int end_pos;
+		int start_line = 0;
+		int end_line = 0;
+		int start_pos = 0;
+		int end_pos = 0;
 		std::string line;
 	};
 
@@ -53,7 +53,7 @@ namespace ast
 		AstExprType ast_type = AstExprType::BaseExpr;
 		BodyExpr* body;
 		types::Type result_type = types::Type::None;
-		LinePositionInfo line_info;
+		ExpressionLineInfo line_info;
 
 	public:
 		BaseExpr(AstExprType ast_type, BodyExpr* body);
@@ -64,7 +64,8 @@ namespace ast
 
 		virtual AstExprType get_type() final;
 		virtual BodyExpr* get_body() final;
-		virtual void set_line_info(LinePositionInfo line_info) final;
+		virtual void set_line_info(ExpressionLineInfo line_info) final;
+		virtual ExpressionLineInfo& get_line_info() final;
 	};
 
 	// Any literal value

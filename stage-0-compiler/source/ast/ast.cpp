@@ -19,9 +19,14 @@ namespace ast
 		return this->body;
 	}
 
-	void BaseExpr::set_line_info(LinePositionInfo line_info)
+	void BaseExpr::set_line_info(ExpressionLineInfo line_info)
 	{
 		this->line_info = line_info;
+	}
+
+	ExpressionLineInfo& BaseExpr::get_line_info()
+	{
+		return this->line_info;
 	}
 
 	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string str)
@@ -276,7 +281,10 @@ namespace ast
 	{
 		if (result_type == types::Type::None)
 		{
-			result_type = this->expressions.back()->get_result_type();
+			if (this->expressions.size() > 0)
+			{
+				result_type = this->expressions.back()->get_result_type();
+			}
 		}
 		return result_type;
 	}

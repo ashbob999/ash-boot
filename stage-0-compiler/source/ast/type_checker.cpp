@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 
 #include "type_checker.h"
 #include "scope_checker.h"
@@ -13,33 +14,63 @@ namespace type_checker
 		return check_expression_dispatch(body);
 	}
 
-	bool TypeChecker::log_error(std::string str)
+	bool TypeChecker::log_error(ast::BaseExpr* expr, std::string str)
 	{
 		std::cout << str << std::endl;
+
+		/*
+		// TODO: use when file is read into char array
+		ast::ExpressionLineInfo& line_info = expr->get_line_info();
+
+		std::string lines;
+		std::string positions;
+
+		if (line_info.start_line == line_info.end_line)
+		{
+			lines += "At Line: ";
+			lines += std::to_string(line_info.start_line);
+		}
+		else
+		{
+			lines += "At Lines: ";
+			lines += std::to_string(line_info.start_line);
+			lines += '-';
+			lines += std::to_string(line_info.end_line);
+		}
+
+		if (line_info.start_pos == line_info.end_pos)
+		{
+			positions += "At Position: ";
+			positions += std::to_string(line_info.start_pos);
+		}
+		else
+		{
+			positions += "At Positions: ";
+			positions += std::to_string(line_info.start_pos);
+			positions += '-';
+			positions += std::to_string(line_info.end_pos);
+		}
+
+		std::cout << lines << ' ' << positions << std::endl;
+		std::cout << '\t' << line_info.line << std::endl;
+		std::cout << std::endl;
+		*/
 		return false;
+
 	}
 
 	bool TypeChecker::check_function(ast::FunctionDefinition* func)
 	{
-		/*
-		* function definition
-		if (!func_def->check_return_type())
-			{
-				end_;
-				return log_error_definition("function definition has invalid return type");
-			}
-		*/
-
 		// check function body
 		if (!check_expression_dispatch(func->body.get()))
 		{
-			return log_error("function body has invalid types");
+			return false;
 		}
 
 		// check function return type
 		if (!func->check_return_type())
 		{
-			return log_error("function definition has invalid return type");
+			return log_error(func->body->expressions.back().get(), "function definition has invalid return type");
 		}
 
 		return true;
@@ -48,18 +79,10 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::LiteralExpr>(ast::LiteralExpr* expr)
 	{
-		/*
-		* literal
-		if (!literal->check_types())
-			{
-				end_;
-				return log_error("literal type invalid");
-			}
-		*/
-
+		// check the literal type
 		if (!expr->check_types())
 		{
-			return log_error("literal type invalid");
+			return log_error(expr, "Literal has invalid type");
 		}
 
 		return true;
@@ -95,21 +118,15 @@ namespace type_checker
 		// check value expression
 		if (expr->expr != nullptr && !check_expression_dispatch(expr->expr.get()))
 		{
-			return log_error("variable declaration value failed type checks");
+			return false;
 		}
 
-		/*
-		* variable delcaration
-		if (!var->check_types())
-			{
-				end_;
-				return log_error("variable declaration expected type: " + types::to_string(var->curr_type) + " but got type: " + types::to_string(var->expr->get_result_type()));
-			}
-		*/
-
+		// check the expression result type
 		if (!expr->check_types())
 		{
-			return log_error("variable declaration expected type: " + types::to_string(expr->curr_type) + " but got type: " + types::to_string(expr->expr->get_result_type()));
+			std::string type1 = types::to_string(expr->curr_type);
+			std::string type2 = types::to_string(expr->expr->get_result_type());
+			return log_error(expr, "Variable declaration expression for: " + expr->name + ", expected type: " + type1 + " but got type: " + type2 + " instead");
 		}
 
 		return true;
@@ -121,21 +138,13 @@ namespace type_checker
 		// check variable is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
-			return log_error("variable being referenced is not in scope");
+			return log_error(expr, "Variable reference for: " + expr->name + ", is not in scope");
 		}
 
-		/*
-		* variable reference
-		if (!var->check_types())
-				{
-					end_;
-					return log_error("variable reference type error");
-				}
-		*/
-
+		// chekc variable type
 		if (!expr->check_types())
 		{
-			return log_error("variable reference type error");
+			return log_error(expr, "Variable reference for: " + expr->name + ", has invalid type");
 		}
 
 		return true;
@@ -147,27 +156,21 @@ namespace type_checker
 		// check lhs
 		if (!check_expression_dispatch(expr->lhs.get()))
 		{
-			return log_error("binary op lhs type check failed");
+			return false;
 		}
 
 		// check rhs
 		if (!check_expression_dispatch(expr->rhs.get()))
 		{
-			return log_error("binary op rhs type check failed");
+			return false;
 		}
 
-		/*
-		* binop
-		if (!lhs->check_types())
-				{
-					end_;
-					return log_error("binop incompatible types: " + types::to_string(lhs_->lhs->get_result_type()) + " and " + types::to_string(lhs_->rhs->get_result_type()));
-				}
-		*/
-
+		// check both sides of the binary operator have the same type, type is given by lhs
 		if (!expr->check_types())
 		{
-			return log_error("binop incompatible types: " + types::to_string(expr->lhs->get_result_type()) + " and " + types::to_string(expr->rhs->get_result_type()));
+			std::string type1 = types::to_string(expr->lhs->get_result_type());
+			std::string type2 = types::to_string(expr->rhs->get_result_type());
+			return log_error(expr, "Binary operator " + ast::to_string(expr->binop) + " has incompatible types: " + type1 + " and " + type2 + " given");
 		}
 
 		return true;
@@ -179,21 +182,14 @@ namespace type_checker
 		// check function is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
-			return log_error("function being called is not in scope");
+			return log_error(expr, "Function call for: " + expr->callee + ", is not in scope");
 		}
 
-		/*
-		* call expr
-		if (!call->check_types())
-			{
-				end_;
-				return log_error("call expression has arguments of invalid types");
-			}
-		*/
-
+		// check call arguments
 		if (!expr->check_types())
 		{
-			return log_error("call expression has arguments of invalid types");
+			// TODO: make better
+			return log_error(expr, "Call expression has arguments of invalid types");
 		}
 
 		return true;
