@@ -62,6 +62,8 @@ int main(int argc, char** argv)
 
 		std::cout << "File Was Parsed Successfully" << std::endl;
 
+		//std::cout << std::endl << body_ast->to_string(0) << std::endl << std::endl;
+
 		// do type checking
 		type_checker::TypeChecker tc;
 

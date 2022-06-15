@@ -232,6 +232,46 @@ namespace type_checker
 		return true;
 	}
 
+	template<>
+	bool TypeChecker::check_expression<ast::IfExpr>(ast::IfExpr* expr)
+	{
+
+		// check the condition
+		if (!check_expression_dispatch(expr->condition.get()))
+		{
+			return false;
+		}
+
+		// TODO: fix type from int to bool
+		// check the condition has type bool
+		if (expr->condition->get_result_type() != types::Type::Int)
+		{
+			return log_error(expr, "If condition must have type bool");
+		}
+
+		// check if body
+		if (!check_expression_dispatch(expr->if_body.get()))
+		{
+			return false;
+		}
+
+		// check else body
+		if (!check_expression_dispatch(expr->else_body.get()))
+		{
+			return false;
+		}
+
+		// check both bodies have the same result type, type iof given by the if body
+		if (!expr->check_types())
+		{
+			std::string type1 = types::to_string(expr->if_body->get_result_type());
+			std::string type2 = types::to_string(expr->else_body->get_result_type());
+			return log_error(expr, "If Statement has incompatible result types: " + type1 + " and " + type2 + " given");
+		}
+
+		return true;
+	}
+
 	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -260,7 +300,12 @@ namespace type_checker
 			{
 				return check_expression(dynamic_cast<ast::CallExpr*>(expr));
 			}
+			case ast::AstExprType::IfExpr:
+			{
+				return check_expression(dynamic_cast<ast::IfExpr*>(expr));
+			}
 		}
+		assert(false && "Missing Type Specialisation");
 		return false;
 	}
 

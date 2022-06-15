@@ -22,6 +22,7 @@ namespace ast
 		VariableReferenceExpr,
 		BinaryExpr,
 		CallExpr,
+		IfExpr
 	};
 
 	struct ExpressionLineInfo
@@ -48,6 +49,7 @@ namespace ast
 	class VariableReferenceExpr;
 	class BinaryExpr;
 	class CallExpr;
+	class IfExpr;
 
 	class FunctionPrototype;
 	class FunctionDefinition;
@@ -182,6 +184,20 @@ namespace ast
 
 		std::string callee;
 		std::vector<shared_ptr<BaseExpr>> args;
+	};
+
+	class IfExpr : public BaseExpr
+	{
+	public:
+		IfExpr(BodyExpr* body, shared_ptr<BaseExpr> condition, shared_ptr<BaseExpr> if_body, shared_ptr<BaseExpr>else_body);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		bool should_return_value = true; // should the if return a value after being evaluated
+		shared_ptr<BaseExpr> condition;
+		shared_ptr<BaseExpr> if_body;
+		shared_ptr<BaseExpr> else_body;
 	};
 
 	// The prototype for a function (i.e. the definition)

@@ -134,6 +134,16 @@ namespace parser
 					curr_token = Token::ExternFunction;
 					return curr_token;
 				}
+				else if (identifier_string == "if")
+				{
+					curr_token = Token::IfStatement;
+					return curr_token;
+				}
+				else if (identifier_string == "else")
+				{
+					curr_token = Token::ElseStatement;
+					return curr_token;
+				}
 				else
 				{
 #ifdef __debug
@@ -240,8 +250,6 @@ namespace parser
 
 		if (has_curly_brackets)
 		{
-			get_next_token();
-
 			if (curr_token != Token::BodyStart)
 			{
 				return log_error_body("Body must start with a '{'");
@@ -308,6 +316,22 @@ namespace parser
 					body->add_prototype(proto);
 					break;
 				}
+				case Token::IfStatement:
+				{
+					shared_ptr<ast::BaseExpr> base = parse_if_else();
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
+
+					shared_ptr<ast::IfExpr> if_expr = std::dynamic_pointer_cast<ast::IfExpr>(base);
+					if_expr->should_return_value = false;
+
+					body->add_base(base);
+
+					break;
+				}
 				case Token::BodyEnd:
 				{
 					end_;
@@ -323,7 +347,7 @@ namespace parser
 						return log_error_body("Expressions are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_expression(false);
+					shared_ptr<ast::BaseExpr> base = parse_expression(false, false);
 					if (base == nullptr)
 					{
 #ifdef __debug
@@ -379,7 +403,7 @@ namespace parser
 
 	/// expression
 	///   ::= primary binop_rhs
-	shared_ptr<ast::BaseExpr> Parser::parse_expression(bool for_call)
+	shared_ptr<ast::BaseExpr> Parser::parse_expression(bool for_call, bool for_if_cond)
 	{
 		start_;
 		shared_ptr<ast::BaseExpr> lhs = parse_primary();
@@ -416,6 +440,12 @@ namespace parser
 			}
 		}
 
+		if (for_if_cond)
+		{
+			end_;
+			return lhs;
+		}
+
 		end_;
 		return log_error("Expected end of expression, missing ';'");
 	}
@@ -449,6 +479,11 @@ namespace parser
 			{
 				end_;
 				return parse_parenthesis();
+			}
+			case Token::IfStatement:
+			{
+				end_;
+				return parse_if_else();
 			}
 			default:
 			{
@@ -570,7 +605,7 @@ namespace parser
 		{
 			get_next_token();
 
-			expr = parse_expression(false);
+			expr = parse_expression(false, false);
 			if (expr == nullptr)
 			{
 				end_;
@@ -611,7 +646,7 @@ namespace parser
 		{
 			while (true)
 			{
-				shared_ptr<ast::BaseExpr> arg = parse_expression(true);
+				shared_ptr<ast::BaseExpr> arg = parse_expression(true, false);
 				if (arg != nullptr)
 				{
 					args.push_back(arg);
@@ -648,7 +683,7 @@ namespace parser
 		start_;
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> expr = parse_expression(false);
+		shared_ptr<ast::BaseExpr> expr = parse_expression(false, false);
 
 		if (curr_token != Token::ParenEnd)
 		{
@@ -789,6 +824,8 @@ namespace parser
 			return nullptr;
 		}
 
+		get_next_token();
+
 		shared_ptr<ast::BodyExpr> body = parse_body(false, true);
 		if (body == nullptr)
 		{
@@ -806,6 +843,51 @@ namespace parser
 
 		end_;
 		return make_shared<ast::FunctionDefinition>(proto, body);
+	}
+
+	shared_ptr<ast::BaseExpr> Parser::parse_if_else()
+	{
+		start_;
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> cond = parse_expression(false, true);
+
+		if (cond == nullptr)
+		{
+			end_;
+			return log_error("Expected if condition");
+		}
+
+		shared_ptr<ast::BodyExpr> if_body = parse_body(false, true);
+
+		if (if_body == nullptr)
+		{
+			end_;
+			return log_error("Expected if body");
+		}
+
+		get_next_token();
+
+		if (curr_token != Token::ElseStatement)
+		{
+			end_;
+			return log_error("Expected else");
+		}
+
+		get_next_token();
+
+		shared_ptr<ast::BodyExpr> else_body = parse_body(false, true);
+
+		if (else_body == nullptr)
+		{
+			end_;
+			return log_error("Expected else body");
+		}
+
+		get_next_token();
+
+		end_;
+		return make_shared<ast::IfExpr>(bodies.back(), cond, if_body, else_body);
 	}
 
 	int Parser::get_token_precedence()

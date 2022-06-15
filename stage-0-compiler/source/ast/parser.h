@@ -18,6 +18,8 @@ namespace parser
 		BinaryOperator,
 		FunctionDefinition,
 		ExternFunction,
+		IfStatement,
+		ElseStatement,
 		BodyStart,
 		BodyEnd,
 		ParenStart,
@@ -50,7 +52,7 @@ namespace parser
 		Token get_next_token();
 		shared_ptr<ast::BodyExpr> parse_body(bool is_top_level, bool has_curly_brackets);
 		shared_ptr<ast::FunctionDefinition> parse_top_level();
-		shared_ptr<ast::BaseExpr> parse_expression(bool for_call);
+		shared_ptr<ast::BaseExpr> parse_expression(bool for_call, bool for_if_cond);
 		shared_ptr<ast::BaseExpr> parse_primary();
 		shared_ptr<ast::BaseExpr> parse_binop_rhs(int precedence, shared_ptr<ast::BaseExpr> lhs);
 		shared_ptr<ast::BaseExpr> parse_literal();
@@ -60,6 +62,7 @@ namespace parser
 		ast::FunctionPrototype* parse_function_prototype();
 		ast::FunctionPrototype* parse_extern();
 		shared_ptr<ast::FunctionDefinition> parse_function_definition();
+		shared_ptr<ast::BaseExpr> parse_if_else();
 		int get_token_precedence();
 		shared_ptr<ast::BaseExpr> log_error(std::string error_message);
 		shared_ptr<ast::BodyExpr> log_error_body(std::string error_message);

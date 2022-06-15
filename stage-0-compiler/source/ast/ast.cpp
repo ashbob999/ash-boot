@@ -263,11 +263,23 @@ namespace ast
 
 	std::string BodyExpr::to_string(int depth)
 	{
+		// TODO: show nested functions
 		std::string tabs(depth, '\t');
 
 		std::stringstream str;
 
 		str << tabs << "Body: {" << '\n';
+
+		for (auto& p : this->function_prototypes)
+		{
+			str << p.second->to_string(depth + 1);
+		}
+
+		for (auto& f : this->functions)
+		{
+			str << f->to_string(depth + 1);
+		}
+
 		for (auto& e : this->expressions)
 		{
 			str << e->to_string(depth + 1);
@@ -386,6 +398,71 @@ namespace ast
 		return true;
 	}
 
+	IfExpr::IfExpr(BodyExpr* body, shared_ptr<BaseExpr> condition, shared_ptr<BaseExpr> if_body, shared_ptr<BaseExpr> else_body)
+		: BaseExpr(AstExprType::IfExpr, body), condition(condition), if_body(if_body), else_body(else_body)
+	{}
+
+	std::string IfExpr::to_string(int depth)
+	{
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "if statement: {" << '\n';
+
+		str << tabs << '\t' << "condition: {" << '\n';
+		str << this->condition->to_string(depth + 2);
+		str << tabs << '\t' << "}," << '\n';
+
+		str << tabs << '\t' << "if body: {" << '\n';
+		str << this->if_body->to_string(depth + 2);
+		str << tabs << '\t' << "}," << '\n';
+
+		str << tabs << '\t' << "else body: {" << '\n';
+		str << this->else_body->to_string(depth + 2);
+		str << tabs << '\t' << "}" << '\n';
+
+		str << tabs << "}, " << '\n';
+
+		return str.str();
+	}
+
+	types::Type IfExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			if (this->should_return_value)
+			{
+				result_type = this->if_body->get_result_type();
+			}
+			else
+			{
+				result_type = types::Type::Int;
+			}
+		}
+		return result_type;
+	}
+
+	bool IfExpr::check_types()
+	{
+		// TODO: check for bool type
+		if (this->condition->get_result_type() == types::Type::Int)
+		{
+			if (this->should_return_value)
+			{
+				if (this->if_body->get_result_type() == this->else_body->get_result_type())
+				{
+					return true;
+				}
+			}
+			else
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	FunctionPrototype::FunctionPrototype(std::string name, types::Type return_type, std::vector<types::Type> types, std::vector<std::string> args)
 		: name(name), return_type(return_type), types(types), args(args)
 	{}
@@ -427,12 +504,12 @@ namespace ast
 
 		for (auto& f : this->body->functions)
 		{
-			str << f->to_string(0);
+			str << f->to_string(depth + 1);
 			str << '\n';
 		}
 
-		str << this->prototype->to_string(depth);
-		str << '\n';
+		//str << this->prototype->to_string(depth);
+		//str << '\n';
 		str << tabs << "function body : {" << '\n';
 		str << tabs << '\t' << "Name: " << this->prototype->name << '\n';
 		str << this->body->to_string(depth + 1);

@@ -373,6 +373,78 @@ namespace builder
 		return llvm_ir_builder->CreateCall(callee_func, args, "call");
 	}
 
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::IfExpr>(ast::IfExpr* expr)
+	{
+		llvm::Value* cond_value = generate_code_dispatch(expr->condition.get());
+
+		if (cond_value == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		// convert condition to a bool, by comparing it to zero
+		// TODO: fix
+		cond_value = llvm_ir_builder->CreateICmpNE(cond_value, types::get_default_value(*llvm_context, types::Type::Int), "ifcond");
+
+		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
+
+		// create a block for the if and else cases
+		llvm::BasicBlock* if_block = llvm::BasicBlock::Create(*llvm_context, "if_body", func);
+		llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*llvm_context, "else_body");
+		llvm::BasicBlock* merge_block = llvm::BasicBlock::Create(*llvm_context, "if_end");
+
+		llvm_ir_builder->CreateCondBr(cond_value, if_block, else_block);
+
+		// emit the if body value
+		llvm_ir_builder->SetInsertPoint(if_block);
+
+		llvm::Value* if_value = generate_code_dispatch(expr->if_body.get());
+
+		if (if_value == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		llvm_ir_builder->CreateBr(merge_block);
+
+		if_block = llvm_ir_builder->GetInsertBlock();
+
+		// emit the else block
+		func->getBasicBlockList().push_back(else_block);
+		llvm_ir_builder->SetInsertPoint(else_block);
+
+		llvm::Value* else_value = generate_code_dispatch(expr->else_body.get());
+
+		if (else_value == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		llvm_ir_builder->CreateBr(merge_block);
+		else_block = llvm_ir_builder->GetInsertBlock();
+
+		// emit merge block
+		func->getBasicBlockList().push_back(merge_block);
+		llvm_ir_builder->SetInsertPoint(merge_block);
+
+		if (expr->should_return_value)
+		{
+			llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "ifres");
+
+			phi_node->addIncoming(if_value, if_block);
+			phi_node->addIncoming(else_value, else_block);
+			return phi_node;
+		}
+		else
+		{
+			return types::get_default_value(*llvm_context, expr->get_result_type());
+		}
+	}
+
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -401,7 +473,12 @@ namespace builder
 			{
 				return generate_code(dynamic_cast<ast::CallExpr*>(expr));
 			}
+			case ast::AstExprType::IfExpr:
+			{
+				return generate_code(dynamic_cast<ast::IfExpr*>(expr));
+			}
 		}
+		assert(false && "Missing Type Specialisation");
 		null_end;
 		return nullptr;
 	}
