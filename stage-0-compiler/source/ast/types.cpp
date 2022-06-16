@@ -90,7 +90,7 @@ namespace types
 		{
 			case Type::Int:
 			{
-				return llvm::ConstantInt::get(llvm_context, llvm::APInt(32, 0, false));
+				return llvm::ConstantInt::get(llvm_context, llvm::APInt(32, 0, true));
 			}
 			case Type::Float:
 			{
@@ -208,7 +208,7 @@ namespace types
 	llvm::ConstantData* IntType::get_value(llvm::LLVMContext* llvm_context)
 	{
 		// create 32 bit signed int type
-		return llvm::ConstantInt::get(*llvm_context, llvm::APInt(32, data, false));
+		return llvm::ConstantInt::get(*llvm_context, llvm::APInt(32, data, true));
 	}
 
 	std::string IntType::to_string()
