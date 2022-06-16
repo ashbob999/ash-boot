@@ -21,6 +21,10 @@ namespace types
 		{
 			return Type::Void;
 		}
+		else if (str == "bool")
+		{
+			return Type::Bool;
+		}
 		return Type::None;
 	}
 
@@ -32,6 +36,7 @@ namespace types
 
 		std::regex int_regex{ "[+-]?[0-9][0-9]*" };
 		std::regex float_regex{ "[+-]?[0-9][0-9]*[.][0-9][0-9]*[f]?" };
+		std::regex bool_regex{ "(true|false)" };
 
 		std::smatch match;
 
@@ -42,6 +47,11 @@ namespace types
 		else if (std::regex_match(str, match, float_regex))
 		{
 			return { true, Type::Float };
+		}
+
+		else if (std::regex_match(str, match, bool_regex))
+		{
+			return { true, Type::Bool };
 		}
 
 		return { false, Type::None };
@@ -63,6 +73,10 @@ namespace types
 			{
 				return llvm::Type::getVoidTy(llvm_context);
 			}
+			case Type::Bool:
+			{
+				return llvm::Type::getInt1Ty(llvm_context);
+			}
 			default:
 			{
 				return nullptr;
@@ -81,6 +95,10 @@ namespace types
 			case Type::Float:
 			{
 				return llvm::ConstantFP::get(llvm_context, llvm::APFloat((float) 0));
+			}
+			case Type::Bool:
+			{
+				return llvm::ConstantInt::get(llvm_context, llvm::APInt(1, 0, false));
 			}
 			default:
 			{
@@ -109,6 +127,10 @@ namespace types
 			{
 				return "Void";
 			}
+			case Type::Bool:
+			{
+				return "Bool";
+			}
 		}
 	}
 
@@ -123,6 +145,10 @@ namespace types
 			case types::Type::Float:
 			{
 				return make_shared<FloatType>(str);
+			}
+			case types::Type::Bool:
+			{
+				return make_shared<BoolType>(str);
 			}
 		}
 
@@ -277,5 +303,50 @@ namespace types
 	std::string FloatType::to_string()
 	{
 		return std::to_string(this->data);
+	}
+
+	BoolType::BoolType()
+	{
+		this->data = false;
+	}
+
+	BoolType::BoolType(std::string str)
+	{
+		bool value = false;
+
+		if (str == "true")
+		{
+			value = true;
+		}
+		else if (str == "false")
+		{
+			value = false;
+		}
+
+		data = value;
+	}
+
+	llvm::ConstantData* BoolType::get_value(llvm::LLVMContext* llvm_context)
+	{
+		if (data)
+		{
+			return llvm::ConstantInt::get(*llvm_context, llvm::APInt(1, 1, false));
+		}
+		else
+		{
+			return llvm::ConstantInt::get(*llvm_context, llvm::APInt(1, 0, false));
+		}
+	}
+
+	std::string BoolType::to_string()
+	{
+		if (data)
+		{
+			return "true";
+		}
+		else
+		{
+			return "false";
+		}
 	}
 }

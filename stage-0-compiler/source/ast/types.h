@@ -17,6 +17,7 @@ namespace types
 		Int, // 32-bit signed int
 		Float, // 32-bit floating-point number
 		Void,
+		Bool, // either true (1), false (0)
 	};
 
 	Type is_valid_type(std::string str);
@@ -68,5 +69,16 @@ namespace types
 		std::string to_string() override;
 	private:
 		float data;
+	};
+
+	class BoolType : public BaseType
+	{
+	public:
+		BoolType();
+		BoolType(std::string);
+		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
+		std::string to_string() override;
+	private:
+		bool data;
 	};
 };

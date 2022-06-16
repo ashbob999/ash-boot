@@ -148,6 +148,15 @@ namespace parser
 				}
 				else
 				{
+					// check if identifier is a bool
+					std::pair<bool, types::Type> res = types::check_type_string(identifier_string);
+					if (res.first && res.second == types::Type::Bool)
+					{
+						curr_type = res.second;
+						curr_token = Token::LiteralValue;
+						return curr_token;
+					}
+
 #ifdef __debug
 					std::cout << "identifier " << identifier_string << std::endl;
 #endif
