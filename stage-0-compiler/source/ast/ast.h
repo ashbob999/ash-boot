@@ -152,6 +152,8 @@ namespace ast
 		Addition,
 		Subtraction,
 		Multiplication,
+		LessThan,
+		GreaterThan,
 	};
 
 	BinaryOp is_binary_op(char c);

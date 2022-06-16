@@ -171,6 +171,14 @@ namespace ast
 		{
 			return BinaryOp::Multiplication;
 		}
+		else if (c == '<')
+		{
+			return BinaryOp::LessThan;
+		}
+		else if (c == '>')
+		{
+			return BinaryOp::GreaterThan;
+		}
 		return BinaryOp::None;
 	}
 
@@ -197,6 +205,14 @@ namespace ast
 			case ast::BinaryOp::Multiplication:
 			{
 				return "Multiplication (*)";
+			}
+			case ast::BinaryOp::LessThan:
+			{
+				return "LessThan (<)";
+			}
+			case ast::BinaryOp::GreaterThan:
+			{
+				return "LessThan (<)";
 			}
 		}
 	}

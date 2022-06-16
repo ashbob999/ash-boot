@@ -18,7 +18,9 @@ namespace parser
 {
 	// the operator precedences, higher binds tighter, same binds to the left
 	const std::unordered_map<char, int> Parser::binop_precedence = {
-		{'=', 2},
+		{'=',  2},
+		{'<', 10},
+		{'>', 10},
 		{'+', 20},
 		{'-', 20},
 		{'*', 40},

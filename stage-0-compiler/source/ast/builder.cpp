@@ -337,6 +337,46 @@ namespace builder
 			{
 				return llvm_ir_builder->CreateMul(lhs, rhs, "mul");
 			}
+			case ast::BinaryOp::LessThan:
+			{
+				switch (expr->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						llvm::Value* res = llvm_ir_builder->CreateICmpSLT(lhs, rhs, "lt");
+						return llvm_ir_builder->CreateCast(llvm::Instruction::CastOps::ZExt, res, types::get_llvm_type(*llvm_context, types::Type::Int), "cvt");
+					}
+					case types::Type::Float:
+					{
+						llvm::Value* res = llvm_ir_builder->CreateFCmpOLT(lhs, rhs, "lt");
+						return llvm_ir_builder->CreateUIToFP(res, types::get_llvm_type(*llvm_context, types::Type::Float));
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + ast::to_string(expr->binop));
+					}
+				}
+			}
+			case ast::BinaryOp::GreaterThan:
+			{
+				switch (expr->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						llvm::Value* res = llvm_ir_builder->CreateICmpSGT(lhs, rhs, "lt");
+						return llvm_ir_builder->CreateCast(llvm::Instruction::CastOps::ZExt, res, types::get_llvm_type(*llvm_context, types::Type::Int), "cvt");
+					}
+					case types::Type::Float:
+					{
+						llvm::Value* res = llvm_ir_builder->CreateFCmpOGT(lhs, rhs, "lt");
+						return llvm_ir_builder->CreateUIToFP(res, types::get_llvm_type(*llvm_context, types::Type::Float));
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + ast::to_string(expr->binop));
+					}
+				}
+			}
 			default:
 			{
 				return log_error_value("invalid binary operator");
