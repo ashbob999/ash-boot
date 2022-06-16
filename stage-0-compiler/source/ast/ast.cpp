@@ -2,6 +2,7 @@
 
 #include "ast.h"
 #include "scope_checker.h"
+#include "module.h"
 
 namespace ast
 {
@@ -29,7 +30,7 @@ namespace ast
 		return this->line_info;
 	}
 
-	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string str)
+	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string& str)
 		: BaseExpr(AstExprType::LiteralExpr, body), curr_type(curr_type)
 	{
 		value_type = types::BaseType::create_type(curr_type, str);
@@ -71,8 +72,8 @@ namespace ast
 		return true;
 	}
 
-	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string str, shared_ptr<BaseExpr> expr)
-		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name(str), expr(expr)
+	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string& str, shared_ptr<BaseExpr> expr)
+		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name_id(module::StringManager::get_id(str)), expr(expr)
 	{}
 
 	VariableDeclarationExpr::~VariableDeclarationExpr()
@@ -85,7 +86,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Variable Declaration: {" << '\n';
-		str << tabs << '\t' << "Name: " << this->name << '\n';
+		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
 		str << tabs << '\t' << "Type: " << types::to_string(this->curr_type) << '\n';
 		str << tabs << '\t' << "Value: {" << '\n';
 		if (this->expr == nullptr)
@@ -121,8 +122,8 @@ namespace ast
 		return false;
 	}
 
-	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, std::string str)
-		: BaseExpr(AstExprType::VariableReferenceExpr, body), name(str)
+	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, std::string& str)
+		: BaseExpr(AstExprType::VariableReferenceExpr, body), name_id(module::StringManager::get_id(str))
 	{}
 
 	std::string VariableReferenceExpr::to_string(int depth)
@@ -132,7 +133,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Variable Reference: {" << '\n';
-		str << tabs << '\t' << "Name: " << this->name << '\n';
+		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
 		str << tabs << "}," << '\n';
 
 		return str.str();
@@ -143,7 +144,7 @@ namespace ast
 		if (result_type == types::Type::None)
 		{
 			//result_type = this->get_body()->named_types[this->name];
-			result_type = scope::get_scope(this)->named_types[this->name];
+			result_type = scope::get_scope(this)->named_types[this->name_id];
 		}
 		return result_type;
 	}
@@ -354,28 +355,28 @@ namespace ast
 	{
 		functions.push_back(func);
 		//auto s = std::make_shared<FunctionPrototype>(func->prototype);
-		function_prototypes[func->prototype->name] = func->prototype;
+		function_prototypes[func->prototype->name_id] = func->prototype;
 	}
 
 	void BodyExpr::add_prototype(FunctionPrototype* proto)
 	{
-		function_prototypes[proto->name] = proto;
+		function_prototypes[proto->name_id] = proto;
 	}
 
-	llvm::Type* BodyExpr::get_llvm_type(llvm::LLVMContext& llvm_context, std::string str)
+	llvm::Type* BodyExpr::get_llvm_type(llvm::LLVMContext& llvm_context, int str_id)
 	{
-		auto f = this->llvm_named_types.find(str);
+		auto f = this->llvm_named_types.find(str_id);
 		if (f != this->llvm_named_types.end())
 		{
 			return f->second;
 		}
-		llvm::Type* type = types::get_llvm_type(llvm_context, this->named_types[str]);
-		this->llvm_named_types[str] = type;
+		llvm::Type* type = types::get_llvm_type(llvm_context, this->named_types[str_id]);
+		this->llvm_named_types[str_id] = type;
 		return type;
 	}
 
-	CallExpr::CallExpr(BodyExpr* body, std::string callee, std::vector<shared_ptr<BaseExpr>> args)
-		: BaseExpr(AstExprType::CallExpr, body), callee(callee), args(args)
+	CallExpr::CallExpr(BodyExpr* body, std::string& callee, std::vector<shared_ptr<BaseExpr>>& args)
+		: BaseExpr(AstExprType::CallExpr, body), callee_id(module::StringManager::get_id(callee)), args(args)
 	{}
 
 	CallExpr::~CallExpr()
@@ -388,7 +389,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Function Call: {" << '\n';
-		str << tabs << '\t' << "Name: " << this->callee << '\n';
+		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->callee_id) << '\n';
 		str << tabs << '\t' << "Args: {" << '\n';
 		for (auto& a : this->args)
 		{
@@ -405,7 +406,7 @@ namespace ast
 		if (result_type == types::Type::None)
 		{
 			//result_type = scope::get_scope(shared_ptr<CallExpr>(this))->function_prototypes[this->callee]->return_type;
-			result_type = scope::get_scope(this)->function_prototypes[this->callee]->return_type;
+			result_type = scope::get_scope(this)->function_prototypes[this->callee_id]->return_type;
 			//result_type = this->get_body()->function_prototypes[this->callee]->return_type;
 		}
 		return result_type;
@@ -424,7 +425,7 @@ namespace ast
 		BodyExpr* b2 = this->get_body()->get_body();
 		*/
 		//shared_ptr<FunctionPrototype> proto = scope::get_scope(shared_ptr<CallExpr>(this))->function_prototypes[this->callee];
-		FunctionPrototype* proto = scope::get_scope(this)->function_prototypes[this->callee];
+		FunctionPrototype* proto = scope::get_scope(this)->function_prototypes[this->callee_id];
 
 		for (int i = 0; i < this->args.size(); i++)
 		{
@@ -501,8 +502,8 @@ namespace ast
 		return false;
 	}
 
-	FunctionPrototype::FunctionPrototype(std::string name, types::Type return_type, std::vector<types::Type> types, std::vector<std::string> args)
-		: name(name), return_type(return_type), types(types), args(args)
+	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)
+		: name_id(module::StringManager::get_id(name)), return_type(return_type), types(types), args(args)
 	{}
 
 	std::string FunctionPrototype::to_string(int depth)
@@ -513,12 +514,12 @@ namespace ast
 
 		str << tabs << "function prototype: {" << '\n';
 
-		str << tabs << '\t' << "name: " << this->name << '\n';
+		str << tabs << '\t' << "name: " << module::StringManager::get_string(this->name_id) << '\n';
 		str << tabs << '\t' << "args: [" << '\n';
 
 		for (int i = 0; i < this->args.size(); i++)
 		{
-			str << tabs << '\t' << '\t' << "{ " << this->args[i] << ": " << types::to_string(this->types[i]) << "}," << '\n';
+			str << tabs << '\t' << '\t' << "{ " << module::StringManager::get_string(this->args[i]) << ": " << types::to_string(this->types[i]) << "}," << '\n';
 		}
 
 		str << tabs << '\t' << "]," << '\n';
@@ -549,7 +550,7 @@ namespace ast
 		//str << this->prototype->to_string(depth);
 		//str << '\n';
 		str << tabs << "function body : {" << '\n';
-		str << tabs << '\t' << "Name: " << this->prototype->name << '\n';
+		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->prototype->name_id) << '\n';
 		str << this->body->to_string(depth + 1);
 		str << tabs << '}' << '\n';
 

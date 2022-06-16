@@ -7,7 +7,7 @@ using std::make_shared;
 
 namespace types
 {
-	Type is_valid_type(std::string str)
+	Type is_valid_type(std::string& str)
 	{
 		if (str == "int")
 		{
@@ -28,7 +28,7 @@ namespace types
 		return Type::None;
 	}
 
-	std::pair<bool, Type> check_type_string(std::string str)
+	std::pair<bool, Type> check_type_string(std::string& str)
 	{
 		// type formats
 		// int: [+-]?[0-9][0-9]*
@@ -134,7 +134,7 @@ namespace types
 		}
 	}
 
-	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string str)
+	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string& str)
 	{
 		switch (curr_type)
 		{
@@ -170,7 +170,7 @@ namespace types
 		this->data = 0;
 	}
 
-	IntType::IntType(std::string str)
+	IntType::IntType(std::string& str)
 	{
 		bool is_negative = false;
 
@@ -221,7 +221,7 @@ namespace types
 		this->data = 0.0f;
 	}
 
-	FloatType::FloatType(std::string str)
+	FloatType::FloatType(std::string& str)
 	{
 		bool is_negative = false;
 		int whole = 0;
@@ -310,7 +310,7 @@ namespace types
 		this->data = false;
 	}
 
-	BoolType::BoolType(std::string str)
+	BoolType::BoolType(std::string& str)
 	{
 		bool value = false;
 

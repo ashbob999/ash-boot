@@ -3,6 +3,7 @@
 
 #include "type_checker.h"
 #include "scope_checker.h"
+#include "module.h"
 
 namespace type_checker
 {
@@ -96,7 +97,7 @@ namespace type_checker
 		{
 			if (scope::is_variable_defined(body, p.first, ast::ReferenceType::Function))
 			{
-				return log_error(body, "Function: " + p.first + ", is already defined");
+				return log_error(body, "Function: " + module::StringManager::get_string(p.first) + ", is already defined");
 			}
 
 			body->in_scope_vars.push_back({ p.first, ast::ReferenceType::Function });
@@ -131,14 +132,14 @@ namespace type_checker
 		{
 			if (p.second == ast::ReferenceType::Variable)
 			{
-				if (p.first == expr->name)
+				if (p.first == expr->name_id)
 				{
-					return log_error(expr, "Variable: " + expr->name + ", has already been defined");
+					return log_error(expr, "Variable: " + module::StringManager::get_string(expr->name_id) + ", has already been defined");
 				}
 			}
 		}
 
-		expr->get_body()->in_scope_vars.push_back({ expr->name, ast::ReferenceType::Variable });
+		expr->get_body()->in_scope_vars.push_back({ expr->name_id, ast::ReferenceType::Variable });
 
 		// check value expression
 		if (expr->expr != nullptr && !check_expression_dispatch(expr->expr.get()))
@@ -151,7 +152,7 @@ namespace type_checker
 		{
 			std::string type1 = types::to_string(expr->curr_type);
 			std::string type2 = types::to_string(expr->expr->get_result_type());
-			return log_error(expr, "Variable declaration expression for: " + expr->name + ", expected type: " + type1 + " but got type: " + type2 + " instead");
+			return log_error(expr, "Variable declaration expression for: " + module::StringManager::get_string(expr->name_id) + ", expected type: " + type1 + " but got type: " + type2 + " instead");
 		}
 
 		return true;
@@ -161,21 +162,21 @@ namespace type_checker
 	bool TypeChecker::check_expression<ast::VariableReferenceExpr>(ast::VariableReferenceExpr* expr)
 	{
 		// check variable has already been defined
-		if (!scope::is_variable_defined(expr, expr->name, ast::ReferenceType::Variable))
+		if (!scope::is_variable_defined(expr, expr->name_id, ast::ReferenceType::Variable))
 		{
-			return log_error(expr, "Variable reference for: " + expr->name + ", is not in scope (not defined)");
+			return log_error(expr, "Variable reference for: " + module::StringManager::get_string(expr->name_id) + ", is not in scope (not defined)");
 		}
 
 		// check variable is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
-			return log_error(expr, "Variable reference for: " + expr->name + ", is not in scope");
+			return log_error(expr, "Variable reference for: " + module::StringManager::get_string(expr->name_id) + ", is not in scope");
 		}
 
 		// chekc variable type
 		if (!expr->check_types())
 		{
-			return log_error(expr, "Variable reference for: " + expr->name + ", has invalid type");
+			return log_error(expr, "Variable reference for: " + module::StringManager::get_string(expr->name_id) + ", has invalid type");
 		}
 
 		return true;
@@ -211,15 +212,15 @@ namespace type_checker
 	bool TypeChecker::check_expression<ast::CallExpr>(ast::CallExpr* expr)
 	{
 		// check function has been defined
-		if (!scope::is_variable_defined(expr, expr->callee, ast::ReferenceType::Function))
+		if (!scope::is_variable_defined(expr, expr->callee_id, ast::ReferenceType::Function))
 		{
-			return log_error(expr, "Function call for: " + expr->callee + ", is not in scope (not defined)");
+			return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is not in scope (not defined)");
 		}
 
 		// check function is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
-			return log_error(expr, "Function call for: " + expr->callee + ", is not in scope");
+			return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is not in scope");
 		}
 
 		// check call arguments

@@ -6,6 +6,7 @@
 
 #include "builder.h"
 #include "scope_checker.h"
+#include "module.h"
 
 using std::dynamic_pointer_cast;
 
@@ -67,14 +68,14 @@ namespace builder
 		// create the function type
 		llvm::FunctionType* ft = llvm::FunctionType::get(types::get_llvm_type(*llvm_context, prototype->return_type), types, false);
 
-		llvm::Function* f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, prototype->name, llvm_module);
+		llvm::Function* f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, module::StringManager::get_string(prototype->name_id), llvm_module);
 
 		// set names for all arguments
 
 		int index = 0;
 		for (auto& arg : f->args())
 		{
-			arg.setName(prototype->args[index]);
+			arg.setName(module::StringManager::get_string(prototype->args[index]));
 			index++;
 		}
 
@@ -106,7 +107,7 @@ namespace builder
 		}
 
 		// check for existing function
-		llvm::Function* the_function = llvm_module->getFunction(function_definition->prototype->name);
+		llvm::Function* the_function = llvm_module->getFunction(module::StringManager::get_string(function_definition->prototype->name_id));
 
 		if (the_function == nullptr)
 		{
@@ -134,8 +135,9 @@ namespace builder
 			llvm_ir_builder->CreateStore(&arg, alloca);
 
 			//llvm_named_values[std::string{ arg.getName() }] = alloca;
-			function_definition->body->llvm_named_values[std::string{ arg.getName() }] = alloca;
-			function_definition->body->llvm_named_types[std::string{ arg.getName() }] = arg.getType();
+			std::string name{ arg.getName() };
+			function_definition->body->llvm_named_values[module::StringManager::get_id(name)] = alloca;
+			function_definition->body->llvm_named_types[module::StringManager::get_id(name)] = arg.getType();
 		}
 
 		llvm::Value* return_value = generate_code_dispatch(function_definition->body.get());
@@ -204,7 +206,7 @@ namespace builder
 		llvm::Function* the_function = llvm_ir_builder->GetInsertBlock()->getParent();
 
 		// register the variable and emit its initialiser
-		const std::string& var_name = expr->name;
+		const int var_id = expr->name_id;
 		ast::BaseExpr* init = expr->expr.get();
 
 		// Emit the initializer before adding the variable to scope, this prevents
@@ -231,7 +233,7 @@ namespace builder
 			init_value = types::get_default_value(*llvm_context, expr->curr_type);
 		}
 
-		llvm::AllocaInst* alloca = create_entry_block_alloca(the_function, types::get_llvm_type(*llvm_context, expr->curr_type), expr->name);
+		llvm::AllocaInst* alloca = create_entry_block_alloca(the_function, types::get_llvm_type(*llvm_context, expr->curr_type), module::StringManager::get_string(expr->name_id));
 		llvm_ir_builder->CreateStore(init_value, alloca);
 
 		// remember the old varibale binding so we can restore when the function ends
@@ -239,8 +241,8 @@ namespace builder
 		// remember the new binding
 		//llvm_named_values[var_name] = alloca;
 		//llvm_named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
-		expr->get_body()->llvm_named_values[var_name] = alloca;
-		expr->get_body()->llvm_named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
+		expr->get_body()->llvm_named_values[var_id] = alloca;
+		expr->get_body()->llvm_named_types[var_id] = types::get_llvm_type(*llvm_context, expr->curr_type);
 
 		// create the body code?????????
 		// TODO: SORT
@@ -265,15 +267,16 @@ namespace builder
 		//if (f == expr->get_body()->llvm_named_values.end())
 		if (b == nullptr)
 		{
-			return log_error_value("unknown variable name: " + expr->name);
+			return log_error_value("unknown variable name: " + module::StringManager::get_string(expr->name_id));
 		}
 
-		auto f = b->llvm_named_values.find(expr->name);
+		auto f = b->llvm_named_values.find(expr->name_id);
 
 		// load the value
 		//return llvm_ir_builder->CreateLoad(llvm_named_types[f->first], f->second, f->first.c_str());
 		//return llvm_ir_builder->CreateLoad(expr->get_body()->llvm_named_types[f->first], f->second, f->first.c_str());
-		return llvm_ir_builder->CreateLoad(b->get_llvm_type(*llvm_context, f->first), f->second, f->first.c_str());
+		//std::string name = ;
+		return llvm_ir_builder->CreateLoad(b->get_llvm_type(*llvm_context, f->first), f->second, module::StringManager::get_string(f->first));
 	}
 
 	template<>
@@ -299,7 +302,7 @@ namespace builder
 
 			// look up the name
 			//auto f = llvm_named_values.find(lhs_expr->name);
-			auto f = lhs_expr->get_body()->llvm_named_values.find(lhs_expr->name);
+			auto f = lhs_expr->get_body()->llvm_named_values.find(lhs_expr->name_id);
 			if (f == lhs_expr->get_body()->llvm_named_values.end())
 			{
 				return log_error_value("unknown variable name");
@@ -383,11 +386,11 @@ namespace builder
 	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::CallExpr>(ast::CallExpr* expr)
 	{
-		llvm::Function* callee_func = llvm_module->getFunction(expr->callee);
+		llvm::Function* callee_func = llvm_module->getFunction(module::StringManager::get_string(expr->callee_id));
 
 		if (callee_func == nullptr)
 		{
-			return log_error_value("unknown function referenced: " + expr->callee);
+			return log_error_value("unknown function referenced: " + module::StringManager::get_string(expr->callee_id));
 		}
 
 		if (callee_func->arg_size() != expr->args.size())

@@ -9,14 +9,14 @@ namespace scope
 		ast::BodyExpr* body = call_expr->get_body();
 
 		// TODO: deal with function overloading
-		auto f = body->function_prototypes.find(call_expr->callee);
+		auto f = body->function_prototypes.find(call_expr->callee_id);
 		while (body != nullptr && f == body->function_prototypes.end())
 		{
 			body = body->get_body();
 
 			if (body != nullptr)
 			{
-				f = body->function_prototypes.find(call_expr->callee);
+				f = body->function_prototypes.find(call_expr->callee_id);
 			}
 		}
 
@@ -27,21 +27,21 @@ namespace scope
 	{
 		ast::BodyExpr* body = var_ref->get_body();
 
-		auto f = body->named_types.find(var_ref->name);
+		auto f = body->named_types.find(var_ref->name_id);
 		while (body != nullptr && f == body->named_types.end())
 		{
 			body = body->get_body();
 
 			if (body != nullptr)
 			{
-				f = body->named_types.find(var_ref->name);
+				f = body->named_types.find(var_ref->name_id);
 			}
 		}
 
 		return body;
 	}
 
-	bool is_variable_defined(ast::BaseExpr* expr, std::string name, ast::ReferenceType type)
+	bool is_variable_defined(ast::BaseExpr* expr, int name_id, ast::ReferenceType type)
 	{
 		// TODO: handle generic functions and overloading
 
@@ -61,7 +61,7 @@ namespace scope
 			return false;
 		}
 
-		std::pair<std::string, ast::ReferenceType> p{ name, type };
+		std::pair<int, ast::ReferenceType> p{ name_id, type };
 
 		auto f = std::find(body->in_scope_vars.begin(), body->in_scope_vars.end(), p);
 		while (body != nullptr && (type == ast::ReferenceType::Function || !body->is_function_body) && f == body->in_scope_vars.end())

@@ -9,6 +9,7 @@
 #include "ast/parser.h"
 #include "ast/builder.h"
 #include "ast/type_checker.h"
+#include "ast/module.h"
 
 int main(int argc, char** argv)
 {
@@ -87,7 +88,7 @@ int main(int argc, char** argv)
 
 			if (proto == nullptr)
 			{
-				std::cout << "Failed To Generate LLVM IR Code For Function Prototype: " << p.second->name << std::endl;
+				std::cout << "Failed To Generate LLVM IR Code For Function Prototype: " << module::StringManager::get_string(p.second->name_id) << std::endl;
 
 				return 1;
 			}
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
 
 			if (func == nullptr)
 			{
-				std::cout << "Failed To Generate LLVM IR Code For Function: " << f->prototype->name << std::endl;
+				std::cout << "Failed To Generate LLVM IR Code For Function: " << module::StringManager::get_string(f->prototype->name_id) << std::endl;
 
 				//delete body_ast;
 

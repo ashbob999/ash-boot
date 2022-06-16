@@ -20,9 +20,9 @@ namespace types
 		Bool, // either true (1), false (0)
 	};
 
-	Type is_valid_type(std::string str);
+	Type is_valid_type(std::string& str);
 
-	std::pair<bool, Type> check_type_string(std::string str);
+	std::pair<bool, Type> check_type_string(std::string& str);
 
 	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, Type type);
 
@@ -44,7 +44,7 @@ namespace types
 		virtual std::string to_string() = 0;
 
 	public:
-		static shared_ptr<BaseType> create_type(Type curr_type, std::string str);
+		static shared_ptr<BaseType> create_type(Type curr_type, std::string& str);
 		static bool is_sign_char(char c);
 		static bool is_digit(char c);
 	};
@@ -53,7 +53,7 @@ namespace types
 	{
 	public:
 		IntType();
-		IntType(std::string);
+		IntType(std::string&);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
 	private:
@@ -64,7 +64,7 @@ namespace types
 	{
 	public:
 		FloatType();
-		FloatType(std::string);
+		FloatType(std::string&);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
 	private:
@@ -75,7 +75,7 @@ namespace types
 	{
 	public:
 		BoolType();
-		BoolType(std::string);
+		BoolType(std::string&);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
 	private:

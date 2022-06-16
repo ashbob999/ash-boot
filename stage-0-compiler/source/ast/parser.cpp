@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "parser.h"
+#include "module.h"
 
 //#define __debug
 
@@ -407,7 +408,11 @@ namespace parser
 			return nullptr;
 		}
 
-		ast::FunctionPrototype* proto = new ast::FunctionPrototype("", types::Type::Void, std::vector<types::Type>{}, std::vector < std::string>{});
+		std::string name = "_";
+		std::vector<types::Type> types;
+		std::vector<int> arg_ids;
+
+		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::Type::Void, types, arg_ids);
 		end_;
 		return make_shared<ast::FunctionDefinition>(proto, expr);
 	}
@@ -625,7 +630,7 @@ namespace parser
 		}
 
 		end_;
-		expr->get_body()->named_types[name] = var_type;
+		expr->get_body()->named_types[module::StringManager::get_id(name)] = var_type;
 		return make_shared<ast::VariableDeclarationExpr>(bodies.back(), var_type, name, expr);
 	}
 
@@ -748,7 +753,7 @@ namespace parser
 		}
 
 		std::vector<types::Type> types;
-		std::vector<std::string> args;
+		std::vector<int> args;
 
 		get_next_token();
 
@@ -773,7 +778,7 @@ namespace parser
 					return nullptr;
 				}
 
-				args.push_back(identifier_string);
+				args.push_back(module::StringManager::get_id(identifier_string));
 
 				get_next_token();
 
