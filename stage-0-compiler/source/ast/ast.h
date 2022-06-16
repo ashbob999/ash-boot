@@ -157,6 +157,7 @@ namespace ast
 	};
 
 	BinaryOp is_binary_op(char c);
+	bool is_binary_comparision(BinaryOp op);
 
 	std::string to_string(BinaryOp binop);
 

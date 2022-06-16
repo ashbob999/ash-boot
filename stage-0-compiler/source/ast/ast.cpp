@@ -182,6 +182,22 @@ namespace ast
 		return BinaryOp::None;
 	}
 
+	bool is_binary_comparision(BinaryOp op)
+	{
+		switch (op)
+		{
+			case BinaryOp::LessThan:
+			case BinaryOp::GreaterThan:
+			{
+				return true;
+			}
+			default:
+			{
+				return false;
+			}
+		}
+	}
+
 	std::string to_string(BinaryOp binop)
 	{
 		switch (binop)
@@ -247,7 +263,14 @@ namespace ast
 	{
 		if (result_type == types::Type::None)
 		{
-			result_type = this->lhs->get_result_type();
+			if (is_binary_comparision(this->binop))
+			{
+				result_type = types::Type::Bool;
+			}
+			else
+			{
+				result_type = this->lhs->get_result_type();
+			}
 		}
 		return result_type;
 	}
