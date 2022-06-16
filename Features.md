@@ -6,6 +6,7 @@
 - simple binary operations (=, +, -, *)
 - basic scope
 - extern functions
+- nested functions
 
 
 ##### Features Required for Bootstrapping
@@ -28,5 +29,4 @@
 - custom types
 - modules
 - multiple source files
-- nested functions
 
