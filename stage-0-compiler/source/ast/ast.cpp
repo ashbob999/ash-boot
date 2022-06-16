@@ -461,8 +461,7 @@ namespace ast
 
 	bool IfExpr::check_types()
 	{
-		// TODO: check for bool type
-		if (this->condition->get_result_type() == types::Type::Int)
+		if (this->condition->get_result_type() == types::Type::Bool)
 		{
 			if (this->should_return_value)
 			{

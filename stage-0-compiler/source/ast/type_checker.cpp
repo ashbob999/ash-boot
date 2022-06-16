@@ -242,9 +242,8 @@ namespace type_checker
 			return false;
 		}
 
-		// TODO: fix type from int to bool
 		// check the condition has type bool
-		if (expr->condition->get_result_type() != types::Type::Int)
+		if (expr->condition->get_result_type() != types::Type::Bool)
 		{
 			return log_error(expr, "If condition must have type bool");
 		}

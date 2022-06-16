@@ -426,7 +426,7 @@ namespace builder
 
 		// convert condition to a bool, by comparing it to zero
 		// TODO: fix
-		cond_value = llvm_ir_builder->CreateICmpNE(cond_value, types::get_default_value(*llvm_context, types::Type::Int), "ifcond");
+		cond_value = llvm_ir_builder->CreateICmpNE(cond_value, types::get_default_value(*llvm_context, types::Type::Bool), "ifcond");
 
 		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
