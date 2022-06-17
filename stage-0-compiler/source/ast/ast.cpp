@@ -253,7 +253,7 @@ namespace ast
 			}
 			case types::Type::Bool:
 			{
-				if (is_binary_comparision(binop))
+				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment)
 				{
 					return true; // only support comparisons for bools
 				}
