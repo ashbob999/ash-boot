@@ -305,6 +305,25 @@ namespace parser
 #endif
 					break;
 				}
+				case Token::VariableDeclaration:
+				{
+					if (is_top_level)
+					{
+						return log_error_body("Expressions are not allowed in top level code");
+					}
+
+					shared_ptr<ast::BaseExpr> base = parse_variable_declaration();
+
+					if (base == nullptr)
+					{
+						end_;
+						return nullptr;
+					}
+
+					body->add_base(base);
+
+					break;
+				}
 				case Token::FunctionDefinition:
 				{
 
@@ -488,11 +507,6 @@ namespace parser
 		start_;
 		switch (curr_token)
 		{
-			case Token::VariableDeclaration:
-			{
-				end_;
-				return parse_variable_declaration();
-			}
 			case Token::VariableReference:
 			{
 				end_;
