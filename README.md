@@ -31,3 +31,38 @@ Or for Windows first make sure you have either opened the Visual Studio command 
 Then the code can be compiled using `link.exe`
 
 `link.exe <input-file> /defaultlib:libcmt /OUT:<output-executable>`
+
+#### Sample Program
+```
+# externally defined functions
+extern int putchar(int c);
+
+# functions
+function int main() {
+	# variables
+	int i = 10;
+	float f = 1.5f;
+	bool b = true;
+
+	# nested function
+	function int add(int x, int y) {
+		x + y;
+	}
+
+	# function call
+	int r = add(i, 7);
+
+	# if statement
+	if (r > 15) {
+		r = r * 1;
+	} else {
+		r = r / 2;
+	}
+
+	# inline if
+	int bv = if b {1;} else {2;};
+	
+	# return value
+	0;
+}
+```
