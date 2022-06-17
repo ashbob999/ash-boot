@@ -503,6 +503,12 @@ namespace builder
 		}
 	}
 
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::CommentExpr>(ast::CommentExpr* expr)
+	{
+		return nullptr;
+	}
+
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -534,6 +540,10 @@ namespace builder
 			case ast::AstExprType::IfExpr:
 			{
 				return generate_code(dynamic_cast<ast::IfExpr*>(expr));
+			}
+			case ast::AstExprType::CommentExpr:
+			{
+				return generate_code(dynamic_cast<ast::CommentExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

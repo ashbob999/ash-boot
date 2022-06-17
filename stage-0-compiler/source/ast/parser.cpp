@@ -248,6 +248,12 @@ namespace parser
 			return curr_token;
 		}
 
+		if (last_char == '#')
+		{
+			curr_token = Token::Comment;
+			return curr_token;
+		}
+
 		//std::cout << "identifier " << identifier_string << " " << last_char << std::endl;
 
 		// anything else
@@ -343,6 +349,12 @@ namespace parser
 
 					body->add_base(base);
 
+					break;
+				}
+				case Token::Comment:
+				{
+					end_;
+					parse_comment();
 					break;
 				}
 				case Token::BodyEnd:
@@ -905,6 +917,19 @@ namespace parser
 
 		end_;
 		return make_shared<ast::IfExpr>(bodies.back(), cond, if_body, else_body);
+	}
+
+	shared_ptr<ast::BaseExpr> Parser::parse_comment()
+	{
+		// skip till end of line
+		while (last_char != '\n')
+		{
+			last_char = get_char();
+		}
+
+		curr_token = Token::EndOfExpression;
+
+		return make_shared<ast::CommentExpr>(bodies.back());
 	}
 
 	int Parser::get_token_precedence()

@@ -537,6 +537,25 @@ namespace ast
 		return false;
 	}
 
+	CommentExpr::CommentExpr(BodyExpr* body)
+		: BaseExpr(AstExprType::CommentExpr, body)
+	{}
+
+	std::string CommentExpr::to_string(int depth)
+	{
+		return std::string();
+	}
+
+	types::Type CommentExpr::get_result_type()
+	{
+		return types::Type::None;
+	}
+
+	bool CommentExpr::check_types()
+	{
+		return true;
+	}
+
 	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)
 		: name_id(module::StringManager::get_id(name)), return_type(return_type), types(types), args(args)
 	{}

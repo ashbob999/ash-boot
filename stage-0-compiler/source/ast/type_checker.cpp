@@ -279,6 +279,12 @@ namespace type_checker
 		return true;
 	}
 
+	template<>
+	bool TypeChecker::check_expression<ast::CommentExpr>(ast::CommentExpr* expr)
+	{
+		return true;
+	}
+
 	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -310,6 +316,10 @@ namespace type_checker
 			case ast::AstExprType::IfExpr:
 			{
 				return check_expression(dynamic_cast<ast::IfExpr*>(expr));
+			}
+			case ast::AstExprType::CommentExpr:
+			{
+				return check_expression(dynamic_cast<ast::CommentExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");
