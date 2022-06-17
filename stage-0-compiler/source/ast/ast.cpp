@@ -613,7 +613,11 @@ namespace ast
 
 	bool FunctionDefinition::check_return_type()
 	{
-		if (this->prototype->return_type == this->body->get_result_type())
+		if (this->prototype->return_type == types::Type::Void)
+		{
+			return true;
+		}
+		else if (this->prototype->return_type == this->body->get_result_type())
 		{
 			return true;
 		}

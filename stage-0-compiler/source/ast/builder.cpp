@@ -430,7 +430,15 @@ namespace builder
 			}
 		}
 
-		return llvm_ir_builder->CreateCall(callee_func, args, "call");
+		// void return types cannot have a name
+		if (expr->get_result_type() == types::Type::Void)
+		{
+			return llvm_ir_builder->CreateCall(callee_func, args);
+		}
+		else
+		{
+			return llvm_ir_builder->CreateCall(callee_func, args, "call");
+		}
 	}
 
 	template<>
