@@ -172,6 +172,10 @@ namespace ast
 		{
 			return BinaryOp::Multiplication;
 		}
+		else if (c == '/')
+		{
+			return BinaryOp::Division;
+		}
 		else if (c == '<')
 		{
 			return BinaryOp::LessThan;
@@ -222,6 +226,10 @@ namespace ast
 			case ast::BinaryOp::Multiplication:
 			{
 				return "Multiplication (*)";
+			}
+			case ast::BinaryOp::Division:
+			{
+				return "Division (/)";
 			}
 			case ast::BinaryOp::LessThan:
 			{

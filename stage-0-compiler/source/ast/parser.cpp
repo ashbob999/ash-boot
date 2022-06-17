@@ -25,6 +25,7 @@ namespace parser
 		{'+', 20},
 		{'-', 20},
 		{'*', 40},
+		{'/', 40},
 	};
 
 	Parser::Parser(std::ifstream& input_file) : input_file(input_file)

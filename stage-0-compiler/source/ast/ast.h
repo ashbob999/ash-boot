@@ -152,6 +152,7 @@ namespace ast
 		Addition,
 		Subtraction,
 		Multiplication,
+		Division,
 		LessThan,
 		GreaterThan,
 	};

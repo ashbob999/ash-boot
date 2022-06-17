@@ -340,6 +340,25 @@ namespace builder
 			{
 				return llvm_ir_builder->CreateMul(lhs, rhs, "mul");
 			}
+			case ast::BinaryOp::Division:
+			{
+				// TODO: deal with divide by zero errors
+				switch (expr->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateSDiv(lhs, rhs, "sdiv");
+					}
+					case types::Type::Float:
+					{
+						return llvm_ir_builder->CreateFDiv(lhs, rhs, "fdiv");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + ast::to_string(expr->binop));
+					}
+				}
+			}
 			case ast::BinaryOp::LessThan:
 			{
 				switch (expr->lhs->get_result_type())
