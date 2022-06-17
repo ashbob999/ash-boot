@@ -62,6 +62,12 @@ namespace type_checker
 
 	bool TypeChecker::check_function(ast::FunctionDefinition* func)
 	{
+		// add args to scope
+		for (auto& arg : func->prototype->args)
+		{
+			func->body->in_scope_vars.push_back({ arg, ast::ReferenceType::Variable });
+		}
+
 		// check function body
 		if (!check_expression_dispatch(func->body.get()))
 		{

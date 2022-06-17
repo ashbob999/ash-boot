@@ -302,10 +302,12 @@ namespace builder
 
 			// look up the name
 			//auto f = llvm_named_values.find(lhs_expr->name);
-			auto f = lhs_expr->get_body()->llvm_named_values.find(lhs_expr->name_id);
-			if (f == lhs_expr->get_body()->llvm_named_values.end())
+			//auto f = lhs_expr->get_body()->llvm_named_values.find(lhs_expr->name_id);
+			ast::BodyExpr* scope = scope::get_scope(lhs_expr);
+			auto f = scope->llvm_named_values.find(lhs_expr->name_id);
+			if (f == scope->llvm_named_values.end())
 			{
-				return log_error_value("unknown variable name");
+				return log_error_value("unknown variable name: " + module::StringManager::get_string(lhs_expr->name_id));
 			}
 
 			llvm_ir_builder->CreateStore(rhs, f->second);
@@ -379,7 +381,7 @@ namespace builder
 			}
 			case ast::BinaryOp::GreaterThan:
 			{
-				switch (expr->get_result_type())
+				switch (expr->lhs->get_result_type())
 				{
 					case types::Type::Int:
 					{

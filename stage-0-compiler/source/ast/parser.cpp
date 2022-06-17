@@ -401,9 +401,8 @@ namespace parser
 #ifdef __debug
 				std::cout << "end of expression" << std::endl;
 #endif
+				curr_token = get_next_token();
 			}
-
-			curr_token = get_next_token();
 		}
 
 		end_;
@@ -836,6 +835,8 @@ namespace parser
 			return nullptr;
 		}
 
+		get_next_token();
+
 		end_;
 		return proto;
 	}
@@ -869,6 +870,8 @@ namespace parser
 		}
 
 		body->is_function_body = true;
+
+		get_next_token();
 
 		end_;
 		return make_shared<ast::FunctionDefinition>(proto, body);
