@@ -162,6 +162,8 @@ namespace ast
 
 	std::string to_string(BinaryOp binop);
 
+	bool is_type_supported(BinaryOp binop, types::Type type);
+
 	// Any binary expression
 	class BinaryExpr : public BaseExpr
 	{

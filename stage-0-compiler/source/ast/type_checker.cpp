@@ -205,6 +205,13 @@ namespace type_checker
 			return log_error(expr, "Binary operator " + ast::to_string(expr->binop) + " has incompatible types: " + type1 + " and " + type2 + " given");
 		}
 
+		// check type supports the specified operation
+		if (!ast::is_type_supported(expr->binop, expr->get_result_type()))
+		{
+			std::string type = types::to_string(expr->rhs->get_result_type());
+			return log_error(expr, "Binary operator " + ast::to_string(expr->binop) + " does not support the given type: " + type);
+		}
+
 		return true;
 	}
 

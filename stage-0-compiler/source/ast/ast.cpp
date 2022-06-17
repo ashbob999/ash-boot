@@ -242,6 +242,33 @@ namespace ast
 		}
 	}
 
+	bool is_type_supported(BinaryOp binop, types::Type type)
+	{
+		switch (type)
+		{
+			case types::Type::Int:
+			case types::Type::Float:
+			{
+				return true; // all operators supported
+			}
+			case types::Type::Bool:
+			{
+				if (is_binary_comparision(binop))
+				{
+					return true; // only support comparisons for bools
+				}
+				else
+				{
+					return false;
+				}
+			}
+			default:
+			{
+				return false;
+			}
+		}
+	}
+
 	BinaryExpr::BinaryExpr(BodyExpr* body, BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs)
 		: BaseExpr(AstExprType::BinaryExpr, body), binop(binop), lhs(lhs), rhs(rhs)
 	{}
