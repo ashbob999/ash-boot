@@ -119,52 +119,47 @@ namespace parser
 				next_char = peek_char();
 			}
 
-			types::Type type = types::is_valid_type(identifier_string);
-			if (type != types::Type::None)
+			if (identifier_string == "function")
 			{
-				curr_type = type;
+				curr_token = Token::FunctionDefinition;
+				return Token::FunctionDefinition;
+			}
+			else if (identifier_string == "extern")
+			{
+				curr_token = Token::ExternFunction;
+				return curr_token;
+			}
+			else if (identifier_string == "if")
+			{
+				curr_token = Token::IfStatement;
+				return curr_token;
+			}
+			else if (identifier_string == "else")
+			{
+				curr_token = Token::ElseStatement;
+				return curr_token;
+			}
+			else if (identifier_string == "var")
+			{
 				curr_token = Token::VariableDeclaration;
 				return curr_token;
 			}
 			else
 			{
-				if (identifier_string == "function")
+				// check if identifier is a bool
+				std::pair<bool, types::Type> res = types::check_type_string(identifier_string);
+				if (res.first && res.second == types::Type::Bool)
 				{
-					curr_token = Token::FunctionDefinition;
-					return Token::FunctionDefinition;
-				}
-				else if (identifier_string == "extern")
-				{
-					curr_token = Token::ExternFunction;
+					curr_type = res.second;
+					curr_token = Token::LiteralValue;
 					return curr_token;
 				}
-				else if (identifier_string == "if")
-				{
-					curr_token = Token::IfStatement;
-					return curr_token;
-				}
-				else if (identifier_string == "else")
-				{
-					curr_token = Token::ElseStatement;
-					return curr_token;
-				}
-				else
-				{
-					// check if identifier is a bool
-					std::pair<bool, types::Type> res = types::check_type_string(identifier_string);
-					if (res.first && res.second == types::Type::Bool)
-					{
-						curr_type = res.second;
-						curr_token = Token::LiteralValue;
-						return curr_token;
-					}
 
 #ifdef __debug
-					std::cout << "identifier " << identifier_string << std::endl;
+				std::cout << "identifier " << identifier_string << std::endl;
 #endif
-					curr_token = Token::VariableReference;
-					return Token::VariableReference;
-				}
+				curr_token = Token::VariableReference;
+				return Token::VariableReference;
 			}
 		}
 
@@ -624,11 +619,20 @@ namespace parser
 		return make_shared<ast::LiteralExpr>(bodies.back(), curr_type, literal_string);
 	}
 
-	/// variable_declaration_expr ::= 'curr_type' identifier ('=' expression)?
+	/// variable_declaration_expr ::= var 'curr_type' identifier ('=' expression)?
 	shared_ptr<ast::BaseExpr> Parser::parse_variable_declaration()
 	{
 		start_;
-		types::Type var_type = curr_type;
+
+		get_next_token();
+
+		types::Type var_type = types::is_valid_type(identifier_string);
+
+		if (var_type == types::Type::None)
+		{
+			end_;
+			return log_error("Invalid type specified");
+		}
 
 		get_next_token();
 
@@ -749,14 +753,21 @@ namespace parser
 	ast::FunctionPrototype* Parser::parse_function_prototype()
 	{
 		start_;
-		if (curr_token != Token::VariableDeclaration)
+		if (curr_token!= Token::VariableReference)
 		{
 			end_;
 			log_error_empty("Return type for function prototype is invalid");
 			return nullptr;
 		}
 
-		types::Type return_type = curr_type;
+		types::Type return_type = types::is_valid_type(identifier_string);
+
+		if (return_type == types::Type::None)
+		{
+			end_;
+			log_error_empty("Return type for function prototype is invalid");
+			return nullptr;
+		}
 
 		get_next_token();
 
@@ -787,14 +798,14 @@ namespace parser
 		{
 			while (true)
 			{
-				if (curr_token != Token::VariableDeclaration)
+				if (curr_token != Token::VariableReference)
 				{
 					end_;
 					log_error_empty("Expected variable declaration in function prototype");
 					return nullptr;
 				}
 
-				types.push_back(curr_type);
+				types.push_back(types::is_valid_type(identifier_string));
 
 				get_next_token();
 				if (curr_token != Token::VariableReference)
