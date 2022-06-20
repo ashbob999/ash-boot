@@ -20,6 +20,101 @@ namespace ast
 		return this->body;
 	}
 
+	void BaseExpr::set_body(BodyExpr* new_body)
+	{
+		this->body = new_body;
+
+		switch (this->ast_type)
+		{
+			case AstExprType::LiteralExpr:
+			{
+				break;
+			}
+			case AstExprType::BodyExpr:
+			{
+				BodyExpr* expr = dynamic_cast<BodyExpr*>(this);
+
+				for (auto& f : expr->functions)
+				{
+					f->body->set_body(new_body);
+				}
+
+				for (auto& e : expr->expressions)
+				{
+					e->set_body(new_body);
+				}
+
+				break;
+			}
+			case AstExprType::VariableDeclarationExpr:
+			{
+				VariableDeclarationExpr* expr = dynamic_cast<VariableDeclarationExpr*>(this);
+
+				if (expr->expr != nullptr)
+				{
+					expr->expr->set_body(new_body);
+				}
+
+				break;
+			}
+			case AstExprType::VariableReferenceExpr:
+			{
+				break;
+			}
+			case AstExprType::BinaryExpr:
+			{
+				BinaryExpr* expr = dynamic_cast<BinaryExpr*>(this);
+
+				expr->lhs->set_body(new_body);
+				expr->rhs->set_body(new_body);
+				break;
+			}
+			case AstExprType::CallExpr:
+			{
+				CallExpr* expr = dynamic_cast<CallExpr*>(this);
+
+				for (auto& e : expr->args)
+				{
+					e->set_body(new_body);
+				}
+
+				break;
+			}
+			case AstExprType::IfExpr:
+			{
+				IfExpr* expr = dynamic_cast<IfExpr*>(this);
+
+				expr->condition->set_body(new_body);
+				expr->if_body->set_body(new_body);
+				expr->else_body->set_body(new_body);
+
+				break;
+			}
+			case AstExprType::ForExpr:
+			{
+				ForExpr* expr = dynamic_cast<ForExpr*>(this);
+
+				expr->start_expr->set_body(new_body);
+				expr->end_expr->set_body(new_body);
+				if (expr->step_expr != nullptr)
+				{
+					expr->step_expr->set_body(new_body);
+				}
+				expr->for_body->set_body(new_body);
+
+				break;
+			}
+			case AstExprType::CommentExpr:
+			{
+				break;
+			}
+			default:
+			{
+				assert(false && "missing type specialisation");
+			}
+		}
+	}
+
 	void BaseExpr::set_line_info(ExpressionLineInfo line_info)
 	{
 		this->line_info = line_info;
@@ -533,6 +628,33 @@ namespace ast
 			{
 				return true;
 			}
+		}
+		return false;
+	}
+
+	ForExpr::ForExpr(BodyExpr* body, types::Type var_type, int name_id, shared_ptr<BaseExpr> start_expr, shared_ptr<BaseExpr> end_expr, shared_ptr<BaseExpr> step_expr, shared_ptr<BodyExpr> for_body)
+		: BaseExpr(AstExprType::ForExpr, body), var_type(var_type), name_id(name_id), start_expr(start_expr), end_expr(end_expr), step_expr(step_expr), for_body(for_body)
+	{}
+
+	std::string ForExpr::to_string(int depth)
+	{
+		return std::string();
+	}
+
+	types::Type ForExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = types::Type::Void;
+		}
+		return result_type;
+	}
+
+	bool ForExpr::check_types()
+	{
+		if (end_expr->get_result_type() == types::Type::Bool)
+		{
+			return true;
 		}
 		return false;
 	}

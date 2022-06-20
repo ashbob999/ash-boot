@@ -286,6 +286,59 @@ namespace type_checker
 	}
 
 	template<>
+	bool TypeChecker::check_expression<ast::ForExpr>(ast::ForExpr* expr)
+	{
+		// add variable to for body scope
+		expr->for_body->in_scope_vars.push_back({ expr->name_id, ast::ReferenceType::Variable });
+
+		// check the start expression
+		if (!check_expression_dispatch(expr->start_expr.get()))
+		{
+			return false;
+		}
+
+		// check the variable has correct type
+		if (expr->var_type != expr->start_expr->get_result_type())
+		{
+			std::string type1 = types::to_string(expr->var_type);
+			std::string type2 = types::to_string(expr->start_expr->get_result_type());
+			return log_error(expr, "for start expression has invalid type, expected type: " + type1 + ", but got type: " + type2 + " instead");
+		}
+
+		// check the end condition
+		if (!check_expression_dispatch(expr->end_expr.get()))
+		{
+			return false;
+		}
+
+		// check the end condition has type bool
+		if (expr->end_expr->get_result_type() != types::Type::Bool)
+		{
+			return log_error(expr, "For end condition must have type bool");
+		}
+
+		// check the step expression
+		if (expr->step_expr != nullptr && !check_expression_dispatch(expr->step_expr.get()))
+		{
+			return nullptr;
+		}
+
+		// check for body
+		if (!check_expression_dispatch(expr->for_body.get()))
+		{
+			return nullptr;
+		}
+
+		// check for
+		if (!expr->check_types())
+		{
+			return log_error(expr, "For end condition must have type bool (for check types)");
+		}
+
+		return true;
+	}
+
+	template<>
 	bool TypeChecker::check_expression<ast::CommentExpr>(ast::CommentExpr* expr)
 	{
 		return true;
@@ -322,6 +375,10 @@ namespace type_checker
 			case ast::AstExprType::IfExpr:
 			{
 				return check_expression(dynamic_cast<ast::IfExpr*>(expr));
+			}
+			case ast::AstExprType::ForExpr:
+			{
+				return check_expression(dynamic_cast<ast::ForExpr*>(expr));
 			}
 			case ast::AstExprType::CommentExpr:
 			{

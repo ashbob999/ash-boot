@@ -144,6 +144,11 @@ namespace parser
 				curr_token = Token::VariableDeclaration;
 				return curr_token;
 			}
+			else if (identifier_string == "for")
+			{
+				curr_token = Token::ForStatement;
+				return curr_token;
+			}
 			else
 			{
 				// check if identifier is a bool
@@ -360,6 +365,19 @@ namespace parser
 
 					shared_ptr<ast::IfExpr> if_expr = std::dynamic_pointer_cast<ast::IfExpr>(base);
 					if_expr->should_return_value = false;
+
+					body->add_base(base);
+
+					break;
+				}
+				case Token::ForStatement:
+				{
+					shared_ptr<ast::BaseExpr> base = parse_for_loop();
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
 
 					body->add_base(base);
 
@@ -753,7 +771,7 @@ namespace parser
 	ast::FunctionPrototype* Parser::parse_function_prototype()
 	{
 		start_;
-		if (curr_token!= Token::VariableReference)
+		if (curr_token != Token::VariableReference)
 		{
 			end_;
 			log_error_empty("Return type for function prototype is invalid");
@@ -945,6 +963,94 @@ namespace parser
 
 		end_;
 		return make_shared<ast::IfExpr>(bodies.back(), cond, if_body, else_body);
+	}
+
+	/// forexpr ::= 'for' 'type' identifier '=' expr ';' expr (';' expr)? '{' expression* '}'
+	shared_ptr<ast::BaseExpr> Parser::parse_for_loop()
+	{
+		get_next_token();
+
+		if (curr_token != Token::VariableReference)
+		{
+			return log_error("Expected type after for");
+		}
+
+		types::Type var_type = types::is_valid_type(identifier_string);
+
+		if (var_type == types::Type::None)
+		{
+			return log_error("Invalid type after for");
+		}
+
+		get_next_token();
+
+		if (curr_token != Token::VariableReference)
+		{
+			return log_error("Expected identifier after type");
+		}
+
+		int name_id = module::StringManager::get_id(identifier_string);
+
+		get_next_token();
+
+		if (last_char != '=')
+		{
+			return log_error("Expected '=' after identifier");
+		}
+
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> start_expr = parse_expression(false, false);
+
+		if (start_expr == nullptr)
+		{
+			return nullptr;
+		}
+
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> end_expr = parse_expression(false, false);
+
+		if (end_expr == nullptr)
+		{
+			return nullptr;
+		}
+
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> step_expr;
+
+		// optional step expression
+		if (curr_token != Token::BodyStart)
+		{
+			step_expr = parse_expression(false, false);
+
+			if (step_expr == nullptr)
+			{
+				return nullptr;
+			}
+		}
+
+		shared_ptr<ast::BodyExpr> for_body = parse_body(false, true);
+
+		if (for_body == nullptr)
+		{
+			return nullptr;
+		}
+
+		get_next_token();
+
+		// change the body of the start, end, step expressions to the for body
+		start_expr->set_body(for_body.get());
+		end_expr->set_body(for_body.get());
+		if (step_expr != nullptr)
+		{
+			step_expr->set_body(for_body.get());
+		}
+
+		start_expr->get_body()->named_types[name_id] = var_type;
+
+		return make_shared<ast::ForExpr>(bodies.back(), var_type, name_id, start_expr, end_expr, step_expr, for_body);
 	}
 
 	shared_ptr<ast::BaseExpr> Parser::parse_comment()

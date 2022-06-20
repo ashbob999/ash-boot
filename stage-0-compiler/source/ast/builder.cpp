@@ -182,7 +182,8 @@ namespace builder
 
 		if (expr->expressions.size() == 0)
 		{
-			return llvm::Constant::getNullValue(types::get_llvm_type(*llvm_context, types::Type::Int));
+			//return llvm::Constant::getNullValue(types::get_llvm_type(*llvm_context, types::Type::Int));
+			return llvm::ConstantTokenNone::get(*llvm_context);
 		}
 
 		for (auto& e : expr->expressions)
@@ -514,6 +515,83 @@ namespace builder
 	}
 
 	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::ForExpr>(ast::ForExpr* expr)
+	{
+		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
+
+		// create an alloc in the start block
+		llvm::AllocaInst* alloca = create_entry_block_alloca(func, types::get_llvm_type(*llvm_context, expr->var_type), module::StringManager::get_string(expr->name_id));
+
+		// emit the start code
+		llvm::Value* start_value = generate_code_dispatch(expr->start_expr.get());
+
+		if (start_value == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		// store the value
+		llvm_ir_builder->CreateStore(start_value, alloca);
+
+		expr->for_body->llvm_named_values[expr->name_id] = alloca;
+
+		// mkae a new block for the start header
+		llvm::BasicBlock* look_block = llvm::BasicBlock::Create(*llvm_context, "loop", func);
+
+		// insert a fallthrougth from the current block into the loop block
+		llvm_ir_builder->CreateBr(look_block);
+
+		// start insertion into the  loop block
+		llvm_ir_builder->SetInsertPoint(look_block);
+
+		// emit the body of the loop
+		if (generate_code_dispatch(expr->for_body.get()) == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		// emit the step value
+		llvm::Value* step_value = nullptr;
+
+		if (expr->step_expr != nullptr)
+		{
+			step_value = generate_code_dispatch(expr->step_expr.get());
+
+			if (step_value == nullptr)
+			{
+				null_end;
+				return nullptr;
+			}
+		}
+		else
+		{
+			assert(false && "empty step not implemented yet");
+		}
+
+		// compute the end condition
+		llvm::Value* end_condition = generate_code_dispatch(expr->end_expr.get());
+
+		if (end_condition == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		// create the after loop block, and insert it
+		llvm::BasicBlock* after_block = llvm::BasicBlock::Create(*llvm_context, "afterloop", func);
+
+		// insert the conditional branch
+		llvm_ir_builder->CreateCondBr(end_condition, look_block, after_block);
+
+		// any new code will be inserted in the after block
+		llvm_ir_builder->SetInsertPoint(after_block);
+
+		return llvm::ConstantTokenNone::get(*llvm_context);
+	}
+
+	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::CommentExpr>(ast::CommentExpr* expr)
 	{
 		return nullptr;
@@ -550,6 +628,10 @@ namespace builder
 			case ast::AstExprType::IfExpr:
 			{
 				return generate_code(dynamic_cast<ast::IfExpr*>(expr));
+			}
+			case ast::AstExprType::ForExpr:
+			{
+				return generate_code(dynamic_cast<ast::ForExpr*>(expr));
 			}
 			case ast::AstExprType::CommentExpr:
 			{

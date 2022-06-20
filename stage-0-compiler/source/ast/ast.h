@@ -23,6 +23,7 @@ namespace ast
 		BinaryExpr,
 		CallExpr,
 		IfExpr,
+		ForExpr,
 		CommentExpr,
 	};
 
@@ -51,6 +52,7 @@ namespace ast
 	class BinaryExpr;
 	class CallExpr;
 	class IfExpr;
+	class ForExpr;
 	class CommentExpr;
 
 	class FunctionPrototype;
@@ -74,6 +76,7 @@ namespace ast
 
 		virtual AstExprType get_type() final;
 		virtual BodyExpr* get_body() final;
+		virtual void set_body(BodyExpr* body) final;
 		virtual void set_line_info(ExpressionLineInfo line_info) final;
 		virtual ExpressionLineInfo& get_line_info() final;
 	};
@@ -206,6 +209,22 @@ namespace ast
 		shared_ptr<BaseExpr> condition;
 		shared_ptr<BaseExpr> if_body;
 		shared_ptr<BaseExpr> else_body;
+	};
+
+	class ForExpr : public BaseExpr
+	{
+	public:
+		ForExpr(BodyExpr* body, types::Type var_type, int name_id, shared_ptr<BaseExpr> start_expr, shared_ptr<BaseExpr> end_expr, shared_ptr<BaseExpr> step_expr, shared_ptr<BodyExpr> for_body);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		types::Type var_type;
+		int name_id;
+		shared_ptr<BaseExpr> start_expr;
+		shared_ptr<BaseExpr> end_expr;
+		shared_ptr<BaseExpr> step_expr;
+		shared_ptr<BodyExpr> for_body;
 	};
 
 	class CommentExpr : public BaseExpr
