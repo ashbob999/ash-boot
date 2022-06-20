@@ -77,7 +77,14 @@ namespace type_checker
 		// check function return type
 		if (!func->check_return_type())
 		{
-			return log_error(func->body->expressions.back().get(), "function definition has invalid return type");
+			if (func->body->expressions.size() == 0)
+			{
+				return log_error(nullptr, "function definition has invalid return type");
+			}
+			else
+			{
+				return log_error(func->body->expressions.back().get(), "function definition has invalid return type");
+			}
 		}
 
 		return true;
