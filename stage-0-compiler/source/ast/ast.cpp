@@ -512,7 +512,7 @@ namespace ast
 			}
 			else
 			{
-				result_type = types::Type::Int;
+				result_type = types::Type::Void;
 			}
 		}
 		return result_type;

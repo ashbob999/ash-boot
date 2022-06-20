@@ -509,7 +509,7 @@ namespace builder
 		}
 		else
 		{
-			return types::get_default_value(*llvm_context, expr->get_result_type());
+			return llvm::ConstantTokenNone::get(*llvm_context);
 		}
 	}
 
