@@ -1,13 +1,31 @@
+# externally defined functions
 extern int putchar(int c);
 
-function int add( int a , int b ) {
-	a + b ;
-}
+# functions
+function int main() {
+	# variables
+	var int i = 10;
+	var float f = 1.5f;
+	var bool b = true;
 
-function int main ( ) {
-	int x = add ( 5 , 10 ) ;
+	# nested function
+	function int add(int x, int y) {
+		x + y;
+	}
 
-	putchar(65);
+	# function call
+	var int r = add(i, 7);
+
+	# if statement
+	if (r > 15) {
+		r = r * 1;
+	} else {
+		r = r / 2;
+	}
+
+	# inline if
+	var int bv = if b {1;} else {2;};
 	
-	0 ;
+	# return value
+	0;
 }

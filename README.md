@@ -40,9 +40,9 @@ extern int putchar(int c);
 # functions
 function int main() {
 	# variables
-	int i = 10;
-	float f = 1.5f;
-	bool b = true;
+	var int i = 10;
+	var float f = 1.5f;
+	var bool b = true;
 
 	# nested function
 	function int add(int x, int y) {
@@ -50,7 +50,7 @@ function int main() {
 	}
 
 	# function call
-	int r = add(i, 7);
+	var int r = add(i, 7);
 
 	# if statement
 	if (r > 15) {
@@ -60,7 +60,7 @@ function int main() {
 	}
 
 	# inline if
-	int bv = if b {1;} else {2;};
+	var int bv = if b {1;} else {2;};
 	
 	# return value
 	0;
