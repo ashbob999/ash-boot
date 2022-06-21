@@ -536,14 +536,20 @@ namespace builder
 
 		expr->for_body->llvm_named_values[expr->name_id] = alloca;
 
-		// mkae a new block for the start header
-		llvm::BasicBlock* look_block = llvm::BasicBlock::Create(*llvm_context, "loop", func);
+		// create the condition block
+		llvm::BasicBlock* condition_block = llvm::BasicBlock::Create(*llvm_context, "loopcond", func);
+
+		// make a new block for the start header
+		llvm::BasicBlock* loop_block = llvm::BasicBlock::Create(*llvm_context, "loopbody", func);
+
+		// create the step block
+		llvm::BasicBlock* step_block = llvm::BasicBlock::Create(*llvm_context, "loopstep", func);
 
 		// insert a fallthrougth from the current block into the loop block
-		llvm_ir_builder->CreateBr(look_block);
+		llvm_ir_builder->CreateBr(loop_block);
 
-		// start insertion into the  loop block
-		llvm_ir_builder->SetInsertPoint(look_block);
+		// start insertion into the loop block
+		llvm_ir_builder->SetInsertPoint(loop_block);
 
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->for_body.get()) == nullptr)
@@ -551,6 +557,12 @@ namespace builder
 			null_end;
 			return nullptr;
 		}
+
+		// create fallthrough into step block
+		llvm_ir_builder->CreateBr(step_block);
+
+		// start insertion into the step block
+		llvm_ir_builder->SetInsertPoint(step_block);
 
 		// emit the step value
 		llvm::Value* step_value = nullptr;
@@ -570,6 +582,12 @@ namespace builder
 			assert(false && "empty step not implemented yet");
 		}
 
+		// create jump to loop condition block
+		llvm_ir_builder->CreateBr(condition_block);
+
+		// set insertion into condition block
+		llvm_ir_builder->SetInsertPoint(condition_block);
+
 		// compute the end condition
 		llvm::Value* end_condition = generate_code_dispatch(expr->end_expr.get());
 
@@ -583,7 +601,7 @@ namespace builder
 		llvm::BasicBlock* after_block = llvm::BasicBlock::Create(*llvm_context, "afterloop", func);
 
 		// insert the conditional branch
-		llvm_ir_builder->CreateCondBr(end_condition, look_block, after_block);
+		llvm_ir_builder->CreateCondBr(end_condition, loop_block, after_block);
 
 		// any new code will be inserted in the after block
 		llvm_ir_builder->SetInsertPoint(after_block);
