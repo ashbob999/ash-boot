@@ -315,13 +315,20 @@ namespace builder
 			return rhs;
 		}
 
-		llvm::Value* lhs = generate_code_dispatch(expr->lhs.get());
-		llvm::Value* rhs = generate_code_dispatch(expr->rhs.get());
+		llvm::Value* lhs;
+		llvm::Value* rhs;
 
-		if (lhs == nullptr || rhs == nullptr)
+		// don't pre generate the code for the lhs & rhs if the binop is a boolean operator
+		if (!operators::is_boolean_operator(expr->binop))
 		{
-			null_end;
-			return nullptr;
+			lhs = generate_code_dispatch(expr->lhs.get());
+			rhs = generate_code_dispatch(expr->rhs.get());
+
+			if (lhs == nullptr || rhs == nullptr)
+			{
+				null_end;
+				return nullptr;
+			}
 		}
 
 		switch (expr->binop)
@@ -471,6 +478,160 @@ namespace builder
 						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
+			}
+			case operators::BinaryOp::BooleanAnd:
+			{
+				llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
+
+				// create the lhs entry block
+				llvm::BasicBlock* lhs_block = llvm::BasicBlock::Create(*llvm_context, "and_lhs_start", func);
+
+				// create the lhs exit block
+				llvm::BasicBlock* lhs_end_block = llvm::BasicBlock::Create(*llvm_context, "and_lhs_end");
+
+				// create the rhs entry block
+				llvm::BasicBlock* rhs_block = llvm::BasicBlock::Create(*llvm_context, "and_rhs_start");
+
+				// create the rhs exit block
+				llvm::BasicBlock* rhs_end_block = llvm::BasicBlock::Create(*llvm_context, "and_rhs_end");
+
+				// create the end block
+				llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*llvm_context, "andend");
+
+				// create fallthrough into lhs block
+				llvm_ir_builder->CreateBr(lhs_block);
+
+				// set insertion point to lhs block
+				llvm_ir_builder->SetInsertPoint(lhs_block);
+
+				// emit the lhs code
+				lhs = generate_code_dispatch(expr->lhs.get());
+
+				if (lhs == nullptr)
+				{
+					null_end;
+					return nullptr;
+				}
+
+				// create fallthrough to lhs end block
+				llvm_ir_builder->CreateBr(lhs_end_block);
+
+				func->getBasicBlockList().push_back(lhs_end_block);
+				// set insertion point to lhs end block
+				llvm_ir_builder->SetInsertPoint(lhs_end_block);
+
+				// create branch to rhs
+				llvm_ir_builder->CreateCondBr(lhs, rhs_block, end_block);
+
+				func->getBasicBlockList().push_back(rhs_block);
+				// set insertion point to rhs block
+				llvm_ir_builder->SetInsertPoint(rhs_block);
+
+				// emit the rhs code
+				rhs = generate_code_dispatch(expr->rhs.get());
+
+				if (rhs == nullptr)
+				{
+					null_end;
+					return nullptr;
+				}
+
+				// create fallthrough to rhs end block
+				llvm_ir_builder->CreateBr(rhs_end_block);
+
+				func->getBasicBlockList().push_back(rhs_end_block);
+				// set insertion point to rhs end block
+				llvm_ir_builder->SetInsertPoint(rhs_end_block);
+
+				// create fallthrough to end block
+				llvm_ir_builder->CreateBr(end_block);
+
+				func->getBasicBlockList().push_back(end_block);
+				// set insertion point to end block
+				llvm_ir_builder->SetInsertPoint(end_block);
+
+				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "ifres");
+
+				phi_node->addIncoming(types::get_default_value(*llvm_context, types::Type::Bool), lhs_end_block);
+				phi_node->addIncoming(rhs, rhs_end_block);
+				return phi_node;
+			}
+			case operators::BinaryOp::BooleanOr:
+			{
+				llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
+
+				// create the lhs entry block
+				llvm::BasicBlock* lhs_block = llvm::BasicBlock::Create(*llvm_context, "or_lhs_statr", func);
+
+				// create the lhs exit block
+				llvm::BasicBlock* lhs_end_block = llvm::BasicBlock::Create(*llvm_context, "or_lhs_end");
+
+				// create the rhs entry block
+				llvm::BasicBlock* rhs_block = llvm::BasicBlock::Create(*llvm_context, "or_rhs_start");
+
+				// create the rhs exit block
+				llvm::BasicBlock* rhs_end_block = llvm::BasicBlock::Create(*llvm_context, "or_rhs_end");
+
+				// create the end block
+				llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*llvm_context, "or_end");
+
+				// create fallthrough into lhs block
+				llvm_ir_builder->CreateBr(lhs_block);
+
+				// set insertion point to lhs block
+				llvm_ir_builder->SetInsertPoint(lhs_block);
+
+				// emit the lhs code
+				lhs = generate_code_dispatch(expr->lhs.get());
+
+				if (lhs == nullptr)
+				{
+					null_end;
+					return nullptr;
+				}
+
+				// create fallthrough to lhs end block
+				llvm_ir_builder->CreateBr(lhs_end_block);
+
+				func->getBasicBlockList().push_back(lhs_end_block);
+				// set insertion point to lhs end block
+				llvm_ir_builder->SetInsertPoint(lhs_end_block);
+
+				// create branch to rhs
+				llvm_ir_builder->CreateCondBr(lhs, end_block, rhs_block);
+
+				func->getBasicBlockList().push_back(rhs_block);
+				// set insertion point to rhs block
+				llvm_ir_builder->SetInsertPoint(rhs_block);
+
+				// emit the rhs code
+				rhs = generate_code_dispatch(expr->rhs.get());
+
+				if (rhs == nullptr)
+				{
+					null_end;
+					return nullptr;
+				}
+
+				// create fallthrough to rhs end block
+				llvm_ir_builder->CreateBr(rhs_end_block);
+
+				func->getBasicBlockList().push_back(rhs_end_block);
+				// set insertion point to rhs end block
+				llvm_ir_builder->SetInsertPoint(rhs_end_block);
+
+				// create fallthrough to end block
+				llvm_ir_builder->CreateBr(end_block);
+
+				func->getBasicBlockList().push_back(end_block);
+				// set insertion point to end block
+				llvm_ir_builder->SetInsertPoint(end_block);
+
+				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "ifres");
+
+				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type::Bool), 1, false), lhs_end_block);
+				phi_node->addIncoming(rhs, rhs_end_block);
+				return phi_node;
 			}
 			default:
 			{

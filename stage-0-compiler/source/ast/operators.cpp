@@ -36,12 +36,28 @@ namespace operators
 		{
 			return true;
 		}
+		else if (c == '&')
+		{
+			return true;
+		}
+		else if (c == '|')
+		{
+			return true;
+		}
 		return false;
 	}
 
 	bool is_second_char_valid(char c)
 	{
 		if (c == '=')
+		{
+			return true;
+		}
+		else if (c == '&')
+		{
+			return true;
+		}
+		else if (c == '|')
 		{
 			return true;
 		}
@@ -110,6 +126,20 @@ namespace operators
 					return BinaryOp::NotEqualTo;
 				}
 			}
+			else if (c2 == '&')
+			{
+				if (c1 == '&')
+				{
+					return BinaryOp::BooleanAnd;
+				}
+			}
+			else if (c2 == '|')
+			{
+				if (c1 == '|')
+				{
+					return BinaryOp::BooleanOr;
+				}
+			}
 		}
 
 		return BinaryOp::None;
@@ -133,6 +163,19 @@ namespace operators
 				return false;
 			}
 		}
+	}
+
+	bool is_boolean_operator(BinaryOp op)
+	{
+		switch (op)
+		{
+			case BinaryOp::BooleanAnd:
+			case BinaryOp::BooleanOr:
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	std::string to_string(BinaryOp binop)
@@ -181,11 +224,18 @@ namespace operators
 			case types::Type::Int:
 			case types::Type::Float:
 			{
-				return true; // all operators supported
+				if (!is_boolean_operator(binop))
+				{
+					return true; // all operators supported, apart form boolean operators
+				}
+				else
+				{
+					return false;
+				}
 			}
 			case types::Type::Bool:
 			{
-				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment)
+				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment || is_boolean_operator(binop))
 				{
 					return true; // only support comparisons for bools
 				}
