@@ -2,11 +2,16 @@
 
 ##### Current Features
 - functions
-- simple types (int, float)
-- simple binary operations (=, +, -, *)
+- simple types (int, float, bool)
+- binary operations (=, +, -, *, /)
+- comparisons (<, <=, >, >=, ==, !=)
+- boolean operators (&&, ||)
 - basic scope
 - extern functions
 - nested functions
+- if/else statements
+- for loops
+- while loops
 
 
 ##### Features Required for Bootstrapping
