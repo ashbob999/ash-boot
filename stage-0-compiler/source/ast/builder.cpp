@@ -453,6 +453,25 @@ namespace builder
 					}
 				}
 			}
+			case operators::BinaryOp::NotEqualTo:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					case types::Type::Bool:
+					{
+						return llvm_ir_builder->CreateICmpNE(lhs, rhs, "ne");
+					}
+					case types::Type::Float:
+					{
+						return llvm_ir_builder->CreateFCmpONE(lhs, rhs, "ne");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
 			default:
 			{
 				return log_error_value("invalid binary operator");

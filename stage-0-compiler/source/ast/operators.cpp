@@ -32,6 +32,10 @@ namespace operators
 		{
 			return true;
 		}
+		else if (c == '!')
+		{
+			return true;
+		}
 		return false;
 	}
 
@@ -101,6 +105,10 @@ namespace operators
 				{
 					return BinaryOp::EqualTo;
 				}
+				else if (c1 == '!')
+				{
+					return BinaryOp::NotEqualTo;
+				}
 			}
 		}
 
@@ -116,6 +124,7 @@ namespace operators
 			case BinaryOp::GreaterThan:
 			case BinaryOp::GreaterThanEqual:
 			case BinaryOp::EqualTo:
+			case BinaryOp::NotEqualTo:
 			{
 				return true;
 			}

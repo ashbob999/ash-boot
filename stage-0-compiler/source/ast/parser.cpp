@@ -25,6 +25,7 @@ namespace parser
 		{operators::BinaryOp::GreaterThan,        10},
 		{operators::BinaryOp::GreaterThanEqual,   10},
 		{operators::BinaryOp::EqualTo,            15},
+		{operators::BinaryOp::NotEqualTo,         15},
 		{operators::BinaryOp::Addition,           20},
 		{operators::BinaryOp::Subtraction,        20},
 		{operators::BinaryOp::Multiplication,     40},

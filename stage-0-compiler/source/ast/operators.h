@@ -20,6 +20,7 @@ namespace operators
 		GreaterThan,
 		GreaterThanEqual,
 		EqualTo,
+		NotEqualTo,
 	};
 
 	bool is_first_char_valid(char c);
