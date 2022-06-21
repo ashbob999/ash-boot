@@ -186,7 +186,7 @@ namespace ast
 		str << tabs << '\t' << "Value: {" << '\n';
 		if (this->expr == nullptr)
 		{
-			str << tabs << '\t' << '\t' << "(default)" << '\n';
+			str << tabs << '\t' << '\t' << "<default>" << '\n';
 		}
 		else
 		{
@@ -463,17 +463,17 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "if statement: {" << '\n';
+		str << tabs << "If Statement: {" << '\n';
 
-		str << tabs << '\t' << "condition: {" << '\n';
+		str << tabs << '\t' << "Condition: {" << '\n';
 		str << this->condition->to_string(depth + 2);
 		str << tabs << '\t' << "}," << '\n';
 
-		str << tabs << '\t' << "if body: {" << '\n';
+		str << tabs << '\t' << "If Body: {" << '\n';
 		str << this->if_body->to_string(depth + 2);
 		str << tabs << '\t' << "}," << '\n';
 
-		str << tabs << '\t' << "else body: {" << '\n';
+		str << tabs << '\t' << "Else Body: {" << '\n';
 		str << this->else_body->to_string(depth + 2);
 		str << tabs << '\t' << "}" << '\n';
 
@@ -523,7 +523,40 @@ namespace ast
 
 	std::string ForExpr::to_string(int depth)
 	{
-		return std::string();
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "For Loop: {" << '\n';
+
+		str << tabs << '\t' << "Start Value: {" << '\n';
+		str << tabs << '\t' << '\t' << "Type: " << types::to_string(this->var_type) << "," << '\n';
+		str << tabs << '\t' << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << "," << '\n';
+		str << tabs << '\t' << '\t' << "Value: {" << '\n';
+		str << this->start_expr->to_string(depth + 3);
+		str << tabs << '\t' << '\t' << "}," << '\n';
+		str << tabs << '\t' << "}," << '\n';
+
+		str << tabs << '\t' << "End Condition: {" << '\n';
+		str << this->end_expr->to_string(depth + 2);
+		str << tabs << '\t' << "}," << '\n';
+
+		str << tabs << '\t' << "Step Expression: {" << '\n';
+		if (this->step_expr != nullptr)
+		{
+			str << this->step_expr->to_string(depth + 2);
+		}
+		else
+		{
+			str << tabs << '\t' << '\t' << "<empty>" << '\n';
+		}
+		str << tabs << '\t' << "}" << '\n';
+
+		str << this->for_body->to_string(depth + 1);
+
+		str << tabs << "}, " << '\n';
+
+		return str.str();
 	}
 
 	types::Type ForExpr::get_result_type()
@@ -550,7 +583,21 @@ namespace ast
 
 	std::string WhileExpr::to_string(int depth)
 	{
-		return std::string();
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "While Loop: {" << '\n';
+
+		str << tabs << '\t' << "End Condition: {" << '\n';
+		str << this->end_expr->to_string(depth + 2);
+		str << tabs << '\t' << "}," << '\n';
+
+		str << this->while_body->to_string(depth + 1);
+
+		str << tabs << "}, " << '\n';
+
+		return str.str();
 	}
 
 	types::Type WhileExpr::get_result_type()
@@ -600,10 +647,10 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "function prototype: {" << '\n';
+		str << tabs << "Function Prototype: {" << '\n';
 
-		str << tabs << '\t' << "name: " << module::StringManager::get_string(this->name_id) << '\n';
-		str << tabs << '\t' << "args: [" << '\n';
+		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
+		str << tabs << '\t' << "Args: [" << '\n';
 
 		for (int i = 0; i < this->args.size(); i++)
 		{
@@ -637,7 +684,7 @@ namespace ast
 
 		//str << this->prototype->to_string(depth);
 		//str << '\n';
-		str << tabs << "function body : {" << '\n';
+		str << tabs << "Function Body : {" << '\n';
 		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->prototype->name_id) << '\n';
 		str << this->body->to_string(depth + 1);
 		str << tabs << '}' << '\n';

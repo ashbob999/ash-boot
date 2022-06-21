@@ -210,9 +210,33 @@ namespace operators
 			{
 				return "LessThan (<)";
 			}
+			case BinaryOp::LessThanEqual:
+			{
+				return "LessThanEqual (<=)";
+			}
 			case BinaryOp::GreaterThan:
 			{
 				return "LessThan (<)";
+			}
+			case BinaryOp::GreaterThanEqual:
+			{
+				return "GreaterThanEqual (<=)";
+			}
+			case BinaryOp::EqualTo:
+			{
+				return "EqualTo (==)";
+			}
+			case BinaryOp::NotEqualTo:
+			{
+				return "NotEqualTo (!=)";
+			}
+			case BinaryOp::BooleanAnd:
+			{
+				return "BooleanAnd (&&)";
+			}
+			case BinaryOp::BooleanOr:
+			{
+				return "BooleanOr (||)";
 			}
 		}
 	}
