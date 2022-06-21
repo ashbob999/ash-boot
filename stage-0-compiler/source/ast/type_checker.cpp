@@ -327,13 +327,13 @@ namespace type_checker
 		// check the step expression
 		if (expr->step_expr != nullptr && !check_expression_dispatch(expr->step_expr.get()))
 		{
-			return nullptr;
+			return false;
 		}
 
 		// check for body
 		if (!check_expression_dispatch(expr->for_body.get()))
 		{
-			return nullptr;
+			return false;
 		}
 
 		// check for
@@ -363,7 +363,7 @@ namespace type_checker
 		// check for body
 		if (!check_expression_dispatch(expr->while_body.get()))
 		{
-			return nullptr;
+			return false;
 		}
 
 		// check for
