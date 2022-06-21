@@ -97,6 +97,10 @@ namespace operators
 				{
 					return BinaryOp::GreaterThanEqual;
 				}
+				else if (c1 == '=')
+				{
+					return BinaryOp::EqualTo;
+				}
 			}
 		}
 
@@ -111,6 +115,7 @@ namespace operators
 			case BinaryOp::LessThanEqual:
 			case BinaryOp::GreaterThan:
 			case BinaryOp::GreaterThanEqual:
+			case BinaryOp::EqualTo:
 			{
 				return true;
 			}

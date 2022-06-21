@@ -19,6 +19,7 @@ namespace operators
 		LessThanEqual,
 		GreaterThan,
 		GreaterThanEqual,
+		EqualTo,
 	};
 
 	bool is_first_char_valid(char c);
