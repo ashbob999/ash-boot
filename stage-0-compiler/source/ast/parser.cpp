@@ -20,12 +20,12 @@ namespace parser
 	// the operator precedences, higher binds tighter, same binds to the left
 	const std::unordered_map<operators::BinaryOp, int> Parser::binop_precedence = {
 		{operators::BinaryOp::Assignment,          2},
+		{operators::BinaryOp::EqualTo,            8},
+		{operators::BinaryOp::NotEqualTo,         8},
 		{operators::BinaryOp::LessThan,           10},
 		{operators::BinaryOp::LessThanEqual,      10},
 		{operators::BinaryOp::GreaterThan,        10},
 		{operators::BinaryOp::GreaterThanEqual,   10},
-		{operators::BinaryOp::EqualTo,            15},
-		{operators::BinaryOp::NotEqualTo,         15},
 		{operators::BinaryOp::Addition,           20},
 		{operators::BinaryOp::Subtraction,        20},
 		{operators::BinaryOp::Multiplication,     40},
