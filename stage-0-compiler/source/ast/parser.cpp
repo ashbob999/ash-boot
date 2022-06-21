@@ -19,13 +19,15 @@ namespace parser
 {
 	// the operator precedences, higher binds tighter, same binds to the left
 	const std::unordered_map<operators::BinaryOp, int> Parser::binop_precedence = {
-		{operators::BinaryOp::Assignment,  2},
-		{operators::BinaryOp::LessThan, 10},
-		{operators::BinaryOp::GreaterThan, 10},
-		{operators::BinaryOp::Addition, 20},
-		{operators::BinaryOp::Subtraction, 20},
-		{operators::BinaryOp::Multiplication, 40},
-		{operators::BinaryOp::Division, 40},
+		{operators::BinaryOp::Assignment,          2},
+		{operators::BinaryOp::LessThan,           10},
+		{operators::BinaryOp::LessThanEqual,      10},
+		{operators::BinaryOp::GreaterThan,        10},
+		{operators::BinaryOp::GreaterThanEqual,   10},
+		{operators::BinaryOp::Addition,           20},
+		{operators::BinaryOp::Subtraction,        20},
+		{operators::BinaryOp::Multiplication,     40},
+		{operators::BinaryOp::Division,           40},
 	};
 
 	Parser::Parser(std::ifstream& input_file) : input_file(input_file)
@@ -252,6 +254,10 @@ namespace parser
 
 			if (operators::is_binary_op(chars) != operators::BinaryOp::None)
 			{
+				if (chars.length() == 2)
+				{
+					last_char = get_char();
+				}
 				identifier_string = chars;
 				last_char = chars.back();
 				curr_token = Token::BinaryOperator;

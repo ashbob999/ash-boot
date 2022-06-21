@@ -16,7 +16,9 @@ namespace operators
 		Multiplication,
 		Division,
 		LessThan,
+		LessThanEqual,
 		GreaterThan,
+		GreaterThanEqual,
 	};
 
 	bool is_first_char_valid(char c);

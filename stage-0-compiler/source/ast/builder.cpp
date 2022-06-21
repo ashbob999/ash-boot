@@ -380,17 +380,53 @@ namespace builder
 					}
 				}
 			}
+			case operators::BinaryOp::LessThanEqual:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateICmpSLE(lhs, rhs, "lte");
+					}
+					case types::Type::Float:
+					{
+						return llvm_ir_builder->CreateFCmpOLE(lhs, rhs, "lte");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
 			case operators::BinaryOp::GreaterThan:
 			{
 				switch (expr->lhs->get_result_type())
 				{
 					case types::Type::Int:
 					{
-						return llvm_ir_builder->CreateICmpSGT(lhs, rhs, "lt");
+						return llvm_ir_builder->CreateICmpSGT(lhs, rhs, "gt");
 					}
 					case types::Type::Float:
 					{
-						return llvm_ir_builder->CreateFCmpOGT(lhs, rhs, "lt");
+						return llvm_ir_builder->CreateFCmpOGT(lhs, rhs, "gt");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
+			case operators::BinaryOp::GreaterThanEqual:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "gte");
+					}
+					case types::Type::Float:
+					{
+						return llvm_ir_builder->CreateFCmpOGE(lhs, rhs, "gte");
 					}
 					default:
 					{

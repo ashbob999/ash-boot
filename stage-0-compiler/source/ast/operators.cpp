@@ -37,6 +37,10 @@ namespace operators
 
 	bool is_second_char_valid(char c)
 	{
+		if (c == '=')
+		{
+			return true;
+		}
 		return false;
 	}
 
@@ -80,7 +84,20 @@ namespace operators
 		}
 		else if (str.length() == 2)
 		{
+			char c1 = str[0];
+			char c2 = str[1];
 
+			if (c2 == '=')
+			{
+				if (c1 == '<')
+				{
+					return BinaryOp::LessThanEqual;
+				}
+				else if (c1 == '>')
+				{
+					return BinaryOp::GreaterThanEqual;
+				}
+			}
 		}
 
 		return BinaryOp::None;
@@ -91,7 +108,9 @@ namespace operators
 		switch (op)
 		{
 			case BinaryOp::LessThan:
+			case BinaryOp::LessThanEqual:
 			case BinaryOp::GreaterThan:
+			case BinaryOp::GreaterThanEqual:
 			{
 				return true;
 			}
