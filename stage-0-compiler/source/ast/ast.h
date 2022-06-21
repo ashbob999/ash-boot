@@ -24,6 +24,7 @@ namespace ast
 		CallExpr,
 		IfExpr,
 		ForExpr,
+		WhileExpr,
 		CommentExpr,
 	};
 
@@ -53,6 +54,7 @@ namespace ast
 	class CallExpr;
 	class IfExpr;
 	class ForExpr;
+	class WhileExpr;
 	class CommentExpr;
 
 	class FunctionPrototype;
@@ -225,6 +227,18 @@ namespace ast
 		shared_ptr<BaseExpr> end_expr;
 		shared_ptr<BaseExpr> step_expr;
 		shared_ptr<BodyExpr> for_body;
+	};
+
+	class WhileExpr : public BaseExpr
+	{
+	public:
+		WhileExpr(BodyExpr* body, shared_ptr<BaseExpr> end_expr, shared_ptr<BodyExpr> while_body);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		shared_ptr<BaseExpr> end_expr;
+		shared_ptr<BodyExpr> while_body;
 	};
 
 	class CommentExpr : public BaseExpr

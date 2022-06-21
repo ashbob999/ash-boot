@@ -67,6 +67,11 @@ function int main() {
 		
 	}
 	
+	# while loop
+	while i < 100 {
+		i = i + 1;
+	}
+	
 	# return value
 	0;
 }

@@ -21,6 +21,7 @@ namespace parser
 		IfStatement,
 		ElseStatement,
 		ForStatement,
+		WhileStatement,
 		BodyStart,
 		BodyEnd,
 		ParenStart,
@@ -66,6 +67,7 @@ namespace parser
 		shared_ptr<ast::FunctionDefinition> parse_function_definition();
 		shared_ptr<ast::BaseExpr> parse_if_else();
 		shared_ptr<ast::BaseExpr> parse_for_loop();
+		shared_ptr<ast::BaseExpr> parse_while_loop();
 		shared_ptr<ast::BaseExpr> parse_comment();
 		int get_token_precedence();
 		shared_ptr<ast::BaseExpr> log_error(std::string error_message);

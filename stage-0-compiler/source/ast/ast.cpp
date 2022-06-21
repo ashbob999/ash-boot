@@ -659,6 +659,33 @@ namespace ast
 		return false;
 	}
 
+	WhileExpr::WhileExpr(BodyExpr* body, shared_ptr<BaseExpr> end_expr, shared_ptr<BodyExpr> while_body)
+		: BaseExpr(AstExprType::WhileExpr, body), end_expr(end_expr), while_body(while_body)
+	{}
+
+	std::string WhileExpr::to_string(int depth)
+	{
+		return std::string();
+	}
+
+	types::Type WhileExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = types::Type::Void;
+		}
+		return result_type;
+	}
+
+	bool WhileExpr::check_types()
+	{
+		if (end_expr->get_result_type() == types::Type::Bool)
+		{
+			return true;
+		}
+		return false;
+	}
+
 	CommentExpr::CommentExpr(BodyExpr* body)
 		: BaseExpr(AstExprType::CommentExpr, body)
 	{}

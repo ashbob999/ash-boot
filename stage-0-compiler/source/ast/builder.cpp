@@ -610,6 +610,57 @@ namespace builder
 	}
 
 	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::WhileExpr>(ast::WhileExpr* expr)
+	{
+		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
+
+		// create the condition block
+		llvm::BasicBlock* condition_block = llvm::BasicBlock::Create(*llvm_context, "loopcond", func);
+
+		// insert a fallthrougth from the current block into the condition block
+		llvm_ir_builder->CreateBr(condition_block);
+
+		// create the loop block
+		llvm::BasicBlock* loop_block = llvm::BasicBlock::Create(*llvm_context, "loop", func);
+
+		// set insert to loop block
+		llvm_ir_builder->SetInsertPoint(loop_block);
+
+		// emit the body of the loop
+		if (generate_code_dispatch(expr->while_body.get()) == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		// create fallthrough into condition block
+		llvm_ir_builder->CreateBr(condition_block);
+
+		// create the loop end block
+		llvm::BasicBlock* loop_end_block = llvm::BasicBlock::Create(*llvm_context, "loopend", func);
+
+		// set insertion into the condition block
+		llvm_ir_builder->SetInsertPoint(condition_block);
+
+		// create the conditon value
+		llvm::Value* end_condition = generate_code_dispatch(expr->end_expr.get());
+
+		if (end_condition == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		// insert the conditional branch
+		llvm_ir_builder->CreateCondBr(end_condition, loop_block, loop_end_block);
+
+		// set insert to loop end
+		llvm_ir_builder->SetInsertPoint(loop_end_block);
+
+		return llvm::ConstantTokenNone::get(*llvm_context);
+	}
+
+	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::CommentExpr>(ast::CommentExpr* expr)
 	{
 		return nullptr;
@@ -650,6 +701,10 @@ namespace builder
 			case ast::AstExprType::ForExpr:
 			{
 				return generate_code(dynamic_cast<ast::ForExpr*>(expr));
+			}
+			case ast::AstExprType::WhileExpr:
+			{
+				return generate_code(dynamic_cast<ast::WhileExpr*>(expr));
 			}
 			case ast::AstExprType::CommentExpr:
 			{

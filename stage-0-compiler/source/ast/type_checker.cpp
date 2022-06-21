@@ -346,6 +346,36 @@ namespace type_checker
 	}
 
 	template<>
+	bool TypeChecker::check_expression<ast::WhileExpr>(ast::WhileExpr* expr)
+	{
+		// check the end condition
+		if (!check_expression_dispatch(expr->end_expr.get()))
+		{
+			return false;
+		}
+
+		// check the end condition has type bool
+		if (expr->end_expr->get_result_type() != types::Type::Bool)
+		{
+			return log_error(expr, "While end condition must have type bool");
+		}
+
+		// check for body
+		if (!check_expression_dispatch(expr->while_body.get()))
+		{
+			return nullptr;
+		}
+
+		// check for
+		if (!expr->check_types())
+		{
+			return log_error(expr, "While end condition must have type bool (for check types)");
+		}
+
+		return true;
+	}
+
+	template<>
 	bool TypeChecker::check_expression<ast::CommentExpr>(ast::CommentExpr* expr)
 	{
 		return true;
@@ -386,6 +416,10 @@ namespace type_checker
 			case ast::AstExprType::ForExpr:
 			{
 				return check_expression(dynamic_cast<ast::ForExpr*>(expr));
+			}
+			case ast::AstExprType::WhileExpr:
+			{
+				return check_expression(dynamic_cast<ast::WhileExpr*>(expr));
 			}
 			case ast::AstExprType::CommentExpr:
 			{

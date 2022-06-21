@@ -149,6 +149,11 @@ namespace parser
 				curr_token = Token::ForStatement;
 				return curr_token;
 			}
+			else if (identifier_string == "while")
+			{
+				curr_token = Token::WhileStatement;
+				return curr_token;
+			}
 			else
 			{
 				// check if identifier is a bool
@@ -373,6 +378,19 @@ namespace parser
 				case Token::ForStatement:
 				{
 					shared_ptr<ast::BaseExpr> base = parse_for_loop();
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
+
+					body->add_base(base);
+
+					break;
+				}
+				case Token::WhileStatement:
+				{
+					shared_ptr<ast::BaseExpr> base = parse_while_loop();
 
 					if (base == nullptr)
 					{
@@ -1051,6 +1069,32 @@ namespace parser
 		start_expr->get_body()->named_types[name_id] = var_type;
 
 		return make_shared<ast::ForExpr>(bodies.back(), var_type, name_id, start_expr, end_expr, step_expr, for_body);
+	}
+
+	/// whileexpr ::= 'while' expr '{' expression* '}'
+	shared_ptr<ast::BaseExpr> Parser::parse_while_loop()
+	{
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> end_expr = parse_expression(false, true);
+
+		if (end_expr == nullptr)
+		{
+			return nullptr;
+		}
+
+		//get_next_token();
+
+		shared_ptr<ast::BodyExpr> while_body = parse_body(false, true);
+
+		if (while_body == nullptr)
+		{
+			return nullptr;
+		}
+
+		get_next_token();
+
+		return make_shared<ast::WhileExpr>(bodies.back(), end_expr, while_body);
 	}
 
 	shared_ptr<ast::BaseExpr> Parser::parse_comment()
