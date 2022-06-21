@@ -249,122 +249,7 @@ namespace ast
 		return true;
 	}
 
-	BinaryOp is_binary_op(char c)
-	{
-		if (c == '=')
-		{
-			return BinaryOp::Assignment;
-		}
-		else if (c == '+')
-		{
-			return BinaryOp::Addition;
-		}
-		else if (c == '-')
-		{
-			return BinaryOp::Subtraction;
-		}
-		else if (c == '*')
-		{
-			return BinaryOp::Multiplication;
-		}
-		else if (c == '/')
-		{
-			return BinaryOp::Division;
-		}
-		else if (c == '<')
-		{
-			return BinaryOp::LessThan;
-		}
-		else if (c == '>')
-		{
-			return BinaryOp::GreaterThan;
-		}
-		return BinaryOp::None;
-	}
-
-	bool is_binary_comparision(BinaryOp op)
-	{
-		switch (op)
-		{
-			case BinaryOp::LessThan:
-			case BinaryOp::GreaterThan:
-			{
-				return true;
-			}
-			default:
-			{
-				return false;
-			}
-		}
-	}
-
-	std::string to_string(BinaryOp binop)
-	{
-		switch (binop)
-		{
-			case ast::BinaryOp::None:
-			{
-				return "None";
-			}
-			case ast::BinaryOp::Assignment:
-			{
-				return "Assignment (=)";
-			}
-			case ast::BinaryOp::Addition:
-			{
-				return "Addition (+)";
-			}
-			case ast::BinaryOp::Subtraction:
-			{
-				return "Subtraction (-)";
-			}
-			case ast::BinaryOp::Multiplication:
-			{
-				return "Multiplication (*)";
-			}
-			case ast::BinaryOp::Division:
-			{
-				return "Division (/)";
-			}
-			case ast::BinaryOp::LessThan:
-			{
-				return "LessThan (<)";
-			}
-			case ast::BinaryOp::GreaterThan:
-			{
-				return "LessThan (<)";
-			}
-		}
-	}
-
-	bool is_type_supported(BinaryOp binop, types::Type type)
-	{
-		switch (type)
-		{
-			case types::Type::Int:
-			case types::Type::Float:
-			{
-				return true; // all operators supported
-			}
-			case types::Type::Bool:
-			{
-				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment)
-				{
-					return true; // only support comparisons for bools
-				}
-				else
-				{
-					return false;
-				}
-			}
-			default:
-			{
-				return false;
-			}
-		}
-	}
-
-	BinaryExpr::BinaryExpr(BodyExpr* body, BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs)
+	BinaryExpr::BinaryExpr(BodyExpr* body, operators::BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs)
 		: BaseExpr(AstExprType::BinaryExpr, body), binop(binop), lhs(lhs), rhs(rhs)
 	{}
 
@@ -381,7 +266,7 @@ namespace ast
 		str << tabs << '\t' << "LHS: {" << '\n';
 		str << this->lhs->to_string(depth + 2);
 		str << tabs << '\t' << "}," << '\n';
-		str << tabs << '\t' << "Operator: " << ast::to_string(this->binop) << '\n';
+		str << tabs << '\t' << "Operator: " << operators::to_string(this->binop) << '\n';
 		str << tabs << '\t' << "RHS: {" << '\n';
 		str << this->rhs->to_string(depth + 2);
 		str << tabs << '\t' << "}," << '\n';

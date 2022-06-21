@@ -284,7 +284,7 @@ namespace builder
 	llvm::Value* LLVMBuilder::generate_code<ast::BinaryExpr>(ast::BinaryExpr* expr)
 	{
 		// lhs is not an expression for assignment
-		if (expr->binop == ast::BinaryOp::Assignment)
+		if (expr->binop == operators::BinaryOp::Assignment)
 		{
 			// lhs must be a variable definition or declaration
 			ast::VariableReferenceExpr* lhs_expr = dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get());
@@ -326,24 +326,24 @@ namespace builder
 
 		switch (expr->binop)
 		{
-			case ast::BinaryOp::Assignment:
+			case operators::BinaryOp::Assignment:
 			{
 				null_end;
 				return nullptr;
 			}
-			case ast::BinaryOp::Addition:
+			case operators::BinaryOp::Addition:
 			{
 				return llvm_ir_builder->CreateAdd(lhs, rhs, "add");
 			}
-			case ast::BinaryOp::Subtraction:
+			case operators::BinaryOp::Subtraction:
 			{
 				return llvm_ir_builder->CreateSub(lhs, rhs, "sub");
 			}
-			case ast::BinaryOp::Multiplication:
+			case operators::BinaryOp::Multiplication:
 			{
 				return llvm_ir_builder->CreateMul(lhs, rhs, "mul");
 			}
-			case ast::BinaryOp::Division:
+			case operators::BinaryOp::Division:
 			{
 				// TODO: deal with divide by zero errors
 				switch (expr->get_result_type())
@@ -358,11 +358,11 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + ast::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
-			case ast::BinaryOp::LessThan:
+			case operators::BinaryOp::LessThan:
 			{
 				switch (expr->lhs->get_result_type())
 				{
@@ -376,11 +376,11 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + ast::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
-			case ast::BinaryOp::GreaterThan:
+			case operators::BinaryOp::GreaterThan:
 			{
 				switch (expr->lhs->get_result_type())
 				{
@@ -394,7 +394,7 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + ast::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}

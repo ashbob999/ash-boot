@@ -48,7 +48,7 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_file();
 		shared_ptr<ast::FunctionDefinition> parse_file_as_func();
 		shared_ptr<ast::BodyExpr> parse_file_as_body();
-		static const std::unordered_map<char, int> binop_precedence;
+		static const std::unordered_map<operators::BinaryOp, int> binop_precedence;
 	private:
 		char get_char();
 		char peek_char();

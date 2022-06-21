@@ -18,14 +18,14 @@ using std::make_shared;
 namespace parser
 {
 	// the operator precedences, higher binds tighter, same binds to the left
-	const std::unordered_map<char, int> Parser::binop_precedence = {
-		{'=',  2},
-		{'<', 10},
-		{'>', 10},
-		{'+', 20},
-		{'-', 20},
-		{'*', 40},
-		{'/', 40},
+	const std::unordered_map<operators::BinaryOp, int> Parser::binop_precedence = {
+		{operators::BinaryOp::Assignment,  2},
+		{operators::BinaryOp::LessThan, 10},
+		{operators::BinaryOp::GreaterThan, 10},
+		{operators::BinaryOp::Addition, 20},
+		{operators::BinaryOp::Subtraction, 20},
+		{operators::BinaryOp::Multiplication, 40},
+		{operators::BinaryOp::Division, 40},
 	};
 
 	Parser::Parser(std::ifstream& input_file) : input_file(input_file)
@@ -240,10 +240,23 @@ namespace parser
 		}
 
 		// binary operator
-		if (ast::is_binary_op(last_char) != ast::BinaryOp::None)
+		if (operators::is_first_char_valid(last_char))
 		{
-			curr_token = Token::BinaryOperator;
-			return curr_token;
+			std::string chars;
+			chars += last_char;
+			char next_char = peek_char();
+			if (operators::is_second_char_valid(next_char))
+			{
+				chars += next_char;
+			}
+
+			if (operators::is_binary_op(chars) != operators::BinaryOp::None)
+			{
+				identifier_string = chars;
+				last_char = chars.back();
+				curr_token = Token::BinaryOperator;
+				return curr_token;
+			}
 		}
 
 		// comma
@@ -589,11 +602,8 @@ namespace parser
 				return lhs;
 			}
 
-			char binop = last_char;
-			//std::cout << "binop: " << binop << std::endl;
-
-			ast::BinaryOp binop_type = ast::is_binary_op(binop);
-			if (binop_type == ast::BinaryOp::None)
+			operators::BinaryOp binop_type = operators::is_binary_op(identifier_string);
+			if (binop_type == operators::BinaryOp::None)
 			{
 				end_;
 				return log_error("Binary operator is invalid");
@@ -1117,8 +1127,10 @@ namespace parser
 			return -1;
 		}
 
+		operators::BinaryOp binop = operators::is_binary_op(identifier_string);
+
 		// Make sure it's a declared binop.
-		auto f = binop_precedence.find(last_char);
+		auto f = binop_precedence.find(binop);
 		if (f == binop_precedence.end())
 		{
 			return -1;

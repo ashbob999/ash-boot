@@ -8,6 +8,7 @@
 #include "llvm/IR/Instructions.h"
 
 #include "types.h"
+#include "operators.h"
 
 using std::shared_ptr;
 
@@ -151,37 +152,17 @@ namespace ast
 		int name_id;
 	};
 
-	// The different binary operators
-	enum class BinaryOp
-	{
-		None,
-		Assignment,
-		Addition,
-		Subtraction,
-		Multiplication,
-		Division,
-		LessThan,
-		GreaterThan,
-	};
-
-	BinaryOp is_binary_op(char c);
-	bool is_binary_comparision(BinaryOp op);
-
-	std::string to_string(BinaryOp binop);
-
-	bool is_type_supported(BinaryOp binop, types::Type type);
-
 	// Any binary expression
 	class BinaryExpr : public BaseExpr
 	{
 	public:
-		BinaryExpr(BodyExpr* body, BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs);
+		BinaryExpr(BodyExpr* body, operators::BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs);
 		~BinaryExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
-		BinaryOp binop;
+		operators::BinaryOp binop;
 		shared_ptr<BaseExpr> lhs;
 		shared_ptr<BaseExpr> rhs;
 	};
