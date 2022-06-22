@@ -421,6 +421,18 @@ namespace type_checker
 		return true;
 	}
 
+	template<>
+	bool TypeChecker::check_expression<ast::BreakExpr>(ast::BreakExpr* expr)
+	{
+		// check break
+		if (!expr->check_types())
+		{
+			return log_error(expr, "Break statement is only allowed in loops");
+		}
+
+		return true;
+	}
+
 	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -472,6 +484,10 @@ namespace type_checker
 			case ast::AstExprType::ContinueExpr:
 			{
 				return check_expression(dynamic_cast<ast::ContinueExpr*>(expr));
+			}
+			case ast::AstExprType::BreakExpr:
+			{
+				return check_expression(dynamic_cast<ast::BreakExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

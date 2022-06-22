@@ -29,6 +29,7 @@ namespace ast
 		CommentExpr,
 		ReturnExpr,
 		ContinueExpr,
+		BreakExpr,
 	};
 
 	struct ExpressionLineInfo
@@ -61,6 +62,7 @@ namespace ast
 	class CommentExpr;
 	class ReturnExpr;
 	class ContinueExpr;
+	class BreakExpr;
 
 	class FunctionPrototype;
 	class FunctionDefinition;
@@ -260,6 +262,15 @@ namespace ast
 	{
 	public:
 		ContinueExpr(BodyExpr* body);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+	};
+
+	class BreakExpr : public BaseExpr
+	{
+	public:
+		BreakExpr(BodyExpr* body);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;

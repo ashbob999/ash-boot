@@ -710,8 +710,6 @@ namespace ast
 
 		str << tabs << "Continue Statement: {}" << '\n';
 
-		str << tabs << "}, " << '\n';
-
 		return str.str();
 	}
 
@@ -725,6 +723,47 @@ namespace ast
 	}
 
 	bool ContinueExpr::check_types()
+	{
+		BodyExpr* body = this->get_body();
+
+		while (body->body_type != BodyType::Function)
+		{
+			if (body->body_type == BodyType::Loop)
+			{
+				return true;
+			}
+
+			body = body->get_body();
+		}
+
+		return false;
+	}
+
+	BreakExpr::BreakExpr(BodyExpr* body)
+		: BaseExpr(AstExprType::BreakExpr, body)
+	{}
+
+	std::string BreakExpr::to_string(int depth)
+	{
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "Break Statement: {}" << '\n';
+
+		return str.str();
+	}
+
+	types::Type BreakExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = types::Type::Void;
+		}
+		return result_type;
+	}
+
+	bool BreakExpr::check_types()
 	{
 		BodyExpr* body = this->get_body();
 

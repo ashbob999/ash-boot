@@ -170,6 +170,11 @@ namespace parser
 				curr_token = Token::ContinueStatement;
 				return curr_token;
 			}
+			else if (identifier_string == "break")
+			{
+				curr_token = Token::BreakStatement;
+				return curr_token;
+			}
 			else
 			{
 				// check if identifier is a bool
@@ -492,6 +497,24 @@ namespace parser
 					}
 
 					shared_ptr<ast::BaseExpr> base = parse_continue();
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
+
+					body->add_base(base);
+
+					break;
+				}
+				case Token::BreakStatement:
+				{
+					if (is_top_level)
+					{
+						return log_error_body("Break statements are not allowed in top level code");
+					}
+
+					shared_ptr<ast::BaseExpr> base = parse_break();
 
 					if (base == nullptr)
 					{
@@ -1228,6 +1251,14 @@ namespace parser
 		get_next_token();
 
 		return make_shared<ast::ContinueExpr>(bodies.back());
+	}
+
+	/// breakexpr ::= 'break'
+	shared_ptr<ast::BaseExpr> Parser::parse_break()
+	{
+		get_next_token();
+
+		return make_shared<ast::BreakExpr>(bodies.back());
 	}
 
 	int Parser::get_token_precedence()

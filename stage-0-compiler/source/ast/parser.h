@@ -24,6 +24,7 @@ namespace parser
 		WhileStatement,
 		ReturnStatement,
 		ContinueStatement,
+		BreakStatement,
 		BodyStart,
 		BodyEnd,
 		ParenStart,
@@ -73,6 +74,7 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_comment();
 		shared_ptr<ast::BaseExpr> parse_return();
 		shared_ptr<ast::BaseExpr> parse_continue();
+		shared_ptr<ast::BaseExpr> parse_break();
 		int get_token_precedence();
 		shared_ptr<ast::BaseExpr> log_error(std::string error_message);
 		shared_ptr<ast::BodyExpr> log_error_body(std::string error_message);

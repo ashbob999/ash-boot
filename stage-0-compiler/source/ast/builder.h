@@ -36,5 +36,6 @@ namespace builder
 
 	private:
 		std::vector<llvm::BasicBlock*> loop_continue_blocks;
+		std::vector<llvm::BasicBlock*> loop_break_blocks;
 	};
 }

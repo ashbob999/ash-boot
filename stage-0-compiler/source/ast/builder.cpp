@@ -789,11 +789,14 @@ namespace builder
 		// create the condition block
 		llvm::BasicBlock* condition_block = llvm::BasicBlock::Create(*llvm_context, "loopcond", func);
 
+		// create the step block
+		llvm::BasicBlock* step_block = llvm::BasicBlock::Create(*llvm_context, "loopstep", func);
+
 		// make a new block for the start header
 		llvm::BasicBlock* loop_block = llvm::BasicBlock::Create(*llvm_context, "loopbody", func);
 
-		// create the step block
-		llvm::BasicBlock* step_block = llvm::BasicBlock::Create(*llvm_context, "loopstep", func);
+		// create the after loop block
+		llvm::BasicBlock* after_block = llvm::BasicBlock::Create(*llvm_context, "afterloop");
 
 		// insert a fallthrougth from the current block into the loop block
 		llvm_ir_builder->CreateBr(loop_block);
@@ -803,6 +806,9 @@ namespace builder
 
 		// push the step block for continue statements
 		this->loop_continue_blocks.push_back(step_block);
+
+		// push the end block for break statements
+		this->loop_break_blocks.push_back(after_block);
 
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->for_body.get()) == nullptr)
@@ -816,6 +822,9 @@ namespace builder
 
 		// pop the step block for continue statements
 		this->loop_continue_blocks.pop_back();
+
+		// pop the condition block for break statements
+		this->loop_break_blocks.pop_back();
 
 		// start insertion into the step block
 		llvm_ir_builder->SetInsertPoint(step_block);
@@ -853,11 +862,11 @@ namespace builder
 			return nullptr;
 		}
 
-		// create the after loop block, and insert it
-		llvm::BasicBlock* after_block = llvm::BasicBlock::Create(*llvm_context, "afterloop", func);
-
 		// insert the conditional branch
 		llvm_ir_builder->CreateCondBr(end_condition, loop_block, after_block);
+
+		// insert the after loop block
+		func->getBasicBlockList().push_back(after_block);
 
 		// any new code will be inserted in the after block
 		llvm_ir_builder->SetInsertPoint(after_block);
@@ -879,11 +888,17 @@ namespace builder
 		// create the loop block
 		llvm::BasicBlock* loop_block = llvm::BasicBlock::Create(*llvm_context, "loop", func);
 
+		// create the loop end block
+		llvm::BasicBlock* loop_end_block = llvm::BasicBlock::Create(*llvm_context, "loopend");
+
 		// set insert to loop block
 		llvm_ir_builder->SetInsertPoint(loop_block);
 
 		// push the condition block for continue statements
 		this->loop_continue_blocks.push_back(condition_block);
+
+		// push the loop end block for break statements
+		this->loop_break_blocks.push_back(loop_end_block);
 
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->while_body.get()) == nullptr)
@@ -898,8 +913,8 @@ namespace builder
 		// pop the condition block for continue statements
 		this->loop_continue_blocks.pop_back();
 
-		// create the loop end block
-		llvm::BasicBlock* loop_end_block = llvm::BasicBlock::Create(*llvm_context, "loopend", func);
+		// pop the condition block for break statements
+		this->loop_break_blocks.pop_back();
 
 		// set insertion into the condition block
 		llvm_ir_builder->SetInsertPoint(condition_block);
@@ -915,6 +930,9 @@ namespace builder
 
 		// insert the conditional branch
 		llvm_ir_builder->CreateCondBr(end_condition, loop_block, loop_end_block);
+
+		// insert the after loop block
+		func->getBasicBlockList().push_back(loop_end_block);
 
 		// set insert to loop end
 		llvm_ir_builder->SetInsertPoint(loop_end_block);
@@ -955,6 +973,14 @@ namespace builder
 	llvm::Value* LLVMBuilder::generate_code<ast::ContinueExpr>(ast::ContinueExpr* expr)
 	{
 		llvm_ir_builder->CreateBr(this->loop_continue_blocks.back());
+
+		return llvm::ConstantTokenNone::get(*llvm_context);
+	}
+
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::BreakExpr>(ast::BreakExpr* expr)
+	{
+		llvm_ir_builder->CreateBr(this->loop_break_blocks.back());
 
 		return llvm::ConstantTokenNone::get(*llvm_context);
 	}
@@ -1010,6 +1036,10 @@ namespace builder
 			case ast::AstExprType::ContinueExpr:
 			{
 				return generate_code(dynamic_cast<ast::ContinueExpr*>(expr));
+			}
+			case ast::AstExprType::BreakExpr:
+			{
+				return generate_code(dynamic_cast<ast::BreakExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");
