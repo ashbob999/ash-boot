@@ -643,7 +643,26 @@ namespace ast
 
 	std::string ReturnExpr::to_string(int depth)
 	{
-		return std::string();
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "Return Statement: {" << '\n';
+
+		str << tabs << '\t' << "Value: {" << '\n';
+		if (this->ret_expr != nullptr)
+		{
+			str << this->ret_expr->to_string(depth + 2);
+		}
+		else
+		{
+			str << tabs << '\t' << '\t' << "<void>" << '\n';
+		}
+		str << tabs << '\t' << "}," << '\n';
+
+		str << tabs << "}, " << '\n';
+
+		return str.str();
 	}
 
 	types::Type ReturnExpr::get_result_type()

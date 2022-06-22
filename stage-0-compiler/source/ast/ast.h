@@ -28,6 +28,7 @@ namespace ast
 		WhileExpr,
 		CommentExpr,
 		ReturnExpr,
+		ContinueExpr,
 	};
 
 	struct ExpressionLineInfo
@@ -59,6 +60,7 @@ namespace ast
 	class WhileExpr;
 	class CommentExpr;
 	class ReturnExpr;
+	class ContinueExpr;
 
 	class FunctionPrototype;
 	class FunctionDefinition;
@@ -243,6 +245,15 @@ namespace ast
 		bool check_types() override;
 
 		shared_ptr<BaseExpr> ret_expr;
+	};
+
+	class ContinueExpr : public BaseExpr
+	{
+	public:
+		ContinueExpr(BodyExpr* body);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
 	};
 
 	// The prototype for a function (i.e. the definition)
