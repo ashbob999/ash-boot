@@ -145,14 +145,23 @@ namespace builder
 		if (return_value != nullptr)
 		{
 			// finish off the function
-			// check for void return type
-			if (function_definition->prototype->return_type == types::Type::Void)
+
+			// add return instruction if the last body expression was not a retrun expression
+			if (function_definition->body->expressions.size() > 0 && function_definition->body->expressions.back()->get_type() == ast::AstExprType::ReturnExpr)
 			{
-				llvm_ir_builder->CreateRetVoid();
+				// do nothing
 			}
 			else
 			{
-				llvm_ir_builder->CreateRet(return_value);
+				// check for void return type
+				if (function_definition->prototype->return_type == types::Type::Void)
+				{
+					llvm_ir_builder->CreateRetVoid();
+				}
+				else
+				{
+					llvm_ir_builder->CreateRet(return_value);
+				}
 			}
 			// validate the generated code, checking for consistency
 			llvm::verifyFunction(*the_function);
@@ -907,6 +916,29 @@ namespace builder
 		return nullptr;
 	}
 
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::ReturnExpr>(ast::ReturnExpr* expr)
+	{
+		if (expr->ret_expr == nullptr)
+		{
+			llvm_ir_builder->CreateRetVoid();
+		}
+		else
+		{
+			llvm::Value* ret_value = generate_code_dispatch(expr->ret_expr.get());
+
+			if (ret_value == nullptr)
+			{
+				null_end;
+				return nullptr;
+			}
+
+			llvm_ir_builder->CreateRet(ret_value);
+		}
+
+		return llvm::ConstantTokenNone::get(*llvm_context);
+	}
+
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -950,6 +982,10 @@ namespace builder
 			case ast::AstExprType::CommentExpr:
 			{
 				return generate_code(dynamic_cast<ast::CommentExpr*>(expr));
+			}
+			case ast::AstExprType::ReturnExpr:
+			{
+				return generate_code(dynamic_cast<ast::ReturnExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

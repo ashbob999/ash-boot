@@ -637,6 +637,48 @@ namespace ast
 		return true;
 	}
 
+	ReturnExpr::ReturnExpr(BodyExpr* body, shared_ptr<BaseExpr> ret_expr)
+		: BaseExpr(AstExprType::ReturnExpr, body), ret_expr(ret_expr)
+	{}
+
+	std::string ReturnExpr::to_string(int depth)
+	{
+		return std::string();
+	}
+
+	types::Type ReturnExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			if (ret_expr == nullptr)
+			{
+				result_type = types::Type::Void;
+			}
+			else
+			{
+				result_type = ret_expr->get_result_type();
+			}
+		}
+		return result_type;
+	}
+
+	bool ReturnExpr::check_types()
+	{
+		BodyExpr* body = this->get_body();
+
+		while (!body->is_function_body)
+		{
+			body = body->get_body();
+		}
+
+		if (body->parent_function->return_type == this->get_result_type())
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)
 		: name_id(module::StringManager::get_id(name)), return_type(return_type), types(types), args(args)
 	{}

@@ -381,6 +381,34 @@ namespace type_checker
 		return true;
 	}
 
+	template<>
+	bool TypeChecker::check_expression<ast::ReturnExpr>(ast::ReturnExpr* expr)
+	{
+		// check return expression
+		if (expr->ret_expr != nullptr && !check_expression_dispatch(expr->ret_expr.get()))
+		{
+			return false;
+		}
+
+		// check return
+		if (!expr->check_types())
+		{
+			ast::BodyExpr* body = expr->get_body();
+
+			while (!body->is_function_body)
+			{
+				body = body->get_body();
+			}
+
+			std::string type1 = types::to_string(body->parent_function->return_type);
+
+			std::string type2 = types::to_string(expr->ret_expr->get_result_type());
+			return log_error(expr, "Return statement has incompatible type with function return type, expected: " + type1 + " , but got: " + type2 + " instead");
+		}
+
+		return true;
+	}
+
 	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -424,6 +452,10 @@ namespace type_checker
 			case ast::AstExprType::CommentExpr:
 			{
 				return check_expression(dynamic_cast<ast::CommentExpr*>(expr));
+			}
+			case ast::AstExprType::ReturnExpr:
+			{
+				return check_expression(dynamic_cast<ast::ReturnExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

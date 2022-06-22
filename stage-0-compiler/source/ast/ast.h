@@ -27,6 +27,7 @@ namespace ast
 		ForExpr,
 		WhileExpr,
 		CommentExpr,
+		ReturnExpr,
 	};
 
 	struct ExpressionLineInfo
@@ -57,6 +58,7 @@ namespace ast
 	class ForExpr;
 	class WhileExpr;
 	class CommentExpr;
+	class ReturnExpr;
 
 	class FunctionPrototype;
 	class FunctionDefinition;
@@ -115,6 +117,7 @@ namespace ast
 		llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, int str_id);
 
 		bool is_function_body = false;
+		FunctionPrototype* parent_function = nullptr;
 		std::vector<std::pair<int, ReferenceType>> in_scope_vars; // only used for checking vars are in scope, and order of defines
 		std::vector<shared_ptr<BaseExpr>> expressions;
 		std::vector<shared_ptr<FunctionDefinition>> functions;
@@ -229,6 +232,17 @@ namespace ast
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
+	};
+
+	class ReturnExpr : public BaseExpr
+	{
+	public:
+		ReturnExpr(BodyExpr* body, shared_ptr<BaseExpr> ret_expr);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		shared_ptr<BaseExpr> ret_expr;
 	};
 
 	// The prototype for a function (i.e. the definition)

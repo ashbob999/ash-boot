@@ -160,6 +160,11 @@ namespace parser
 				curr_token = Token::WhileStatement;
 				return curr_token;
 			}
+			else if (identifier_string == "return")
+			{
+				curr_token = Token::ReturnStatement;
+				return curr_token;
+			}
 			else
 			{
 				// check if identifier is a bool
@@ -454,6 +459,24 @@ namespace parser
 				{
 					end_;
 					parse_comment();
+					break;
+				}
+				case Token::ReturnStatement:
+				{
+					if (is_top_level)
+					{
+						return log_error_body("Return statements are not allowed in top level code");
+					}
+
+					shared_ptr<ast::BaseExpr> base = parse_return();
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
+
+					body->add_base(base);
+
 					break;
 				}
 				case Token::BodyEnd:
@@ -977,6 +1000,7 @@ namespace parser
 		}
 
 		body->is_function_body = true;
+		body->parent_function = proto;
 
 		get_next_token();
 
@@ -1154,6 +1178,26 @@ namespace parser
 		curr_token = Token::EndOfExpression;
 
 		return make_shared<ast::CommentExpr>(bodies.back());
+	}
+	
+	/// returnexpr ::= 'return' expr?
+	shared_ptr<ast::BaseExpr> Parser::parse_return()
+	{
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> expr;
+
+		if (curr_token != Token::EndOfExpression)
+		{
+			expr = parse_expression(false, false);
+
+			if (expr == nullptr)
+			{
+				return log_error("Return statement expected expression");
+			}
+		}
+
+		return make_shared<ast::ReturnExpr>(bodies.back(), expr);
 	}
 
 	int Parser::get_token_precedence()
