@@ -499,19 +499,19 @@ namespace builder
 				llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
 				// create the lhs entry block
-				llvm::BasicBlock* lhs_block = llvm::BasicBlock::Create(*llvm_context, "and_lhs_start", func);
+				llvm::BasicBlock* lhs_block = llvm::BasicBlock::Create(*llvm_context, "and.lhs.start", func);
 
 				// create the lhs exit block
-				llvm::BasicBlock* lhs_end_block = llvm::BasicBlock::Create(*llvm_context, "and_lhs_end");
+				llvm::BasicBlock* lhs_end_block = llvm::BasicBlock::Create(*llvm_context, "and.lhs.end");
 
 				// create the rhs entry block
-				llvm::BasicBlock* rhs_block = llvm::BasicBlock::Create(*llvm_context, "and_rhs_start");
+				llvm::BasicBlock* rhs_block = llvm::BasicBlock::Create(*llvm_context, "and.rhs.start");
 
 				// create the rhs exit block
-				llvm::BasicBlock* rhs_end_block = llvm::BasicBlock::Create(*llvm_context, "and_rhs_end");
+				llvm::BasicBlock* rhs_end_block = llvm::BasicBlock::Create(*llvm_context, "and.rhs.end");
 
 				// create the end block
-				llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*llvm_context, "andend");
+				llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*llvm_context, "and.end");
 
 				// create fallthrough into lhs block
 				llvm_ir_builder->CreateBr(lhs_block);
@@ -565,7 +565,7 @@ namespace builder
 				// set insertion point to end block
 				llvm_ir_builder->SetInsertPoint(end_block);
 
-				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "ifres");
+				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "and.res");
 
 				phi_node->addIncoming(types::get_default_value(*llvm_context, types::Type::Bool), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
@@ -576,19 +576,19 @@ namespace builder
 				llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
 				// create the lhs entry block
-				llvm::BasicBlock* lhs_block = llvm::BasicBlock::Create(*llvm_context, "or_lhs_statr", func);
+				llvm::BasicBlock* lhs_block = llvm::BasicBlock::Create(*llvm_context, "or.lhs.start", func);
 
 				// create the lhs exit block
-				llvm::BasicBlock* lhs_end_block = llvm::BasicBlock::Create(*llvm_context, "or_lhs_end");
+				llvm::BasicBlock* lhs_end_block = llvm::BasicBlock::Create(*llvm_context, "or.lhs.end");
 
 				// create the rhs entry block
-				llvm::BasicBlock* rhs_block = llvm::BasicBlock::Create(*llvm_context, "or_rhs_start");
+				llvm::BasicBlock* rhs_block = llvm::BasicBlock::Create(*llvm_context, "or.rhs.start");
 
 				// create the rhs exit block
-				llvm::BasicBlock* rhs_end_block = llvm::BasicBlock::Create(*llvm_context, "or_rhs_end");
+				llvm::BasicBlock* rhs_end_block = llvm::BasicBlock::Create(*llvm_context, "or.rhs.end");
 
 				// create the end block
-				llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*llvm_context, "or_end");
+				llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*llvm_context, "or.end");
 
 				// create fallthrough into lhs block
 				llvm_ir_builder->CreateBr(lhs_block);
@@ -642,7 +642,7 @@ namespace builder
 				// set insertion point to end block
 				llvm_ir_builder->SetInsertPoint(end_block);
 
-				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "ifres");
+				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "or.res");
 
 				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type::Bool), 1, false), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
@@ -710,9 +710,9 @@ namespace builder
 		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
 		// create a block for the if and else cases
-		llvm::BasicBlock* if_block = llvm::BasicBlock::Create(*llvm_context, "if_body", func);
-		llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*llvm_context, "else_body");
-		llvm::BasicBlock* merge_block = llvm::BasicBlock::Create(*llvm_context, "if_end");
+		llvm::BasicBlock* if_block = llvm::BasicBlock::Create(*llvm_context, "if.body", func);
+		llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*llvm_context, "else.body");
+		llvm::BasicBlock* merge_block = llvm::BasicBlock::Create(*llvm_context, "if.end");
 
 		llvm_ir_builder->CreateCondBr(cond_value, if_block, else_block);
 
@@ -787,28 +787,28 @@ namespace builder
 		expr->for_body->llvm_named_values[expr->name_id] = alloca;
 
 		// create the condition block
-		llvm::BasicBlock* condition_block = llvm::BasicBlock::Create(*llvm_context, "loopcond", func);
+		llvm::BasicBlock* condition_block = llvm::BasicBlock::Create(*llvm_context, "for.cond", func);
 
 		// create the step block
-		llvm::BasicBlock* step_block = llvm::BasicBlock::Create(*llvm_context, "loopstep", func);
+		llvm::BasicBlock* step_block = llvm::BasicBlock::Create(*llvm_context, "for.step", func);
 
-		// make a new block for the start header
-		llvm::BasicBlock* loop_block = llvm::BasicBlock::Create(*llvm_context, "loopbody", func);
+		// make a new block for the loop body
+		llvm::BasicBlock* loop_body_block = llvm::BasicBlock::Create(*llvm_context, "for.body", func);
 
-		// create the after loop block
-		llvm::BasicBlock* after_block = llvm::BasicBlock::Create(*llvm_context, "afterloop");
+		// create the end loop block
+		llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*llvm_context, "for.end");
 
-		// insert a fallthrougth from the current block into the loop block
-		llvm_ir_builder->CreateBr(loop_block);
+		// insert a fallthrougth from the current block into the loop body block
+		llvm_ir_builder->CreateBr(loop_body_block);
 
-		// start insertion into the loop block
-		llvm_ir_builder->SetInsertPoint(loop_block);
+		// start insertion into the loop body block
+		llvm_ir_builder->SetInsertPoint(loop_body_block);
 
 		// push the step block for continue statements
 		this->loop_continue_blocks.push_back(step_block);
 
 		// push the end block for break statements
-		this->loop_break_blocks.push_back(after_block);
+		this->loop_break_blocks.push_back(end_block);
 
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->for_body.get()) == nullptr)
@@ -863,13 +863,13 @@ namespace builder
 		}
 
 		// insert the conditional branch
-		llvm_ir_builder->CreateCondBr(end_condition, loop_block, after_block);
+		llvm_ir_builder->CreateCondBr(end_condition, loop_body_block, end_block);
 
-		// insert the after loop block
-		func->getBasicBlockList().push_back(after_block);
+		// insert the end loop block
+		func->getBasicBlockList().push_back(end_block);
 
-		// any new code will be inserted in the after block
-		llvm_ir_builder->SetInsertPoint(after_block);
+		// any new code will be inserted in the end block
+		llvm_ir_builder->SetInsertPoint(end_block);
 
 		return llvm::ConstantTokenNone::get(*llvm_context);
 	}
@@ -880,19 +880,19 @@ namespace builder
 		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
 		// create the condition block
-		llvm::BasicBlock* condition_block = llvm::BasicBlock::Create(*llvm_context, "loopcond", func);
+		llvm::BasicBlock* condition_block = llvm::BasicBlock::Create(*llvm_context, "while.cond", func);
 
 		// insert a fallthrougth from the current block into the condition block
 		llvm_ir_builder->CreateBr(condition_block);
 
-		// create the loop block
-		llvm::BasicBlock* loop_block = llvm::BasicBlock::Create(*llvm_context, "loop", func);
+		// create the loop body block
+		llvm::BasicBlock* loop_body_block = llvm::BasicBlock::Create(*llvm_context, "while.body", func);
 
 		// create the loop end block
-		llvm::BasicBlock* loop_end_block = llvm::BasicBlock::Create(*llvm_context, "loopend");
+		llvm::BasicBlock* loop_end_block = llvm::BasicBlock::Create(*llvm_context, "while.end");
 
-		// set insert to loop block
-		llvm_ir_builder->SetInsertPoint(loop_block);
+		// set insert to loop body block
+		llvm_ir_builder->SetInsertPoint(loop_body_block);
 
 		// push the condition block for continue statements
 		this->loop_continue_blocks.push_back(condition_block);
@@ -929,9 +929,9 @@ namespace builder
 		}
 
 		// insert the conditional branch
-		llvm_ir_builder->CreateCondBr(end_condition, loop_block, loop_end_block);
+		llvm_ir_builder->CreateCondBr(end_condition, loop_body_block, loop_end_block);
 
-		// insert the after loop block
+		// insert the end loop block
 		func->getBasicBlockList().push_back(loop_end_block);
 
 		// set insert to loop end
