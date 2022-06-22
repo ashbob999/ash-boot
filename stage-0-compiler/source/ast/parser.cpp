@@ -39,7 +39,7 @@ namespace parser
 
 	shared_ptr<ast::BaseExpr> Parser::parse_file()
 	{
-		shared_ptr<ast::BaseExpr> file_body = parse_body(true, false);
+		shared_ptr<ast::BaseExpr> file_body = parse_body(ast::BodyType::Global, true, false);
 
 		return file_body;
 	}
@@ -55,7 +55,7 @@ namespace parser
 	{
 		start_;
 		bodies.push_back(nullptr);
-		shared_ptr<ast::BodyExpr> body = parse_body(true, false);
+		shared_ptr<ast::BodyExpr> body = parse_body(ast::BodyType::Global, true, false);
 		end_;
 		return body;
 	}
@@ -163,6 +163,11 @@ namespace parser
 			else if (identifier_string == "return")
 			{
 				curr_token = Token::ReturnStatement;
+				return curr_token;
+			}
+			else if (identifier_string == "continue")
+			{
+				curr_token = Token::ContinueStatement;
 				return curr_token;
 			}
 			else
@@ -321,10 +326,10 @@ namespace parser
 	}
 
 	/// top ::= (definition | expression)*
-	shared_ptr<ast::BodyExpr> Parser::parse_body(bool is_top_level, bool has_curly_brackets)
+	shared_ptr<ast::BodyExpr> Parser::parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets)
 	{
 		start_;
-		shared_ptr<ast::BodyExpr> body = make_shared<ast::BodyExpr>(bodies.back());
+		shared_ptr<ast::BodyExpr> body = make_shared<ast::BodyExpr>(bodies.back(), body_type);
 
 		if (has_curly_brackets)
 		{
@@ -479,6 +484,24 @@ namespace parser
 
 					break;
 				}
+				case Token::ContinueStatement:
+				{
+					if (is_top_level)
+					{
+						return log_error_body("Continue statements are not allowed in top level code");
+					}
+
+					shared_ptr<ast::BaseExpr> base = parse_continue();
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
+
+					body->add_base(base);
+
+					break;
+				}
 				case Token::BodyEnd:
 				{
 					end_;
@@ -535,7 +558,7 @@ namespace parser
 	{
 		start_;
 		bodies.push_back(nullptr);
-		shared_ptr<ast::BodyExpr> expr = parse_body(true, false);
+		shared_ptr<ast::BodyExpr> expr = parse_body(ast::BodyType::Global, true, false);
 		if (expr == nullptr)
 		{
 			end_;
@@ -986,7 +1009,7 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BodyExpr> body = parse_body(false, true);
+		shared_ptr<ast::BodyExpr> body = parse_body(ast::BodyType::Function, false, true);
 		if (body == nullptr)
 		{
 			end_;
@@ -999,7 +1022,6 @@ namespace parser
 			body->named_types[proto->args[i]] = proto->types[i];
 		}
 
-		body->is_function_body = true;
 		body->parent_function = proto;
 
 		get_next_token();
@@ -1021,7 +1043,7 @@ namespace parser
 			return log_error("Expected if condition");
 		}
 
-		shared_ptr<ast::BodyExpr> if_body = parse_body(false, true);
+		shared_ptr<ast::BodyExpr> if_body = parse_body(ast::BodyType::Conditional, false, true);
 
 		if (if_body == nullptr)
 		{
@@ -1039,7 +1061,7 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BodyExpr> else_body = parse_body(false, true);
+		shared_ptr<ast::BodyExpr> else_body = parse_body(ast::BodyType::Conditional, false, true);
 
 		if (else_body == nullptr)
 		{
@@ -1119,7 +1141,7 @@ namespace parser
 			}
 		}
 
-		shared_ptr<ast::BodyExpr> for_body = parse_body(false, true);
+		shared_ptr<ast::BodyExpr> for_body = parse_body(ast::BodyType::Loop, false, true);
 
 		if (for_body == nullptr)
 		{
@@ -1155,7 +1177,7 @@ namespace parser
 
 		//get_next_token();
 
-		shared_ptr<ast::BodyExpr> while_body = parse_body(false, true);
+		shared_ptr<ast::BodyExpr> while_body = parse_body(ast::BodyType::Loop, false, true);
 
 		if (while_body == nullptr)
 		{
@@ -1179,7 +1201,7 @@ namespace parser
 
 		return make_shared<ast::CommentExpr>(bodies.back());
 	}
-	
+
 	/// returnexpr ::= 'return' expr?
 	shared_ptr<ast::BaseExpr> Parser::parse_return()
 	{
@@ -1198,6 +1220,14 @@ namespace parser
 		}
 
 		return make_shared<ast::ReturnExpr>(bodies.back(), expr);
+	}
+
+	/// continueexpr ::= 'continue'
+	shared_ptr<ast::BaseExpr> Parser::parse_continue()
+	{
+		get_next_token();
+
+		return make_shared<ast::ContinueExpr>(bodies.back());
 	}
 
 	int Parser::get_token_precedence()

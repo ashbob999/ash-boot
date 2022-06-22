@@ -395,7 +395,7 @@ namespace type_checker
 		{
 			ast::BodyExpr* body = expr->get_body();
 
-			while (!body->is_function_body)
+			while (body->body_type != ast::BodyType::Function)
 			{
 				body = body->get_body();
 			}
@@ -404,6 +404,18 @@ namespace type_checker
 
 			std::string type2 = types::to_string(expr->ret_expr->get_result_type());
 			return log_error(expr, "Return statement has incompatible type with function return type, expected: " + type1 + " , but got: " + type2 + " instead");
+		}
+
+		return true;
+	}
+
+	template<>
+	bool TypeChecker::check_expression<ast::ContinueExpr>(ast::ContinueExpr* expr)
+	{
+		// check continue
+		if (!expr->check_types())
+		{
+			return log_error(expr, "Continue statement is only allowed in loops");
 		}
 
 		return true;
@@ -456,6 +468,10 @@ namespace type_checker
 			case ast::AstExprType::ReturnExpr:
 			{
 				return check_expression(dynamic_cast<ast::ReturnExpr*>(expr));
+			}
+			case ast::AstExprType::ContinueExpr:
+			{
+				return check_expression(dynamic_cast<ast::ContinueExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

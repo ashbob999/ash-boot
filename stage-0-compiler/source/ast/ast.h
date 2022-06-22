@@ -102,11 +102,19 @@ namespace ast
 		shared_ptr<types::BaseType> value_type;
 	};
 
+	enum class BodyType
+	{
+		Global,
+		Function,
+		Conditional,
+		Loop,
+	};
+
 	// A collection of multiple BaseExpr
 	class BodyExpr : public BaseExpr
 	{
 	public:
-		BodyExpr(BodyExpr* body);
+		BodyExpr(BodyExpr* body, BodyType body_type);
 		~BodyExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -118,8 +126,9 @@ namespace ast
 		// TODO: remove?
 		llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, int str_id);
 
-		bool is_function_body = false;
+		//bool is_function_body = false;
 		FunctionPrototype* parent_function = nullptr;
+		BodyType body_type;
 		std::vector<std::pair<int, ReferenceType>> in_scope_vars; // only used for checking vars are in scope, and order of defines
 		std::vector<shared_ptr<BaseExpr>> expressions;
 		std::vector<shared_ptr<FunctionDefinition>> functions;

@@ -301,8 +301,8 @@ namespace ast
 		return false;
 	}
 
-	BodyExpr::BodyExpr(BodyExpr* body)
-		: BaseExpr(AstExprType::BodyExpr, body)
+	BodyExpr::BodyExpr(BodyExpr* body, BodyType body_type)
+		: BaseExpr(AstExprType::BodyExpr, body), body_type(body_type)
 	{}
 
 	BodyExpr::~BodyExpr()
@@ -685,7 +685,7 @@ namespace ast
 	{
 		BodyExpr* body = this->get_body();
 
-		while (!body->is_function_body)
+		while (body->body_type != ast::BodyType::Function)
 		{
 			body = body->get_body();
 		}
@@ -693,6 +693,49 @@ namespace ast
 		if (body->parent_function->return_type == this->get_result_type())
 		{
 			return true;
+		}
+
+		return false;
+	}
+
+	ContinueExpr::ContinueExpr(BodyExpr* body)
+		: BaseExpr(AstExprType::ContinueExpr, body)
+	{}
+
+	std::string ContinueExpr::to_string(int depth)
+	{
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "Continue Statement: {}" << '\n';
+
+		str << tabs << "}, " << '\n';
+
+		return str.str();
+	}
+
+	types::Type ContinueExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = types::Type::Void;
+		}
+		return result_type;
+	}
+
+	bool ContinueExpr::check_types()
+	{
+		BodyExpr* body = this->get_body();
+
+		while (body->body_type != BodyType::Function)
+		{
+			if (body->body_type == BodyType::Loop)
+			{
+				return true;
+			}
+
+			body = body->get_body();
 		}
 
 		return false;

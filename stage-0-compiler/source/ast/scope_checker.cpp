@@ -64,7 +64,7 @@ namespace scope
 		std::pair<int, ast::ReferenceType> p{ name_id, type };
 
 		auto f = std::find(body->in_scope_vars.begin(), body->in_scope_vars.end(), p);
-		while (body != nullptr && (type == ast::ReferenceType::Function || !body->is_function_body) && f == body->in_scope_vars.end())
+		while (body != nullptr && (type == ast::ReferenceType::Function || body->body_type != ast::BodyType::Function) && f == body->in_scope_vars.end())
 		{
 			body = body->get_body();
 

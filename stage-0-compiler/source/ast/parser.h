@@ -23,6 +23,7 @@ namespace parser
 		ForStatement,
 		WhileStatement,
 		ReturnStatement,
+		ContinueStatement,
 		BodyStart,
 		BodyEnd,
 		ParenStart,
@@ -54,7 +55,7 @@ namespace parser
 		char get_char();
 		char peek_char();
 		Token get_next_token();
-		shared_ptr<ast::BodyExpr> parse_body(bool is_top_level, bool has_curly_brackets);
+		shared_ptr<ast::BodyExpr> parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets);
 		shared_ptr<ast::FunctionDefinition> parse_top_level();
 		shared_ptr<ast::BaseExpr> parse_expression(bool for_call, bool for_if_cond);
 		shared_ptr<ast::BaseExpr> parse_primary();
@@ -71,6 +72,7 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_while_loop();
 		shared_ptr<ast::BaseExpr> parse_comment();
 		shared_ptr<ast::BaseExpr> parse_return();
+		shared_ptr<ast::BaseExpr> parse_continue();
 		int get_token_precedence();
 		shared_ptr<ast::BaseExpr> log_error(std::string error_message);
 		shared_ptr<ast::BodyExpr> log_error_body(std::string error_message);

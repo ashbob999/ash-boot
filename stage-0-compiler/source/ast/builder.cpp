@@ -801,6 +801,9 @@ namespace builder
 		// start insertion into the loop block
 		llvm_ir_builder->SetInsertPoint(loop_block);
 
+		// push the step block for continue statements
+		this->loop_continue_blocks.push_back(step_block);
+
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->for_body.get()) == nullptr)
 		{
@@ -810,6 +813,9 @@ namespace builder
 
 		// create fallthrough into step block
 		llvm_ir_builder->CreateBr(step_block);
+
+		// pop the step block for continue statements
+		this->loop_continue_blocks.pop_back();
 
 		// start insertion into the step block
 		llvm_ir_builder->SetInsertPoint(step_block);
@@ -876,6 +882,9 @@ namespace builder
 		// set insert to loop block
 		llvm_ir_builder->SetInsertPoint(loop_block);
 
+		// push the condition block for continue statements
+		this->loop_continue_blocks.push_back(condition_block);
+
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->while_body.get()) == nullptr)
 		{
@@ -885,6 +894,9 @@ namespace builder
 
 		// create fallthrough into condition block
 		llvm_ir_builder->CreateBr(condition_block);
+
+		// pop the condition block for continue statements
+		this->loop_continue_blocks.pop_back();
 
 		// create the loop end block
 		llvm::BasicBlock* loop_end_block = llvm::BasicBlock::Create(*llvm_context, "loopend", func);
@@ -939,6 +951,14 @@ namespace builder
 		return llvm::ConstantTokenNone::get(*llvm_context);
 	}
 
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::ContinueExpr>(ast::ContinueExpr* expr)
+	{
+		llvm_ir_builder->CreateBr(this->loop_continue_blocks.back());
+
+		return llvm::ConstantTokenNone::get(*llvm_context);
+	}
+
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -986,6 +1006,10 @@ namespace builder
 			case ast::AstExprType::ReturnExpr:
 			{
 				return generate_code(dynamic_cast<ast::ReturnExpr*>(expr));
+			}
+			case ast::AstExprType::ContinueExpr:
+			{
+				return generate_code(dynamic_cast<ast::ContinueExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");
