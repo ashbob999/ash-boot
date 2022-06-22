@@ -25,6 +25,10 @@ namespace types
 		{
 			return Type::Bool;
 		}
+		else if (str == "char")
+		{
+			return Type::Char;
+		}
 		return Type::None;
 	}
 
@@ -33,10 +37,12 @@ namespace types
 		// type formats
 		// int: [+-]?[0-9][0-9]*
 		// float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)[f]?
+		// char: '([^']|\\.)'
 
 		std::regex int_regex{ "[+-]?[0-9][0-9]*" };
 		std::regex float_regex{ "[+-]?[0-9][0-9]*[.][0-9][0-9]*[f]?" };
 		std::regex bool_regex{ "(true|false)" };
+		std::regex char_regex{ "'([^']|\\\\.)'" };
 
 		std::smatch match;
 
@@ -48,10 +54,13 @@ namespace types
 		{
 			return { true, Type::Float };
 		}
-
 		else if (std::regex_match(str, match, bool_regex))
 		{
 			return { true, Type::Bool };
+		}
+		else if (std::regex_match(str, match, char_regex))
+		{
+			return { true, Type::Char };
 		}
 
 		return { false, Type::None };
@@ -77,6 +86,10 @@ namespace types
 			{
 				return llvm::Type::getInt1Ty(llvm_context);
 			}
+			case Type::Char:
+			{
+				return llvm::Type::getInt8Ty(llvm_context);
+			}
 			default:
 			{
 				return nullptr;
@@ -99,6 +112,10 @@ namespace types
 			case Type::Bool:
 			{
 				return llvm::ConstantInt::get(llvm_context, llvm::APInt(1, 0, false));
+			}
+			case Type::Char:
+			{
+				return llvm::ConstantInt::get(llvm_context, llvm::APInt(8, 0, true));
 			}
 			default:
 			{
@@ -138,17 +155,21 @@ namespace types
 	{
 		switch (curr_type)
 		{
-			case types::Type::Int:
+			case Type::Int:
 			{
 				return make_shared<IntType>(str);
 			}
-			case types::Type::Float:
+			case Type::Float:
 			{
 				return make_shared<FloatType>(str);
 			}
-			case types::Type::Bool:
+			case Type::Bool:
 			{
 				return make_shared<BoolType>(str);
+			}
+			case Type::Char:
+			{
+				return make_shared<CharType>(str);
 			}
 		}
 
@@ -349,4 +370,83 @@ namespace types
 			return "false";
 		}
 	}
+
+	CharType::CharType()
+	{
+		this->data = '\0';
+	}
+
+	CharType::CharType(std::string& str)
+	{
+		char value;
+
+		if (str[1] != '\\')
+		{
+			value = str[1];
+		}
+		else
+		{
+			if (str[2] == '\'')
+			{
+				value = '\'';
+			}
+			else if (str[2] == '\"')
+			{
+				value = '"';
+			}
+			else if (str[2] == '\\')
+			{
+				value = '\\';
+			}
+			else if (str[2] == 'a')
+			{
+				value = '\a';
+			}
+			else if (str[2] == 'b')
+			{
+				value = '\b';
+			}
+			else if (str[2] == 'f')
+			{
+				value = '\f';
+			}
+			else if (str[2] == 'n')
+			{
+				value = '\n';
+			}
+			else if (str[2] == 'r')
+			{
+				value = '\r';
+			}
+			else if (str[2] == 't')
+			{
+				value = '\t';
+			}
+			else if (str[2] == 'v')
+			{
+				value = '\v';
+			}
+			else if (str[2] == '0')
+			{
+				value = '\0';
+			}
+			else
+			{
+				value = str[2];
+			}
+		}
+
+		data = value;
+	}
+
+	llvm::ConstantData* CharType::get_value(llvm::LLVMContext* llvm_context)
+	{
+		return llvm::ConstantInt::get(*llvm_context, llvm::APInt(8, data, true));
+	}
+
+	std::string CharType::to_string()
+	{
+		return std::string{ data };
+	}
+
 }

@@ -203,6 +203,32 @@ namespace parser
 			}
 		}
 
+		// literal:
+		//		char: '.'
+		if (last_char == '\'')
+		{
+			identifier_string = last_char;
+			char next_char = get_char();
+			while (next_char != '\'' || identifier_string.back() == '\\')
+			{
+				last_char = next_char;
+				identifier_string += last_char;
+				next_char = get_char();
+			}
+
+			last_char = next_char;
+			identifier_string += last_char;
+
+			std::pair<bool, types::Type> res = types::check_type_string(identifier_string);
+
+			if (res.first)
+			{
+				curr_type = res.second;
+				curr_token = Token::LiteralValue;
+				return curr_token;
+			}
+		}
+
 		// end of file
 		if (last_char == std::ifstream::traits_type::eof())
 		{

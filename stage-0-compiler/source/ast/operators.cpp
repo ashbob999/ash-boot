@@ -261,7 +261,18 @@ namespace operators
 			{
 				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment || is_boolean_operator(binop))
 				{
-					return true; // only support comparisons for bools
+					return true; // only support comparison, assignment, and boolean ops
+				}
+				else
+				{
+					return false;
+				}
+			}
+			case types::Type::Char:
+			{
+				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment)
+				{
+					return true; // only support comparison and assignment
 				}
 				else
 				{

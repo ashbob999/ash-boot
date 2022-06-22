@@ -374,6 +374,7 @@ namespace builder
 				switch (expr->lhs->get_result_type())
 				{
 					case types::Type::Int:
+					case types::Type::Char:
 					{
 						return llvm_ir_builder->CreateICmpSLT(lhs, rhs, "lt");
 					}
@@ -392,6 +393,7 @@ namespace builder
 				switch (expr->lhs->get_result_type())
 				{
 					case types::Type::Int:
+					case types::Type::Char:
 					{
 						return llvm_ir_builder->CreateICmpSLE(lhs, rhs, "lte");
 					}
@@ -410,6 +412,7 @@ namespace builder
 				switch (expr->lhs->get_result_type())
 				{
 					case types::Type::Int:
+					case types::Type::Char:
 					{
 						return llvm_ir_builder->CreateICmpSGT(lhs, rhs, "gt");
 					}
@@ -428,6 +431,7 @@ namespace builder
 				switch (expr->lhs->get_result_type())
 				{
 					case types::Type::Int:
+					case types::Type::Char:
 					{
 						return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "gte");
 					}
@@ -447,6 +451,7 @@ namespace builder
 				{
 					case types::Type::Int:
 					case types::Type::Bool:
+					case types::Type::Char:
 					{
 						return llvm_ir_builder->CreateICmpEQ(lhs, rhs, "eq");
 					}
@@ -466,6 +471,7 @@ namespace builder
 				{
 					case types::Type::Int:
 					case types::Type::Bool:
+					case types::Type::Char:
 					{
 						return llvm_ir_builder->CreateICmpNE(lhs, rhs, "ne");
 					}

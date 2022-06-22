@@ -18,6 +18,7 @@ namespace types
 		Float, // 32-bit floating-point number
 		Void,
 		Bool, // either true (1), false (0)
+		Char, // 8-bit signed integer
 	};
 
 	Type is_valid_type(std::string& str);
@@ -53,7 +54,7 @@ namespace types
 	{
 	public:
 		IntType();
-		IntType(std::string&);
+		IntType(std::string& str);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
 	private:
@@ -64,7 +65,7 @@ namespace types
 	{
 	public:
 		FloatType();
-		FloatType(std::string&);
+		FloatType(std::string& str);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
 	private:
@@ -75,10 +76,21 @@ namespace types
 	{
 	public:
 		BoolType();
-		BoolType(std::string&);
+		BoolType(std::string& str);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
 	private:
 		bool data;
+	};
+
+	class CharType : public BaseType
+	{
+	public:
+		CharType();
+		CharType(std::string& str);
+		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
+		std::string to_string() override;
+	private:
+		char data;
 	};
 };
