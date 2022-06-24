@@ -5,6 +5,7 @@
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Value.h"
+#include "llvm/Target/TargetMachine.h"
 
 #include "ast.h"
 
@@ -16,6 +17,7 @@ namespace builder
 		LLVMBuilder();
 		~LLVMBuilder();
 
+		bool set_target();
 		llvm::Function* generate_function_definition(ast::FunctionDefinition* function);
 		llvm::Function* generate_function_prototype(ast::FunctionPrototype* prototype);
 		llvm::Value* log_error_value(std::string str);
@@ -33,6 +35,7 @@ namespace builder
 		llvm::IRBuilder<>* llvm_ir_builder;
 		//std::map<std::string, llvm::AllocaInst*> llvm_named_values;
 		//std::map<std::string, llvm::Type*> llvm_named_types;
+		llvm::TargetMachine* target_machine;
 
 	private:
 		std::vector<llvm::BasicBlock*> loop_continue_blocks;

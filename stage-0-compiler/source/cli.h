@@ -10,6 +10,12 @@ namespace cli
 {
 	class CLI
 	{
+		enum class OutputType
+		{
+			IR,
+			OBJ,
+		};
+
 	public:
 		CLI(int argc, char** argv);
 
@@ -20,6 +26,7 @@ namespace cli
 		bool check_ast();
 		bool build_ast();
 		bool output_llvm_ir();
+		bool output_object_file();
 
 	private:
 		bool parsed = false;
@@ -27,5 +34,6 @@ namespace cli
 		std::filesystem::path output_file;
 		std::shared_ptr<ast::BodyExpr> body_ast;
 		builder::LLVMBuilder llvm_builder;
+		OutputType output_type = OutputType::IR;
 	};
 }

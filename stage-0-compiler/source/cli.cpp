@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "llvm/Support/FileSystem.h"
+#include "llvm/IR/LegacyPassManager.h"
 
 #include "ast/parser.h"
 #include "ast/type_checker.h"
@@ -59,6 +60,38 @@ namespace cli
 		std::filesystem::path output_file_path{ argv[2] };
 		output_file = output_file_path;
 
+		// argv[3] is output type
+		if (argc >= 4)
+		{
+			// --output-type=[ir|obj]
+			std::string type_str{ argv[3] };
+
+			if (type_str.rfind("--output-type=", 0) == 0)
+			{
+				std::string option = type_str.substr(14);
+
+				if (option == "ir")
+				{
+					output_type = OutputType::IR;
+				}
+				else if (option == "obj")
+				{
+					output_type = OutputType::OBJ;
+				}
+				else
+				{
+					std::cout << "Invalid value for --output-type option: " << option << std::endl;
+					std::cout << "Valid values are: ir or obj" << std::endl;
+					return;
+				}
+			}
+			else
+			{
+				std::cout << "Invalid option: " << type_str << std::endl;
+				return;
+			}
+		}
+
 		parsed = true;
 	}
 
@@ -84,9 +117,24 @@ namespace cli
 			return false;
 		}
 
-		if (!output_llvm_ir())
+		switch (output_type)
 		{
-			return false;
+			case OutputType::IR:
+			{
+				if (!output_llvm_ir())
+				{
+					return false;
+				}
+				break;
+			}
+			case OutputType::OBJ:
+			{
+				if (!output_object_file())
+				{
+					return false;
+				}
+				break;
+			}
 		}
 
 		return true;
@@ -142,7 +190,12 @@ namespace cli
 
 	bool CLI::build_ast()
 	{
-		builder::LLVMBuilder llvm_builder;
+		if (!llvm_builder.set_target())
+		{
+			std::cout << "Failed to set target" << std::endl;
+			return false;
+		}
+
 		llvm_builder.llvm_module->setSourceFileName(input_file.string());
 
 		// generate all of the function prototypes
@@ -199,6 +252,39 @@ namespace cli
 
 		// close file stream
 		output_file_stream.close();
+
+		return true;
+	}
+
+	bool CLI::output_object_file()
+	{
+		std::error_code error_code;
+
+		// create the raw fd stream
+		llvm::raw_fd_ostream output_file_stream(output_file.string(), error_code, llvm::sys::fs::CreationDisposition::CD_CreateAlways, llvm::sys::fs::FileAccess::FA_Write, llvm::sys::fs::OpenFlags::OF_TextWithCRLF);
+
+		if (error_code)
+		{
+			// error
+			std::cout << "Error Opening Output File Stream: " << error_code.message() << std::endl;
+			return false;
+		}
+
+		llvm::legacy::PassManager pass;
+		llvm::CodeGenFileType file_type = llvm::CodeGenFileType::CGFT_ObjectFile;
+
+		if (llvm_builder.target_machine->addPassesToEmitFile(pass, output_file_stream, nullptr, file_type))
+		{
+			std::cout << "Target machine cannot emit a file of this type" << std::endl;
+			return false;
+		}
+
+		pass.run(*llvm_builder.llvm_module);
+
+		// close file stream
+		output_file_stream.close();
+
+		std::cout << "Object Code Was Successfully Written To File" << std::endl;
 
 		return true;
 	}

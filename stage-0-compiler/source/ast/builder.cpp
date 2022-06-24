@@ -3,6 +3,10 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/DiagnosticInfo.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/Host.h"
+#include "llvm/MC/TargetRegistry.h"
+#include "llvm/ADT/APInt.h"
 
 #include "builder.h"
 #include "scope_checker.h"
@@ -35,7 +39,7 @@ namespace builder
 		llvm_module = new llvm::Module("ash-boot", *llvm_context);
 		llvm_ir_builder = new llvm::IRBuilder<>(*llvm_context);
 
-		llvm_context->setDiagnosticHandlerCallBack(&this->diagnostic_handler_callback);
+		//llvm_context->setDiagnosticHandlerCallBack(&this->diagnostic_handler_callback);
 	}
 
 	LLVMBuilder::~LLVMBuilder()
@@ -43,6 +47,40 @@ namespace builder
 		delete llvm_ir_builder;
 		delete llvm_module;
 		delete llvm_context;
+	}
+
+	bool LLVMBuilder::set_target()
+	{
+		// setup targets
+		std::string target_triple = llvm::sys::getDefaultTargetTriple();
+
+		llvm::InitializeAllTargetInfos();
+		llvm::InitializeAllTargets();
+		llvm::InitializeAllTargetMCs();
+		llvm::InitializeAllAsmParsers();
+		llvm::InitializeAllAsmPrinters();
+
+		std::string error;
+		const llvm::Target* target = llvm::TargetRegistry::lookupTarget(target_triple, error);
+
+		if (!target)
+		{
+			std::cout << error << std::endl;
+			return false;
+		}
+
+		const char* cpu = "generic";
+		const char* features = "";
+
+		llvm::TargetOptions opt;
+		llvm::Optional<llvm::Reloc::Model> rec = llvm::Optional<llvm::Reloc::Model>();
+
+		target_machine = target->createTargetMachine(target_triple, cpu, features, opt, rec);
+
+		llvm_module->setDataLayout(target_machine->createDataLayout());
+		llvm_module->setTargetTriple(target_triple);
+
+		return true;
 	}
 
 	llvm::Value* LLVMBuilder::log_error_value(std::string str)
