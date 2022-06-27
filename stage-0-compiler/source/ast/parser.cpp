@@ -404,7 +404,6 @@ namespace parser
 				}
 				case Token::FunctionDefinition:
 				{
-
 					shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
 					if (fd != nullptr)
 					{
@@ -434,6 +433,11 @@ namespace parser
 				}
 				case Token::IfStatement:
 				{
+					if (is_top_level)
+					{
+						return log_error_body("If statements are not allowed in top level code");
+					}
+
 					shared_ptr<ast::BaseExpr> base = parse_if_else();
 
 					if (base == nullptr)
@@ -450,6 +454,11 @@ namespace parser
 				}
 				case Token::ForStatement:
 				{
+					if (is_top_level)
+					{
+						return log_error_body("For statements are not allowed in top level code");
+					}
+
 					shared_ptr<ast::BaseExpr> base = parse_for_loop();
 
 					if (base == nullptr)
@@ -463,6 +472,11 @@ namespace parser
 				}
 				case Token::WhileStatement:
 				{
+					if (is_top_level)
+					{
+						return log_error_body("While statements are not allowed in top level code");
+					}
+
 					shared_ptr<ast::BaseExpr> base = parse_while_loop();
 
 					if (base == nullptr)
