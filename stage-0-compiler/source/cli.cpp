@@ -8,7 +8,6 @@
 
 #include "ast/parser.h"
 #include "ast/type_checker.h"
-#include "ast/module.h"
 
 namespace cli
 {
@@ -157,6 +156,7 @@ namespace cli
 		// parse the file
 		parser::Parser parser{ file_stream , input_file.string() };
 		body_ast = parser.parse_file_as_body();
+		current_module = parser.get_module();
 
 		file_stream.close();
 
@@ -176,6 +176,8 @@ namespace cli
 	{
 		// do type checking
 		type_checker::TypeChecker tc;
+
+		tc.set_module(current_module);
 
 		if (!tc.check_types(body_ast.get()))
 		{

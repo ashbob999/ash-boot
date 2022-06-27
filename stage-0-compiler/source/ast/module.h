@@ -23,6 +23,15 @@ namespace module
 		static std::list<std::string> id_to_string;
 	};
 
+	class Module
+	{
+	public:
+		void add_module(int module_id);
+
+	public:
+		std::vector<int> modules;
+	};
+
 	struct mangled_data
 	{
 		std::string module_name;
@@ -33,12 +42,12 @@ namespace module
 	class Mangler
 	{
 	public:
-		static std::string mangle_module(int module_id);
+		static std::string mangle_module(Module mod);
 		static std::string mangle_function(int function_id, std::vector<types::Type>& types);
 		static std::string mangle_parent_functions(ast::BaseExpr* expr);
-		static int mangle(int module_id, ast::FunctionPrototype* proto);
-		static int mangle(int module_id, ast::CallExpr* expr);
-		static int mangle(int module_id, int function_id, std::vector<types::Type> function_args);
+		static int mangle(Module mod, ast::FunctionPrototype* proto);
+		static int mangle(Module mod, ast::CallExpr* expr);
+		static int mangle(Module mod, int function_id, std::vector<types::Type> function_args);
 		static mangled_data demangle(int name_id);
 		static std::string remove_dots(std::string& str);
 		static std::vector<int> get_mangled_functions(int function_id);

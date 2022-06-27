@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "parser.h"
-#include "module.h"
 
 //#define __debug
 
@@ -58,6 +57,11 @@ namespace parser
 		shared_ptr<ast::BodyExpr> body = parse_body(ast::BodyType::Global, true, false);
 		end_;
 		return body;
+	}
+
+	module::Module Parser::get_module()
+	{
+		return this->current_module;
 	}
 
 	char Parser::get_char()
@@ -173,6 +177,11 @@ namespace parser
 			else if (identifier_string == "break")
 			{
 				curr_token = Token::BreakStatement;
+				return curr_token;
+			}
+			else if (identifier_string == "module")
+			{
+				curr_token = Token::ModuleStatement;
 				return curr_token;
 			}
 			else
@@ -522,6 +531,20 @@ namespace parser
 					}
 
 					body->add_base(base);
+
+					break;
+				}
+				case Token::ModuleStatement:
+				{
+					if (!is_top_level)
+					{
+						return log_error_body("Module Definition can only be in top level code");
+					}
+
+					if (!parse_module())
+					{
+						return nullptr;
+					}
 
 					break;
 				}
@@ -1263,6 +1286,33 @@ namespace parser
 		get_next_token();
 
 		return make_shared<ast::BreakExpr>(bodies.back());
+	}
+
+	/// moduleexpr ::= 'module' identifier
+	bool Parser::parse_module()
+	{
+		get_next_token();
+
+		if (curr_token != Token::VariableReference)
+		{
+			log_error_empty("Invalid identifier for module statement");
+			return false;
+		}
+
+		int module_id = module::StringManager::get_id(identifier_string);
+
+		get_next_token();
+
+		if (curr_token != Token::EndOfExpression)
+		{
+			end_;
+			log_error_empty("Expected end of expression, missing ';'");
+			return false;
+		}
+
+		current_module.add_module(module_id);
+
+		return true;
 	}
 
 	int Parser::get_token_precedence()

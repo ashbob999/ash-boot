@@ -60,23 +60,18 @@ namespace module
 	std::unordered_map<std::string_view, int> StringManager::string_to_id;
 	std::list<std::string> StringManager::id_to_string;
 
-	std::string Mangler::mangle_module(int module_id)
+	std::string Mangler::mangle_module(Module mod)
 	{
 		std::string name;
 
-		std::string& module_name = StringManager::get_string(module_id);
-
-		for (int i = 0; i < module_name.size(); i++)
+		if (mod.modules.size() > 0)
 		{
-			if (module_name[i] == ':' && i < module_name.size() - 1 && module_name[i + 1] == ':')
+			for (int i = 0; i < mod.modules.size() - 1; i++)
 			{
+				name += StringManager::get_string(mod.modules[i]);
 				name += '_';
-				i++;
 			}
-			else
-			{
-				name += module_name[i];
-			}
+			name += StringManager::get_string(mod.modules.back());
 		}
 
 		return name;
@@ -106,12 +101,12 @@ namespace module
 		return name;
 	}
 
-	int Mangler::mangle(int module_id, ast::FunctionPrototype* proto)
+	int Mangler::mangle(Module mod, ast::FunctionPrototype* proto)
 	{
 		std::string name;
 
 		// add module name
-		name += mangle_module(module_id);
+		name += mangle_module(mod);
 
 		name += "__";
 
@@ -123,12 +118,12 @@ namespace module
 		return id;
 	}
 
-	int Mangler::mangle(int module_id, ast::CallExpr* expr)
+	int Mangler::mangle(Module mod, ast::CallExpr* expr)
 	{
 		std::string name;
 
 		// add module name
-		name += mangle_module(module_id);
+		name += mangle_module(mod);
 
 		name += "__";
 
@@ -146,12 +141,12 @@ namespace module
 		return id;
 	}
 
-	int Mangler::mangle(int module_id, int function_id, std::vector<types::Type> function_args)
+	int Mangler::mangle(Module mod, int function_id, std::vector<types::Type> function_args)
 	{
 		std::string name;
 
 		// add module name
-		name += mangle_module(module_id);
+		name += mangle_module(mod);
 
 		name += "__";
 
@@ -240,5 +235,10 @@ namespace module
 	}
 
 	std::unordered_map<int, std::vector<int>> Mangler::mangled_map;
+
+	void Module::add_module(int module_id)
+	{
+		this->modules.push_back(module_id);
+	}
 
 }

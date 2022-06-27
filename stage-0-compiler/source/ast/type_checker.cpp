@@ -3,7 +3,6 @@
 
 #include "type_checker.h"
 #include "scope_checker.h"
-#include "module.h"
 
 namespace type_checker
 {
@@ -13,6 +12,11 @@ namespace type_checker
 	bool TypeChecker::check_types(ast::BaseExpr* body)
 	{
 		return check_expression_dispatch(body);
+	}
+
+	void TypeChecker::set_module(module::Module mod)
+	{
+		this->current_module = mod;
 	}
 
 	bool TypeChecker::log_error(ast::BaseExpr* expr, std::string str)
@@ -108,9 +112,6 @@ namespace type_checker
 		// mangle all of the function prototypes
 		std::map<int, ast::FunctionPrototype*> function_prototypes;
 
-		std::string s = "MODULE";
-		int module_id = module::StringManager::get_id(s);
-
 		for (auto& p : body->function_prototypes)
 		{
 			// if function is main with no args then don't mangle, but only on top level bodies
@@ -125,7 +126,7 @@ namespace type_checker
 					continue;
 				}
 			}
-			int id = module::Mangler::mangle(module_id, p.second);
+			int id = module::Mangler::mangle(current_module, p.second);
 			function_prototypes.insert({ id, p.second });
 			p.second->name_id = id;
 		}
@@ -271,10 +272,7 @@ namespace type_checker
 			}
 		}
 
-		std::string s = "MODULE";
-		int module_id = module::StringManager::get_id(s);
-
-		int id = module::Mangler::mangle(module_id, expr);
+		int id = module::Mangler::mangle(current_module, expr);
 
 		// see if it is a extern function call
 		if (scope::find_extern_function(expr, id))

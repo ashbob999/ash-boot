@@ -5,6 +5,7 @@
 
 #include "ast/ast.h"
 #include "ast/builder.h"
+#include "ast/module.h"
 
 namespace cli
 {
@@ -35,5 +36,6 @@ namespace cli
 		std::shared_ptr<ast::BodyExpr> body_ast;
 		builder::LLVMBuilder llvm_builder;
 		OutputType output_type = OutputType::IR;
+		module::Module current_module;
 	};
 }
