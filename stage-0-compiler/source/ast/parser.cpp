@@ -34,7 +34,7 @@ namespace parser
 		{operators::BinaryOp::Division,           40},
 	};
 
-	Parser::Parser(std::ifstream& input_file) : input_file(input_file)
+	Parser::Parser(std::ifstream& input_file, std::string file_name) : input_file(input_file), file_name(file_name)
 	{}
 
 	shared_ptr<ast::BaseExpr> Parser::parse_file()
@@ -810,9 +810,11 @@ namespace parser
 			}
 		}
 
+		int name_id = module::StringManager::get_id(name);
+
 		end_;
-		expr->get_body()->named_types[module::StringManager::get_id(name)] = var_type;
-		return make_shared<ast::VariableDeclarationExpr>(bodies.back(), var_type, name, expr);
+		expr->get_body()->named_types[name_id] = var_type;
+		return make_shared<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, expr);
 	}
 
 	/// variable_reference_expr
@@ -821,7 +823,7 @@ namespace parser
 	shared_ptr<ast::BaseExpr> Parser::parse_variable_reference()
 	{
 		start_;
-		std::string name = identifier_string;
+		int name_id = module::StringManager::get_id(identifier_string);
 
 		get_next_token();
 
@@ -829,7 +831,7 @@ namespace parser
 		if (curr_token != Token::ParenStart)
 		{
 			end_;
-			return make_shared<ast::VariableReferenceExpr>(bodies.back(), name);
+			return make_shared<ast::VariableReferenceExpr>(bodies.back(), name_id);
 		}
 
 		get_next_token();
@@ -872,7 +874,7 @@ namespace parser
 		get_next_token();
 
 		end_;
-		return make_shared<ast::CallExpr>(bodies.back(), name, args);
+		return make_shared<ast::CallExpr>(bodies.back(), name_id, args);
 	}
 
 	shared_ptr<ast::BaseExpr> Parser::parse_parenthesis()
@@ -1012,6 +1014,8 @@ namespace parser
 		}
 
 		get_next_token();
+
+		proto->is_extern = true;
 
 		end_;
 		return proto;

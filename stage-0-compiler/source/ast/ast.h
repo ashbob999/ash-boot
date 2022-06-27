@@ -139,13 +139,14 @@ namespace ast
 		std::map<int, types::Type> named_types;
 		std::map<int, llvm::Type*> llvm_named_types;
 		std::map<int, llvm::AllocaInst*> llvm_named_values;
+		std::vector<int> extern_functions;
 	};
 
 	// Any variable declaration
 	class VariableDeclarationExpr : public BaseExpr
 	{
 	public:
-		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string& str, shared_ptr<BaseExpr> expr);
+		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, shared_ptr<BaseExpr> expr);
 		~VariableDeclarationExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -160,7 +161,7 @@ namespace ast
 	class VariableReferenceExpr : public BaseExpr
 	{
 	public:
-		VariableReferenceExpr(BodyExpr* body, std::string& str);
+		VariableReferenceExpr(BodyExpr* body, int name_id);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
@@ -186,7 +187,7 @@ namespace ast
 	class CallExpr : public BaseExpr, std::enable_shared_from_this<CallExpr>
 	{
 	public:
-		CallExpr(BodyExpr* body, std::string& callee, std::vector<shared_ptr<BaseExpr>>& args);
+		CallExpr(BodyExpr* body, int callee_id, std::vector<shared_ptr<BaseExpr>>& args);
 		~CallExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -194,6 +195,7 @@ namespace ast
 
 		int callee_id;
 		std::vector<shared_ptr<BaseExpr>> args;
+		bool is_extern = false;
 	};
 
 	class IfExpr : public BaseExpr
@@ -288,6 +290,7 @@ namespace ast
 		types::Type return_type;
 		std::vector<types::Type> types;
 		std::vector<int> args;
+		bool is_extern = false;
 	};
 
 	// The function definition (i.e the body)

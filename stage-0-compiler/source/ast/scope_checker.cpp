@@ -87,6 +87,48 @@ namespace scope
 		return true;
 	}
 
+	bool find_extern_function(ast::BaseExpr* expr, int name_id)
+	{
+		ast::BodyExpr* body = nullptr;
+
+		if (expr->get_type() == ast::AstExprType::BodyExpr)
+		{
+			body = dynamic_cast<ast::BodyExpr*>(expr);
+		}
+		else
+		{
+			body = expr->get_body();
+		}
+
+		if (body == nullptr)
+		{
+			return false;
+		}
+
+		auto f = std::find(body->extern_functions.begin(), body->extern_functions.end(), name_id);
+		while (body != nullptr && f == body->extern_functions.end())
+		{
+			body = body->get_body();
+
+			if (body != nullptr)
+			{
+				f = std::find(body->extern_functions.begin(), body->extern_functions.end(), name_id);
+			}
+		}
+
+		if (body == nullptr)
+		{
+			return false;
+		}
+
+		if (f == body->extern_functions.end())
+		{
+			return false;
+		}
+
+		return true;
+	}
+
 	void scope_error(std::string str)
 	{
 		std::cout << str << std::endl;

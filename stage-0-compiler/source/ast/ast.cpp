@@ -167,8 +167,8 @@ namespace ast
 		return true;
 	}
 
-	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, std::string& str, shared_ptr<BaseExpr> expr)
-		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name_id(module::StringManager::get_id(str)), expr(expr)
+	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, shared_ptr<BaseExpr> expr)
+		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name_id(name_id), expr(expr)
 	{}
 
 	VariableDeclarationExpr::~VariableDeclarationExpr()
@@ -217,8 +217,8 @@ namespace ast
 		return false;
 	}
 
-	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, std::string& str)
-		: BaseExpr(AstExprType::VariableReferenceExpr, body), name_id(module::StringManager::get_id(str))
+	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, int name_id)
+		: BaseExpr(AstExprType::VariableReferenceExpr, body), name_id(name_id)
 	{}
 
 	std::string VariableReferenceExpr::to_string(int depth)
@@ -390,8 +390,8 @@ namespace ast
 		return type;
 	}
 
-	CallExpr::CallExpr(BodyExpr* body, std::string& callee, std::vector<shared_ptr<BaseExpr>>& args)
-		: BaseExpr(AstExprType::CallExpr, body), callee_id(module::StringManager::get_id(callee)), args(args)
+	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<shared_ptr<BaseExpr>>& args)
+		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), args(args)
 	{}
 
 	CallExpr::~CallExpr()

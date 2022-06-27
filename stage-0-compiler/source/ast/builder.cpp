@@ -106,7 +106,20 @@ namespace builder
 		// create the function type
 		llvm::FunctionType* ft = llvm::FunctionType::get(types::get_llvm_type(*llvm_context, prototype->return_type), types, false);
 
-		llvm::Function* f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, module::StringManager::get_string(prototype->name_id), llvm_module);
+		std::string proto_name;
+
+		if (prototype->is_extern)
+		{
+			module::mangled_data data = module::Mangler::demangle(prototype->name_id);
+
+			proto_name = data.function_name;
+		}
+		else
+		{
+			proto_name = module::StringManager::get_string(prototype->name_id);
+		}
+
+		llvm::Function* f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, proto_name, llvm_module);
 
 		// set names for all arguments
 
@@ -696,11 +709,22 @@ namespace builder
 	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::CallExpr>(ast::CallExpr* expr)
 	{
-		llvm::Function* callee_func = llvm_module->getFunction(module::StringManager::get_string(expr->callee_id));
+		std::string name;
+		if (expr->is_extern)
+		{
+			module::mangled_data data = module::Mangler::demangle(expr->callee_id);
+			name = data.function_name;
+		}
+		else
+		{
+			name = module::StringManager::get_string(expr->callee_id);
+		}
+
+		llvm::Function* callee_func = llvm_module->getFunction(name);
 
 		if (callee_func == nullptr)
 		{
-			return log_error_value("unknown function referenced: " + module::StringManager::get_string(expr->callee_id));
+			return log_error_value("unknown function referenced: " + name);
 		}
 
 		if (callee_func->arg_size() != expr->args.size())

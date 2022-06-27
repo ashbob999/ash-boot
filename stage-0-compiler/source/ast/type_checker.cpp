@@ -105,7 +105,35 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::BodyExpr>(ast::BodyExpr* body)
 	{
+		// mangle all of the function prototypes
+		std::map<int, ast::FunctionPrototype*> function_prototypes;
+
+		std::string s = "MODULE";
+		int module_id = module::StringManager::get_id(s);
+
+		for (auto& p : body->function_prototypes)
+		{
+			// if function is main with no args then don't mangle, but only on top level bodies
+			if (body->get_body() == nullptr)
+			{
+				std::string main = "main";
+				int main_id = module::StringManager::get_id(main);
+
+				if (p.first == main_id && p.second->args.size() == 0)
+				{
+					function_prototypes.insert(p);
+					continue;
+				}
+			}
+			int id = module::Mangler::mangle(module_id, p.second);
+			function_prototypes.insert({ id, p.second });
+			p.second->name_id = id;
+		}
+
+		body->function_prototypes = function_prototypes;
+
 		// check all function prototypes to make sure there are no redefinitions
+		// TODO: allow same name function in embedded scopes
 		for (auto& p : body->function_prototypes)
 		{
 			if (scope::is_variable_defined(body, p.first, ast::ReferenceType::Function))
@@ -114,6 +142,10 @@ namespace type_checker
 			}
 
 			body->in_scope_vars.push_back({ p.first, ast::ReferenceType::Function });
+			if (p.second->is_extern)
+			{
+				body->extern_functions.push_back(p.first);
+			}
 		}
 
 		// check each function
@@ -231,6 +263,28 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::CallExpr>(ast::CallExpr* expr)
 	{
+		for (auto& e : expr->args)
+		{
+			if (!check_expression_dispatch(e.get()))
+			{
+				return false;
+			}
+		}
+
+		std::string s = "MODULE";
+		int module_id = module::StringManager::get_id(s);
+
+		int id = module::Mangler::mangle(module_id, expr);
+
+		// see if it is a extern function call
+		if (scope::find_extern_function(expr, id))
+		{
+			expr->is_extern = true;
+		}
+
+		// mangle the call id
+		expr->callee_id = id;
+
 		// check function has been defined
 		if (!scope::is_variable_defined(expr, expr->callee_id, ast::ReferenceType::Function))
 		{

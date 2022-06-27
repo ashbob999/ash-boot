@@ -155,7 +155,7 @@ namespace cli
 		}
 
 		// parse the file
-		parser::Parser parser{ file_stream };
+		parser::Parser parser{ file_stream , input_file.string() };
 		body_ast = parser.parse_file_as_body();
 
 		file_stream.close();

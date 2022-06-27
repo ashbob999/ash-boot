@@ -46,7 +46,7 @@ namespace parser
 	class Parser
 	{
 	public:
-		Parser(std::ifstream& input_file);
+		Parser(std::ifstream& input_file, std::string file_name);
 
 		shared_ptr<ast::BaseExpr> parse_file();
 		shared_ptr<ast::FunctionDefinition> parse_file_as_func();
@@ -89,5 +89,6 @@ namespace parser
 		types::Type curr_type = types::Type::None;
 		std::vector<ast::BodyExpr*> bodies;
 		LineInfo line_info;
+		std::string file_name;
 	};
 }
