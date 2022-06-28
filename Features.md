@@ -14,6 +14,7 @@
 - while loops
 - loop control (continue, break)
 - function control (return)
+- modules can be defined
 
 
 ##### Features Required for Bootstrapping
@@ -34,6 +35,6 @@
 - more types
 - class & inheritance
 - custom types
-- modules
+- using modules
 - multiple source files
 
