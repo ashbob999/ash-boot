@@ -1,3 +1,6 @@
+# module declaration
+module sample;
+
 # externally defined functions
 extern int putchar(int c);
 

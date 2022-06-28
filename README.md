@@ -16,14 +16,19 @@ The syntax for running the compiler is:
 - `ash-boot-stage0.exe <input-file> <output-file>` for Windows
 
 The input file can be any file that contains the source of the program to build.
-The output file will contain llvm IR code that then needs to be built.
+The output file will by default contain the ir code, but can be changed using the `--output-type` option.
+
+###### Options
+- `--output-type=[type]` chooses what type the output file will be, supported values are `ir` or `obj`.
 
 ##### Building The Result
-First run llc from either the system path, or the one created when building llvm.
+To build from the IR code, first run llc from either the system path, or the one created when building llvm.
 
 `llc -filetype=obj <input-file>`
 
-Then For Linux use either `clang` or `gcc` to build the object file.
+Now the object file which was built from the above command, or from the program itself, can be compiled into a executable file.
+
+For Linux use either `clang` or `gcc` to build the object file.
 
 `gcc -o <output-executable> <input-file>`
 
@@ -34,6 +39,9 @@ Then the code can be compiled using `link.exe`
 
 #### Sample Program
 ```
+# module declaration
+module sample;
+
 # externally defined functions
 extern int putchar(int c);
 
