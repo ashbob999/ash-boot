@@ -18,19 +18,22 @@ namespace parser
 {
 	// the operator precedences, higher binds tighter, same binds to the left
 	const std::unordered_map<operators::BinaryOp, int> Parser::binop_precedence = {
-		{operators::BinaryOp::Assignment,          2},
-		{operators::BinaryOp::BooleanOr,           4},
-		{operators::BinaryOp::BooleanAnd,          6},
-		{operators::BinaryOp::EqualTo,             8},
-		{operators::BinaryOp::NotEqualTo,          8},
-		{operators::BinaryOp::LessThan,           10},
-		{operators::BinaryOp::LessThanEqual,      10},
-		{operators::BinaryOp::GreaterThan,        10},
-		{operators::BinaryOp::GreaterThanEqual,   10},
-		{operators::BinaryOp::Addition,           20},
-		{operators::BinaryOp::Subtraction,        20},
-		{operators::BinaryOp::Multiplication,     40},
-		{operators::BinaryOp::Division,           40},
+		{operators::BinaryOp::Assignment,         10},
+		{operators::BinaryOp::BooleanOr,          20},
+		{operators::BinaryOp::BooleanAnd,         30},
+		{operators::BinaryOp::BitwiseOr,          40},
+		{operators::BinaryOp::BitwiseXor,         50},
+		{operators::BinaryOp::BitwiseAnd,         60},
+		{operators::BinaryOp::EqualTo,            70},
+		{operators::BinaryOp::NotEqualTo,         80},
+		{operators::BinaryOp::LessThan,          100},
+		{operators::BinaryOp::LessThanEqual,     100},
+		{operators::BinaryOp::GreaterThan,       100},
+		{operators::BinaryOp::GreaterThanEqual,  100},
+		{operators::BinaryOp::Addition,          120},
+		{operators::BinaryOp::Subtraction,       120},
+		{operators::BinaryOp::Multiplication,    140},
+		{operators::BinaryOp::Division,          140},
 	};
 
 	Parser::Parser(std::ifstream& input_file, std::string file_name) : input_file(input_file), file_name(file_name)

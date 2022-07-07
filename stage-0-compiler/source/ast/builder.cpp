@@ -699,6 +699,48 @@ namespace builder
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
+			case operators::BinaryOp::BitwiseAnd:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateAnd(lhs, rhs, "bitwise_and");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
+			case operators::BinaryOp::BitwiseOr:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateOr(lhs, rhs, "bitwise_or");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
+			case operators::BinaryOp::BitwiseXor:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateXor(lhs, rhs, "bitwise_xor");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
 			default:
 			{
 				return log_error_value("invalid binary operator");

@@ -44,6 +44,10 @@ namespace operators
 		{
 			return true;
 		}
+		else if (c == '^')
+		{
+			return true;
+		}
 		return false;
 	}
 
@@ -99,6 +103,18 @@ namespace operators
 				else if (c == '>')
 				{
 					return BinaryOp::GreaterThan;
+				}
+				else if (c == '&')
+				{
+					return BinaryOp::BitwiseAnd;
+				}
+				else if (c == '|')
+				{
+					return BinaryOp::BitwiseOr;
+				}
+				else if (c == '^')
+				{
+					return BinaryOp::BitwiseXor;
 				}
 			}
 		}
@@ -178,6 +194,20 @@ namespace operators
 		return false;
 	}
 
+	bool is_bitwise_operator(BinaryOp op)
+	{
+		switch (op)
+		{
+			case BinaryOp::BitwiseAnd:
+			case BinaryOp::BitwiseOr:
+			case BinaryOp::BitwiseXor:
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	std::string to_string(BinaryOp binop)
 	{
 		switch (binop)
@@ -238,6 +268,18 @@ namespace operators
 			{
 				return "BooleanOr (||)";
 			}
+			case BinaryOp::BitwiseAnd:
+			{
+				return "BitwiseOr (&)";
+			}
+			case BinaryOp::BitwiseOr:
+			{
+				return "BitwiseOr (|)";
+			}
+			case BinaryOp::BitwiseXor:
+			{
+				return "BitwiseXor (^)";
+			}
 		}
 	}
 
@@ -246,11 +288,21 @@ namespace operators
 		switch (type)
 		{
 			case types::Type::Int:
-			case types::Type::Float:
 			{
 				if (!is_boolean_operator(binop))
 				{
 					return true; // all operators supported, apart form boolean operators
+				}
+				else
+				{
+					return false;
+				}
+			}
+			case types::Type::Float:
+			{
+				if (!is_boolean_operator(binop) && !is_bitwise_operator(binop))
+				{
+					return true; // all operators supported, apart form boolean operators and bitwise operators
 				}
 				else
 				{

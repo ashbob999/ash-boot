@@ -23,6 +23,9 @@ namespace operators
 		NotEqualTo,
 		BooleanAnd,
 		BooleanOr,
+		BitwiseAnd,
+		BitwiseOr,
+		BitwiseXor,
 	};
 
 	bool is_first_char_valid(char c);
@@ -30,6 +33,7 @@ namespace operators
 	BinaryOp is_binary_op(std::string& str);
 	bool is_binary_comparision(BinaryOp op);
 	bool is_boolean_operator(BinaryOp op);
+	bool is_bitwise_operator(BinaryOp op);
 
 	std::string to_string(BinaryOp binop);
 

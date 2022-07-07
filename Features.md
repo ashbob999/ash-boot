@@ -6,6 +6,7 @@
 - binary operations (=, +, -, *, /)
 - comparisons (<, <=, >, >=, ==, !=)
 - boolean operators (&&, ||)
+- bitwise operators (&, |, ^)
 - basic scope
 - extern functions
 - nested functions
