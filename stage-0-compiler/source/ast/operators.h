@@ -14,6 +14,7 @@ namespace operators
 		Addition,
 		Subtraction,
 		Multiplication,
+		Modulo,
 		Division,
 		LessThan,
 		LessThanEqual,

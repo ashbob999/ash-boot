@@ -24,6 +24,10 @@ namespace operators
 		{
 			return true;
 		}
+		else if (c == '%')
+		{
+			return true;
+		}
 		else if (c == '<')
 		{
 			return true;
@@ -95,6 +99,10 @@ namespace operators
 				else if (c == '/')
 				{
 					return BinaryOp::Division;
+				}
+				else if (c == '%')
+				{
+					return BinaryOp::Modulo;
 				}
 				else if (c == '<')
 				{
@@ -232,6 +240,10 @@ namespace operators
 			{
 				return "Multiplication (*)";
 			}
+			case BinaryOp::Modulo:
+			{
+				return "Modulo (%)";
+			}
 			case BinaryOp::Division:
 			{
 				return "Division (/)";
@@ -291,7 +303,7 @@ namespace operators
 			{
 				if (!is_boolean_operator(binop))
 				{
-					return true; // all operators supported, apart form boolean operators
+					return true; // all operators supported, apart from boolean operators
 				}
 				else
 				{
@@ -302,7 +314,7 @@ namespace operators
 			{
 				if (!is_boolean_operator(binop) && !is_bitwise_operator(binop))
 				{
-					return true; // all operators supported, apart form boolean operators and bitwise operators
+					return true; // all operators supported, apart from boolean/bitwise operators
 				}
 				else
 				{

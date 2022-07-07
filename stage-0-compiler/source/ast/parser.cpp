@@ -34,6 +34,7 @@ namespace parser
 		{operators::BinaryOp::Subtraction,       120},
 		{operators::BinaryOp::Multiplication,    140},
 		{operators::BinaryOp::Division,          140},
+		{operators::BinaryOp::Modulo,            140},
 	};
 
 	Parser::Parser(std::ifstream& input_file, std::string file_name) : input_file(input_file), file_name(file_name)

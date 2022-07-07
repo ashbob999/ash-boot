@@ -429,6 +429,25 @@ namespace builder
 					}
 				}
 			}
+			case operators::BinaryOp::Modulo:
+			{
+				// TODO: deal with divide by zero errors
+				switch (expr->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateSRem(lhs, rhs, "srem");
+					}
+					case types::Type::Float:
+					{
+						return llvm_ir_builder->CreateFRem(lhs, rhs, "frem");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
 			case operators::BinaryOp::LessThan:
 			{
 				switch (expr->lhs->get_result_type())
