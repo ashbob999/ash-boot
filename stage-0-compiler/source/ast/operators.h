@@ -27,6 +27,8 @@ namespace operators
 		BitwiseAnd,
 		BitwiseOr,
 		BitwiseXor,
+		BitwiseShiftLeft,
+		BitwiseShiftRight,
 	};
 
 	bool is_first_char_valid(char c);

@@ -760,6 +760,34 @@ namespace builder
 					}
 				}
 			}
+			case operators::BinaryOp::BitwiseShiftLeft:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateShl(lhs, rhs, "shift_left");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
+			case operators::BinaryOp::BitwiseShiftRight:
+			{
+				switch (expr->lhs->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateAShr(lhs, rhs, "shift_right");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
+			}
 			default:
 			{
 				return log_error_value("invalid binary operator");

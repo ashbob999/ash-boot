@@ -30,6 +30,8 @@ namespace parser
 		{operators::BinaryOp::LessThanEqual,     100},
 		{operators::BinaryOp::GreaterThan,       100},
 		{operators::BinaryOp::GreaterThanEqual,  100},
+		{operators::BinaryOp::BitwiseShiftLeft,  110},
+		{operators::BinaryOp::BitwiseShiftRight, 110},
 		{operators::BinaryOp::Addition,          120},
 		{operators::BinaryOp::Subtraction,       120},
 		{operators::BinaryOp::Multiplication,    140},

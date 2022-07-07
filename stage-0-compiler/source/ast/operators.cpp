@@ -69,6 +69,14 @@ namespace operators
 		{
 			return true;
 		}
+		else if (c == '<')
+		{
+			return true;
+		}
+		else if (c == '>')
+		{
+			return true;
+		}
 		return false;
 	}
 
@@ -164,6 +172,20 @@ namespace operators
 					return BinaryOp::BooleanOr;
 				}
 			}
+			else if (c2 == '<')
+			{
+				if (c1 == '<')
+				{
+					return BinaryOp::BitwiseShiftLeft;
+				}
+			}
+			else if (c2 == '>')
+			{
+				if (c1 == '>')
+				{
+					return BinaryOp::BitwiseShiftRight;
+				}
+			}
 		}
 
 		return BinaryOp::None;
@@ -209,6 +231,8 @@ namespace operators
 			case BinaryOp::BitwiseAnd:
 			case BinaryOp::BitwiseOr:
 			case BinaryOp::BitwiseXor:
+			case BinaryOp::BitwiseShiftLeft:
+			case BinaryOp::BitwiseShiftRight:
 			{
 				return true;
 			}
@@ -291,6 +315,14 @@ namespace operators
 			case BinaryOp::BitwiseXor:
 			{
 				return "BitwiseXor (^)";
+			}
+			case BinaryOp::BitwiseShiftLeft:
+			{
+				return "BitwiseShiftLeft (<<)";
+			}
+			case BinaryOp::BitwiseShiftRight:
+			{
+				return "BitwiseShiftRight (^)";
 			}
 		}
 	}
