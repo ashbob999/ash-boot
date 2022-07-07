@@ -3,7 +3,7 @@
 ##### Current Features
 - functions
 - simple types (int, float, bool, char)
-- binary operations (=, +, -, *, /)
+- binary operations (=, +, -, *, /, %)
 - comparisons (<, <=, >, >=, ==, !=)
 - boolean operators (&&, ||)
 - bitwise operators (&, |, ^)
