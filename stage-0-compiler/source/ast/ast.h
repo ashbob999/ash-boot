@@ -30,6 +30,7 @@ namespace ast
 		ReturnExpr,
 		ContinueExpr,
 		BreakExpr,
+		ScopeExpr,
 	};
 
 	struct ExpressionLineInfo
@@ -75,6 +76,7 @@ namespace ast
 		BodyExpr* body;
 		types::Type result_type = types::Type::None;
 		ExpressionLineInfo line_info;
+		bool is_name_mangled = false;
 
 	public:
 		BaseExpr(AstExprType ast_type, BodyExpr* body);
@@ -88,6 +90,8 @@ namespace ast
 		virtual void set_body(BodyExpr* body) final;
 		virtual void set_line_info(ExpressionLineInfo line_info) final;
 		virtual ExpressionLineInfo& get_line_info() final;
+		virtual void set_mangled(bool mangled) final;
+		virtual bool is_mangled() final;
 	};
 
 	// Any literal value

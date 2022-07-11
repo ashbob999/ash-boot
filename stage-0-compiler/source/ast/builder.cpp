@@ -378,8 +378,8 @@ namespace builder
 		llvm::Value* lhs;
 		llvm::Value* rhs;
 
-		// don't pre generate the code for the lhs & rhs if the binop is a boolean operator
-		if (!operators::is_boolean_operator(expr->binop))
+		// don't pre generate the code for the lhs & rhs if the binop is a boolean operator, or a module scope binop
+		if (!operators::is_boolean_operator(expr->binop) && expr->binop != operators::BinaryOp::ModuleScope)
 		{
 			lhs = generate_code_dispatch(expr->lhs.get());
 			rhs = generate_code_dispatch(expr->rhs.get());
@@ -787,6 +787,10 @@ namespace builder
 						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
+			}
+			case operators::BinaryOp::ModuleScope:
+			{
+				return generate_code_dispatch(expr->rhs.get());
 			}
 			default:
 			{

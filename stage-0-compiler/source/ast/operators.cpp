@@ -52,6 +52,10 @@ namespace operators
 		{
 			return true;
 		}
+		else if (c == ':')
+		{
+			return true;
+		}
 		return false;
 	}
 
@@ -74,6 +78,10 @@ namespace operators
 			return true;
 		}
 		else if (c == '>')
+		{
+			return true;
+		}
+		else if (c == ':')
 		{
 			return true;
 		}
@@ -184,6 +192,13 @@ namespace operators
 				if (c1 == '>')
 				{
 					return BinaryOp::BitwiseShiftRight;
+				}
+			}
+			else if (c2 == ':')
+			{
+				if (c1 == ':')
+				{
+					return BinaryOp::ModuleScope;
 				}
 			}
 		}
@@ -324,11 +339,19 @@ namespace operators
 			{
 				return "BitwiseShiftRight (^)";
 			}
+			case BinaryOp::ModuleScope:
+			{
+				return "ModuleScope (::)";
+			}
 		}
 	}
 
 	bool is_type_supported(BinaryOp binop, types::Type type)
 	{
+		if (binop == BinaryOp::ModuleScope)
+		{
+			return false; // module scope operator does not apply to types
+		}
 		switch (type)
 		{
 			case types::Type::Int:

@@ -158,6 +158,50 @@ namespace module
 		return id;
 	}
 
+	int Mangler::add_module(int module_id, int other_id, bool is_first_module)
+	{
+		std::string name;
+
+		name += StringManager::get_string(module_id);
+		name += '_';
+
+		if (is_first_module)
+		{
+			name += '_';
+		}
+
+		name += StringManager::get_string(other_id);
+
+		return StringManager::get_id(name);
+	}
+
+	int Mangler::get_module(ast::BinaryExpr* scope_expr)
+	{
+		if (scope_expr->binop != operators::BinaryOp::ModuleScope)
+		{
+			assert(false, "Mangler::get_module, Scope Expression has invalid binop.");
+		}
+
+		std::string modules;
+
+		// add lhs
+		if (scope_expr->lhs->get_type() == ast::AstExprType::BinaryExpr)
+		{
+			modules += StringManager::get_string(get_module(dynamic_cast<ast::BinaryExpr*>(scope_expr->lhs.get())));
+		}
+		else
+		{
+			modules += StringManager::get_string(dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->lhs.get())->name_id);
+		}
+
+		modules += '_';
+
+		// add rhs
+		modules += StringManager::get_string(dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->rhs.get())->name_id);
+
+		return StringManager::get_id(modules);
+	}
+
 	mangled_data Mangler::demangle(int name_id)
 	{
 		std::string& name = StringManager::get_string(name_id);
@@ -239,6 +283,17 @@ namespace module
 	void Module::add_module(int module_id)
 	{
 		this->modules.push_back(module_id);
+	}
+
+	bool Module::is_module_available(int module_id)
+	{
+		std::string mangled_module = Mangler::mangle_module(*this);
+
+		if (StringManager::get_id(mangled_module) == module_id)
+		{
+			return true;
+		}
+		return false;
 	}
 
 }

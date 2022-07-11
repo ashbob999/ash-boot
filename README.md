@@ -80,6 +80,9 @@ function int main() {
 		i = i + 1;
 	}
 	
+	# scope operator
+	sample::putchar(97);
+	
 	# return value
 	0;
 }

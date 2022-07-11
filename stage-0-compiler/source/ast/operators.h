@@ -29,6 +29,7 @@ namespace operators
 		BitwiseXor,
 		BitwiseShiftLeft,
 		BitwiseShiftRight,
+		ModuleScope,
 	};
 
 	bool is_first_char_valid(char c);

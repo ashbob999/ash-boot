@@ -231,33 +231,127 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::BinaryExpr>(ast::BinaryExpr* expr)
 	{
-		// check lhs
-		if (!check_expression_dispatch(expr->lhs.get()))
+		if (expr->binop == operators::BinaryOp::ModuleScope)
 		{
-			return false;
-		}
+			// lhs will contain any other scope binops and variable references
+			// but rhs will only contain call expressions
 
-		// check rhs
-		if (!check_expression_dispatch(expr->rhs.get()))
+			// recursively check lhs type
+			ast::BinaryExpr* scope_expr = expr;
+			while (true)
+			{
+				ast::AstExprType lhs_type = scope_expr->lhs->get_type();
+				
+				if (lhs_type != ast::AstExprType::VariableReferenceExpr && lhs_type != ast::AstExprType::BinaryExpr)
+				{
+					return log_error(scope_expr, "Binary Operator: " + operators::to_string(scope_expr->binop) + ", lhs must be an identifier or another scoper operator.");
+				}
+				else
+				{
+					// check rhs type is variable refernce, if were not at the top scope binop
+					if (scope_expr != expr && scope_expr->rhs->get_type() != ast::AstExprType::VariableReferenceExpr)
+					{
+						return log_error(scope_expr, "Binary Operator: " + operators::to_string(scope_expr->binop) + ", rhs must be an identifier.");
+					}
+					if (lhs_type == ast::AstExprType::BinaryExpr)
+					{
+						scope_expr = dynamic_cast<ast::BinaryExpr*>(scope_expr->lhs.get());
+						continue;
+					}
+					else
+					{
+						// do nothing for variable reference
+						break;
+					}
+				}
+			}
+
+			// check rhs type
+			ast::AstExprType rhs_type = expr->rhs->get_type();
+			if (rhs_type != ast::AstExprType::CallExpr)
+			{
+				return log_error(expr, "Binary Operator: " + operators::to_string(expr->binop) + ", rhs must be a call expression.");
+			}
+
+			// check module exists
+			int module_id = -1;
+			if (expr->lhs->get_type() == ast::AstExprType::BinaryExpr)
+			{
+				module_id = module::Mangler::get_module(dynamic_cast<ast::BinaryExpr*>(expr->lhs.get()));
+			}
+			else
+			{
+				module_id = dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get())->name_id;
+			}
+
+			if (!this->current_module.is_module_available(module_id))
+			{
+				return log_error(expr, "Binary Operator: " + operators::to_string(expr->binop) + ", lhs module: " + module::StringManager::get_string(module_id) + ", does not exist.");
+			}
+
+			// get rhs name id
+			int rhs_mangled_id = -1;
+			if (expr->rhs->get_type() == ast::AstExprType::CallExpr)
+			{
+				ast::CallExpr* call_expr = dynamic_cast<ast::CallExpr*>(expr->rhs.get());
+
+				std::vector<types::Type> types;
+				for (auto& e : call_expr->args)
+				{
+					types.push_back(e->get_result_type());
+				}
+
+				std::string mangled_name = module::Mangler::mangle_function(call_expr->callee_id, types);
+				rhs_mangled_id = module::StringManager::get_id(mangled_name);
+			}
+
+			// partially mangle rhs
+			int rhs_final_id = module::Mangler::add_module(module_id, rhs_mangled_id, true);
+
+			// set rhs as mangled
+			expr->rhs->set_mangled(true);
+
+			// set rhs mangled name id
+			if (expr->rhs->get_type() == ast::AstExprType::CallExpr)
+			{
+				dynamic_cast<ast::CallExpr*>(expr->rhs.get())->callee_id = rhs_final_id;
+			}
+
+			// check rhs
+			if (!check_expression_dispatch(expr->rhs.get()))
+			{
+				return false;
+			}
+		}
+		else
 		{
-			return false;
-		}
+			// check lhs
+			if (!check_expression_dispatch(expr->lhs.get()))
+			{
+				return false;
+			}
 
-		// check both sides of the binary operator have the same type, type is given by lhs
-		if (!expr->check_types())
-		{
-			std::string type1 = types::to_string(expr->lhs->get_result_type());
-			std::string type2 = types::to_string(expr->rhs->get_result_type());
-			return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " has incompatible types: " + type1 + " and " + type2 + " given");
-		}
+			// check rhs
+			if (!check_expression_dispatch(expr->rhs.get()))
+			{
+				return false;
+			}
 
-		// check type supports the specified operation
-		if (!operators::is_type_supported(expr->binop, expr->get_result_type()))
-		{
-			std::string type = types::to_string(expr->rhs->get_result_type());
-			return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " does not support the given type: " + type);
-		}
+			// check both sides of the binary operator have the same type, type is given by lhs
+			if (!expr->check_types())
+			{
+				std::string type1 = types::to_string(expr->lhs->get_result_type());
+				std::string type2 = types::to_string(expr->rhs->get_result_type());
+				return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " has incompatible types: " + type1 + " and " + type2 + " given");
+			}
 
+			// check type supports the specified operation
+			if (!operators::is_type_supported(expr->binop, expr->get_result_type()))
+			{
+				std::string type = types::to_string(expr->rhs->get_result_type());
+				return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " does not support the given type: " + type);
+			}
+		}
 		return true;
 	}
 
@@ -272,7 +366,15 @@ namespace type_checker
 			}
 		}
 
-		int id = module::Mangler::mangle(current_module, expr);
+		int id;
+		if (expr->is_mangled())
+		{
+			id = expr->callee_id;
+		}
+		else
+		{
+			id = module::Mangler::mangle(current_module, expr);
+		}
 
 		// see if it is a extern function call
 		if (scope::find_extern_function(expr, id))

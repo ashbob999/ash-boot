@@ -27,6 +27,7 @@ namespace module
 	{
 	public:
 		void add_module(int module_id);
+		bool is_module_available(int module_id);
 
 	public:
 		std::vector<int> modules;
@@ -48,6 +49,8 @@ namespace module
 		static int mangle(Module mod, ast::FunctionPrototype* proto);
 		static int mangle(Module mod, ast::CallExpr* expr);
 		static int mangle(Module mod, int function_id, std::vector<types::Type> function_args);
+		static int add_module(int module_id, int other_id, bool is_first_module);
+		static int get_module(ast::BinaryExpr* scope_expr);
 		static mangled_data demangle(int name_id);
 		static std::string remove_dots(std::string& str);
 		static std::vector<int> get_mangled_functions(int function_id);

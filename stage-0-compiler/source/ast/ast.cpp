@@ -125,6 +125,16 @@ namespace ast
 		return this->line_info;
 	}
 
+	void BaseExpr::set_mangled(bool mangled)
+	{
+		this->is_name_mangled = mangled;
+	}
+
+	bool BaseExpr::is_mangled()
+	{
+		return this->is_name_mangled;
+	}
+
 	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string& str)
 		: BaseExpr(AstExprType::LiteralExpr, body), curr_type(curr_type)
 	{
@@ -283,6 +293,10 @@ namespace ast
 			{
 				result_type = types::Type::Bool;
 			}
+			else if (this->binop == operators::BinaryOp::ModuleScope)
+			{
+				result_type = this->rhs->get_result_type();
+			}
 			else
 			{
 				result_type = this->lhs->get_result_type();
@@ -293,7 +307,11 @@ namespace ast
 
 	bool BinaryExpr::check_types()
 	{
-		if (this->lhs->get_result_type() == this->rhs->get_result_type())
+		if (this->binop == operators::BinaryOp::ModuleScope)
+		{
+			return true;
+		}
+		else if (this->lhs->get_result_type() == this->rhs->get_result_type())
 		{
 			return true;
 		}

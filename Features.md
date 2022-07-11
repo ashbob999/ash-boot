@@ -16,6 +16,7 @@
 - loop control (continue, break)
 - function control (return)
 - modules can be defined
+- scope operator
 
 
 ##### Features Required for Bootstrapping
