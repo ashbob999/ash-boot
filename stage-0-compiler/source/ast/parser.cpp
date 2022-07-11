@@ -411,6 +411,8 @@ namespace parser
 				}
 				case Token::FunctionDefinition:
 				{
+					this->finished_parsing_modules = true;
+
 					shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
 					if (fd != nullptr)
 					{
@@ -428,6 +430,8 @@ namespace parser
 				}
 				case Token::ExternFunction:
 				{
+					this->finished_parsing_modules = true;
+
 					ast::FunctionPrototype* proto = parse_extern();
 
 					if (proto == nullptr)
@@ -560,6 +564,11 @@ namespace parser
 					if (!is_top_level)
 					{
 						return log_error_body("Module Definition can only be in top level code");
+					}
+
+					if (this->finished_parsing_modules)
+					{
+						return log_error_body("Module Definitions must be before any other code");
 					}
 
 					if (!parse_module())

@@ -95,5 +95,6 @@ namespace parser
 		LineInfo line_info;
 		std::string file_name;
 		module::Module current_module;
+		bool finished_parsing_modules = false;
 	};
 }
