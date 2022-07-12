@@ -342,6 +342,11 @@ namespace type_checker
 				return false;
 			}
 
+			if (operators::is_assignemnt(expr->binop) && expr->lhs->get_type() != ast::AstExprType::VariableReferenceExpr)
+			{
+				return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " lhs must be an identifier.");
+			}
+
 			// check both sides of the binary operator have the same type, type is given by lhs
 			if (!expr->check_types())
 			{

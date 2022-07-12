@@ -255,6 +255,18 @@ namespace operators
 		return false;
 	}
 
+	bool is_assignemnt(BinaryOp op)
+	{
+		switch (op)
+		{
+			case BinaryOp::Assignment:
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	std::string to_string(BinaryOp binop)
 	{
 		switch (binop)
