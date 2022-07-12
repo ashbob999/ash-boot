@@ -165,6 +165,38 @@ namespace operators
 				{
 					return BinaryOp::NotEqualTo;
 				}
+				else if (c1 == '+')
+				{
+					return BinaryOp::AssignmentAddition;
+				}
+				else if (c1 == '-')
+				{
+					return BinaryOp::AssignmentSubtraction;
+				}
+				else if (c1 == '*')
+				{
+					return BinaryOp::AssignmentMultiplication;
+				}
+				else if (c1 == '%')
+				{
+					return BinaryOp::AssignmentModulo;
+				}
+				else if (c1 == '/')
+				{
+					return BinaryOp::AssignmentDivision;
+				}
+				else if (c1 == '&')
+				{
+					return BinaryOp::AssignmentBitwiseAnd;
+				}
+				else if (c1 == '|')
+				{
+					return BinaryOp::AssignmentBitwiseOr;
+				}
+				else if (c1 == '^')
+				{
+					return BinaryOp::AssignmentBitwiseXor;
+				}
 			}
 			else if (c2 == '&')
 			{
@@ -260,11 +292,78 @@ namespace operators
 		switch (op)
 		{
 			case BinaryOp::Assignment:
+			case BinaryOp::AssignmentAddition:
+			case BinaryOp::AssignmentSubtraction:
+			case BinaryOp::AssignmentMultiplication:
+			case BinaryOp::AssignmentModulo:
+			case BinaryOp::AssignmentDivision:
+			case BinaryOp::AssignmentBitwiseAnd:
+			case BinaryOp::AssignmentBitwiseOr:
+			case BinaryOp::AssignmentBitwiseXor:
 			{
 				return true;
 			}
 		}
 		return false;
+	}
+
+	bool is_compound_assignemnt(BinaryOp op)
+	{
+		switch (op)
+		{
+			case BinaryOp::AssignmentAddition:
+			case BinaryOp::AssignmentSubtraction:
+			case BinaryOp::AssignmentMultiplication:
+			case BinaryOp::AssignmentModulo:
+			case BinaryOp::AssignmentDivision:
+			case BinaryOp::AssignmentBitwiseAnd:
+			case BinaryOp::AssignmentBitwiseOr:
+			case BinaryOp::AssignmentBitwiseXor:
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	BinaryOp extract_compound_assignment_operator(BinaryOp op)
+	{
+		switch (op)
+		{
+			case BinaryOp::AssignmentAddition:
+			{
+				return BinaryOp::Addition;
+			}
+			case BinaryOp::AssignmentSubtraction:
+			{
+				return BinaryOp::Subtraction;
+			}
+			case BinaryOp::AssignmentMultiplication:
+			{
+				return BinaryOp::Multiplication;
+			}
+			case BinaryOp::AssignmentModulo:
+			{
+				return BinaryOp::Modulo;
+			}
+			case BinaryOp::AssignmentDivision:
+			{
+				return BinaryOp::Division;
+			}
+			case BinaryOp::AssignmentBitwiseAnd:
+			{
+				return BinaryOp::BitwiseAnd;
+			}
+			case BinaryOp::AssignmentBitwiseOr:
+			{
+				return BinaryOp::BitwiseOr;
+			}
+			case BinaryOp::AssignmentBitwiseXor:
+			{
+				return BinaryOp::BitwiseXor;
+			}
+		}
+		assert(false && "Invalid compound assignment binary operator");
 	}
 
 	std::string to_string(BinaryOp binop)
@@ -278,6 +377,38 @@ namespace operators
 			case BinaryOp::Assignment:
 			{
 				return "Assignment (=)";
+			}
+			case BinaryOp::AssignmentAddition:
+			{
+				return "AssignmentAddition (+=)";
+			}
+			case BinaryOp::AssignmentSubtraction:
+			{
+				return "AssignmentSubtraction (-=)";
+			}
+			case BinaryOp::AssignmentMultiplication:
+			{
+				return "AssignmentMultiplication (*=)";
+			}
+			case BinaryOp::AssignmentModulo:
+			{
+				return "AssignmentModulo (%=)";
+			}
+			case BinaryOp::AssignmentDivision:
+			{
+				return "AssignmentDivision (/=)";
+			}
+			case BinaryOp::AssignmentBitwiseAnd:
+			{
+				return "AssignmentBitwiseAnd (&=)";
+			}
+			case BinaryOp::AssignmentBitwiseOr:
+			{
+				return "AssignmentBitwiseOr (|=)";
+			}
+			case BinaryOp::AssignmentBitwiseXor:
+			{
+				return "AssignmentBitwiseXor (^=)";
 			}
 			case BinaryOp::Addition:
 			{

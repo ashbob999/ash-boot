@@ -17,6 +17,7 @@ namespace type_checker
 		bool check_expression_dispatch(ast::BaseExpr* expr);
 		template<class T, typename = std::enable_if_t<std::is_base_of_v<ast::BaseExpr, T>>>
 		bool check_expression(T* expr);
+		void expand_compound_assignment(ast::BinaryExpr* expr);
 		bool log_error(ast::BaseExpr* expr, std::string str);
 
 	private:

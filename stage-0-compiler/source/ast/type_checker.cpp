@@ -347,6 +347,11 @@ namespace type_checker
 				return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " lhs must be an identifier.");
 			}
 
+			if (operators::is_compound_assignemnt(expr->binop))
+			{
+				expand_compound_assignment(expr);
+			}
+
 			// check both sides of the binary operator have the same type, type is given by lhs
 			if (!expr->check_types())
 			{
@@ -669,6 +674,18 @@ namespace type_checker
 		}
 		assert(false && "Missing Type Specialisation");
 		return false;
+	}
+
+	void TypeChecker::expand_compound_assignment(ast::BinaryExpr* expr)
+	{
+		// turn a op= b into a = a op b
+
+		operators::BinaryOp op = operators::extract_compound_assignment_operator(expr->binop);
+
+		shared_ptr<ast::BinaryExpr> op_expr = std::make_shared<ast::BinaryExpr>(expr->get_body(), op, expr->lhs, expr->rhs);
+
+		expr->binop = operators::BinaryOp::Assignment;
+		expr->rhs = op_expr;
 	}
 
 }

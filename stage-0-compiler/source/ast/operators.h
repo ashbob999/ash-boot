@@ -11,6 +11,14 @@ namespace operators
 	{
 		None,
 		Assignment,
+		AssignmentAddition,
+		AssignmentSubtraction,
+		AssignmentMultiplication,
+		AssignmentModulo,
+		AssignmentDivision,
+		AssignmentBitwiseAnd,
+		AssignmentBitwiseOr,
+		AssignmentBitwiseXor,
 		Addition,
 		Subtraction,
 		Multiplication,
@@ -39,6 +47,8 @@ namespace operators
 	bool is_boolean_operator(BinaryOp op);
 	bool is_bitwise_operator(BinaryOp op);
 	bool is_assignemnt(BinaryOp op);
+	bool is_compound_assignemnt(BinaryOp op);
+	BinaryOp extract_compound_assignment_operator(BinaryOp op);
 
 	std::string to_string(BinaryOp binop);
 
