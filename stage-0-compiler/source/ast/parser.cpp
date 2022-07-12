@@ -191,6 +191,11 @@ namespace parser
 				curr_token = Token::ModuleStatement;
 				return curr_token;
 			}
+			else if (identifier_string == "using")
+			{
+				curr_token = Token::UsingStatement;
+				return curr_token;
+			}
 			else
 			{
 				// check if identifier is a bool
@@ -572,6 +577,25 @@ namespace parser
 					}
 
 					if (!parse_module())
+					{
+						return nullptr;
+					}
+
+					break;
+				}
+				case Token::UsingStatement:
+				{
+					if (!is_top_level)
+					{
+						return log_error_body("Using Statement can only be in top level code");
+					}
+
+					if (this->finished_parsing_modules)
+					{
+						return log_error_body("Using Statements must be before any other code");
+					}
+
+					if (!parse_using())
 					{
 						return nullptr;
 					}
@@ -1341,6 +1365,98 @@ namespace parser
 		}
 
 		current_module.add_module(module_id);
+
+		return true;
+	}
+
+	bool Parser::parse_using()
+	{
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> base_expr = parse_expression(false, false);
+
+		if (curr_token != Token::EndOfExpression)
+		{
+			end_;
+			log_error_empty("Expected end of expression, missing ';'");
+			return false;
+		}
+
+		if (base_expr->get_type() != ast::AstExprType::VariableReferenceExpr && base_expr->get_type() != ast::AstExprType::BinaryExpr)
+		{
+			log_error_empty("Unexpected expression after using statement.");
+			return false;
+		}
+
+		if (base_expr->get_type() == ast::AstExprType::VariableReferenceExpr)
+		{
+
+		}
+		else
+		{
+			ast::BinaryExpr* expr = dynamic_cast<ast::BinaryExpr*>(base_expr.get());
+			// lhs will contain any other scope binops and variable references
+			// but rhs will only contain call expressions
+
+			// recursively check lhs type
+			ast::BinaryExpr* scope_expr = expr;
+			while (true)
+			{
+				ast::AstExprType lhs_type = scope_expr->lhs->get_type();
+
+				if (lhs_type != ast::AstExprType::VariableReferenceExpr && lhs_type != ast::AstExprType::BinaryExpr)
+				{
+					log_error_empty("Binary Operator: " + operators::to_string(scope_expr->binop) + ", lhs must be an identifier or another scoper operator.");
+					return false;
+				}
+				else
+				{
+					// check rhs type is variable refernce, if were not at the top scope binop
+					if (scope_expr != expr && scope_expr->rhs->get_type() != ast::AstExprType::VariableReferenceExpr)
+					{
+						log_error_empty("Binary Operator: " + operators::to_string(scope_expr->binop) + ", rhs must be an identifier.");
+						return false;
+					}
+					if (lhs_type == ast::AstExprType::BinaryExpr)
+					{
+						scope_expr = dynamic_cast<ast::BinaryExpr*>(scope_expr->lhs.get());
+						continue;
+					}
+					else
+					{
+						// do nothing for variable reference
+						break;
+					}
+				}
+			}
+
+			// check rhs type
+			ast::AstExprType rhs_type = expr->rhs->get_type();
+			if (rhs_type != ast::AstExprType::VariableReferenceExpr)
+			{
+				log_error_empty("Binary Operator: " + operators::to_string(expr->binop) + ", rhs must be an identifier.");
+				return false;
+			}
+		}
+
+		// get module id
+		int module_id = -1;
+		if (base_expr->get_type() == ast::AstExprType::BinaryExpr)
+		{
+			module_id = module::Mangler::get_module(dynamic_cast<ast::BinaryExpr*>(base_expr.get()));
+		}
+		else
+		{
+			module_id = dynamic_cast<ast::VariableReferenceExpr*>(base_expr.get())->name_id;
+		}
+
+		if (!this->current_module.is_module_available(module_id))
+		{
+			log_error_empty("Using expression module: " + module::StringManager::get_string(module_id) + ", does not exist.");
+			return false;
+		}
+
+		this->current_module.add_using(module_id);
 
 		return true;
 	}

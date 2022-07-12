@@ -17,6 +17,7 @@
 - function control (return)
 - modules can be defined
 - scope operator
+- using statement
 
 
 ##### Features Required for Bootstrapping
@@ -37,6 +38,5 @@
 - more types
 - class & inheritance
 - custom types
-- using modules
 - multiple source files
 

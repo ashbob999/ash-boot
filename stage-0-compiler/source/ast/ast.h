@@ -30,7 +30,6 @@ namespace ast
 		ReturnExpr,
 		ContinueExpr,
 		BreakExpr,
-		ScopeExpr,
 	};
 
 	struct ExpressionLineInfo
