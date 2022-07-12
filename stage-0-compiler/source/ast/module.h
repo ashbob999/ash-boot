@@ -28,9 +28,12 @@ namespace module
 	public:
 		void add_module(int module_id);
 		bool is_module_available(int module_id);
+		int find_function(int name_id, bool is_mangled);
 
 	public:
 		std::vector<int> modules;
+		std::vector<int> using_modules;
+		std::vector<int> exported_functions;
 	};
 
 	struct mangled_data
@@ -48,6 +51,7 @@ namespace module
 		static std::string mangle_parent_functions(ast::BaseExpr* expr);
 		static int mangle(Module mod, ast::FunctionPrototype* proto);
 		static int mangle(Module mod, ast::CallExpr* expr);
+		static int mangle(ast::CallExpr* expr);
 		static int mangle(Module mod, int function_id, std::vector<types::Type> function_args);
 		static int add_module(int module_id, int other_id, bool is_first_module);
 		static int get_module(ast::BinaryExpr* scope_expr);

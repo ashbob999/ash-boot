@@ -141,6 +141,24 @@ namespace module
 		return id;
 	}
 
+	int Mangler::mangle(ast::CallExpr* expr)
+	{
+		std::string name;
+
+		std::vector<types::Type> types;
+		for (auto& e : expr->args)
+		{
+			types.push_back(e->get_result_type());
+		}
+
+		name += mangle_function(expr->callee_id, types);
+
+		int id = StringManager::get_id(name);
+		Mangler::mangled_map[expr->callee_id].push_back(id);
+
+		return id;
+	}
+
 	int Mangler::mangle(Module mod, int function_id, std::vector<types::Type> function_args)
 	{
 		std::string name;
@@ -285,6 +303,11 @@ namespace module
 		this->modules.push_back(module_id);
 	}
 
+	void Module::add_using(int module_id)
+	{
+		this->using_modules.push_back(module_id);
+	}
+
 	bool Module::is_module_available(int module_id)
 	{
 		std::string mangled_module = Mangler::mangle_module(*this);
@@ -294,6 +317,36 @@ namespace module
 			return true;
 		}
 		return false;
+	}
+
+	int Module::find_function(int name_id, bool is_mangled)
+	{
+		if (is_mangled)
+		{
+			for (auto& using_id : using_modules)
+			{
+				int id = Mangler::add_module(using_id, name_id, false);
+
+				if (find(exported_functions.begin(), exported_functions.end(), id) != exported_functions.end())
+				{
+					return id;
+				}
+			}
+		}
+		else
+		{
+			for (auto& using_id : using_modules)
+			{
+				int id = Mangler::add_module(using_id, name_id, true);
+
+				if (find(exported_functions.begin(), exported_functions.end(), id) != exported_functions.end())
+				{
+					return id;
+				}
+			}
+		}
+
+		return -1;
 	}
 
 }

@@ -129,6 +129,11 @@ namespace type_checker
 			int id = module::Mangler::mangle(current_module, p.second);
 			function_prototypes.insert({ id, p.second });
 			p.second->name_id = id;
+
+			if (body->get_body() == nullptr)
+			{
+				this->current_module.exported_functions.push_back(id);
+			}
 		}
 
 		body->function_prototypes = function_prototypes;
@@ -241,7 +246,7 @@ namespace type_checker
 			while (true)
 			{
 				ast::AstExprType lhs_type = scope_expr->lhs->get_type();
-				
+
 				if (lhs_type != ast::AstExprType::VariableReferenceExpr && lhs_type != ast::AstExprType::BinaryExpr)
 				{
 					return log_error(scope_expr, "Binary Operator: " + operators::to_string(scope_expr->binop) + ", lhs must be an identifier or another scoper operator.");
@@ -367,13 +372,31 @@ namespace type_checker
 		}
 
 		int id;
+		int no_module_id;
 		if (expr->is_mangled())
 		{
 			id = expr->callee_id;
+			no_module_id = id;
 		}
 		else
 		{
 			id = module::Mangler::mangle(current_module, expr);
+			no_module_id = module::Mangler::mangle(expr);
+		}
+
+		// check function has been defined in current scope
+		if (!scope::is_variable_defined(expr, id, ast::ReferenceType::Function))
+		{
+			// check to see if function exists in the modules
+			int full_function_id = this->current_module.find_function(no_module_id, expr->is_mangled());
+			if (full_function_id == -1)
+			{
+				return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is not in scope (not defined)");
+			}
+			else
+			{
+				id = full_function_id;
+			}
 		}
 
 		// see if it is a extern function call
@@ -385,11 +408,6 @@ namespace type_checker
 		// mangle the call id
 		expr->callee_id = id;
 
-		// check function has been defined
-		if (!scope::is_variable_defined(expr, expr->callee_id, ast::ReferenceType::Function))
-		{
-			return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is not in scope (not defined)");
-		}
 
 		// check function is in scope
 		if (scope::get_scope(expr) == nullptr)
