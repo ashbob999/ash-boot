@@ -849,6 +849,14 @@ namespace parser
 
 		std::string literal_string = identifier_string;
 
+		// check if literal if whithin the correct range
+		// TODO: not ignore float
+		if (!types::check_range(literal_string, curr_type))
+		{
+			end_;
+			return log_error("Literal value for type: " + types::to_string(curr_type) + " is out of range");
+		}
+
 		get_next_token();
 
 		end_;

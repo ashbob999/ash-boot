@@ -151,6 +151,31 @@ namespace types
 		}
 	}
 
+	bool check_range(std::string& literal_string, Type type)
+	{
+		switch (type)
+		{
+			case types::Type::Int:
+			{
+				return IntType::check_range(literal_string);
+			}
+			case types::Type::Float:
+			{
+				// TODO: do an actual range check for floats
+				return true;
+			}
+			case types::Type::Bool:
+			{
+				return true;
+			}
+			case types::Type::Char:
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string& str)
 	{
 		switch (curr_type)
@@ -207,7 +232,7 @@ namespace types
 			i++;
 		}
 
-		int value = 0;
+		uint64_t value = 0;
 
 		// parse the numbers
 		for (; i < str.length(); i++)
@@ -235,6 +260,55 @@ namespace types
 	std::string IntType::to_string()
 	{
 		return std::to_string(this->data);
+	}
+
+	bool IntType::check_range(std::string& literal_string)
+	{
+		std::string int_min = "2147483648"; // -2147483648
+		std::string int_max = "2147483647"; //  2147483647
+		int length = 10;
+
+		bool neg = false;
+
+		// strip any sign chars
+		if (is_sign_char(literal_string[0]))
+		{
+			if (literal_string[0] == '-')
+			{
+				neg = true;
+			}
+
+			literal_string.erase(0);
+		}
+
+		// strip leading zeroes
+		while (literal_string[0] == '0')
+		{
+			literal_string.erase(0);
+		}
+
+		if (literal_string.size() < length)
+		{
+			return true;
+		}
+
+		if (literal_string.size() > length)
+		{
+			return false;
+		}
+
+		if (neg)
+		{
+			int cmp = literal_string.compare(int_min);
+			return cmp <= 0;
+		}
+		else
+		{
+			int cmp = literal_string.compare(int_max);
+			return cmp <= 0;
+		}
+
+		return false;
 	}
 
 	FloatType::FloatType()

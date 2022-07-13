@@ -31,6 +31,8 @@ namespace types
 
 	std::string to_string(Type type);
 
+	bool check_range(std::string& literal_string, Type type);
+
 	union type_value
 	{
 		int _int;
@@ -57,8 +59,9 @@ namespace types
 		IntType(std::string& str);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
+		static bool check_range(std::string& literal_string);
 	private:
-		int data;
+		uint64_t data;
 	};
 
 	class FloatType : public BaseType
