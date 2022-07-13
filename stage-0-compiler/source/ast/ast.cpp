@@ -108,6 +108,25 @@ namespace ast
 			{
 				break;
 			}
+			case AstExprType::ReturnExpr:
+			{
+				break;
+			}
+			case AstExprType::ContinueExpr:
+			{
+				break;
+			}
+			case AstExprType::BreakExpr:
+			{
+				break;
+			}
+			case AstExprType::UnaryExpr:
+			{
+				UnaryExpr* expr = dynamic_cast<UnaryExpr*>(this);
+
+				expr->expr->set_body(new_body);
+				break;
+			}
 			default:
 			{
 				assert(false && "missing type specialisation");
@@ -796,6 +815,40 @@ namespace ast
 		}
 
 		return false;
+	}
+
+	UnaryExpr::UnaryExpr(BodyExpr* body, operators::UnaryOp unop, shared_ptr<BaseExpr> expr)
+		: BaseExpr(ast::AstExprType::UnaryExpr, body), unop(unop), expr(expr)
+	{}
+
+	std::string UnaryExpr::to_string(int depth)
+	{
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "Unary Operation: {" << '\n';
+		str << tabs << '\t' << "Operator: " << operators::to_string(this->unop) << '\n';
+		str << tabs << '\t' << "Expression: {" << '\n';
+		str << this->expr->to_string(depth + 2);
+		str << tabs << '\t' << "}" << '\n';
+		str << tabs << "}," << '\n';
+
+		return str.str();
+	}
+
+	types::Type UnaryExpr::get_result_type()
+	{
+		if (result_type == types::Type::None)
+		{
+			result_type = this->expr->get_result_type();
+		}
+		return result_type;
+	}
+
+	bool UnaryExpr::check_types()
+	{
+		return true;
 	}
 
 	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)

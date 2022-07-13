@@ -238,6 +238,19 @@ namespace operators
 		return BinaryOp::None;
 	}
 
+	UnaryOp is_unary_op(char c)
+	{
+		if (c == '+')
+		{
+			return UnaryOp::Plus;
+		}
+		else if (c == '-')
+		{
+			return UnaryOp::Minus;
+		}
+		return UnaryOp::None;
+	}
+
 	bool is_binary_comparision(BinaryOp op)
 	{
 		switch (op)
@@ -489,6 +502,25 @@ namespace operators
 		}
 	}
 
+	std::string to_string(UnaryOp unop)
+	{
+		switch (unop)
+		{
+			case UnaryOp::None:
+			{
+				return "None";
+			}
+			case UnaryOp::Plus:
+			{
+				return "Plus (+)";
+			}
+			case UnaryOp::Minus:
+			{
+				return "Minus (-)";
+			}
+		}
+	}
+
 	bool is_type_supported(BinaryOp binop, types::Type type)
 	{
 		if (binop == BinaryOp::ModuleScope)
@@ -540,6 +572,33 @@ namespace operators
 				{
 					return false;
 				}
+			}
+			default:
+			{
+				return false;
+			}
+		}
+	}
+
+	bool is_type_supported(UnaryOp nop, types::Type type)
+	{
+		switch (type)
+		{
+			case types::Type::Int:
+			{
+				return true;
+			}
+			case types::Type::Float:
+			{
+				return true;
+			}
+			case types::Type::Bool:
+			{
+				return false;
+			}
+			case types::Type::Char:
+			{
+				return false;
 			}
 			default:
 			{

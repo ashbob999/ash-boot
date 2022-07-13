@@ -615,6 +615,32 @@ namespace type_checker
 		return true;
 	}
 
+	template<>
+	bool TypeChecker::check_expression<ast::UnaryExpr>(ast::UnaryExpr* expr)
+	{
+		// check expression
+		if (!check_expression_dispatch(expr->expr.get()))
+		{
+			return false;
+		}
+
+		// check both sides of the binary operator have the same type, type is given by lhs
+		if (!expr->check_types())
+		{
+			std::string type = types::to_string(expr->expr->get_result_type());
+			return log_error(expr, "Unary operator " + operators::to_string(expr->unop) + " has incompatible type: " + type + " given");
+		}
+
+		// check type supports the specified operation
+		if (!operators::is_type_supported(expr->unop, expr->get_result_type()))
+		{
+			std::string type = types::to_string(expr->expr->get_result_type());
+			return log_error(expr, "Unary operator " + operators::to_string(expr->unop) + " does not support the given type: " + type);
+		}
+
+		return true;
+	}
+
 	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -670,6 +696,10 @@ namespace type_checker
 			case ast::AstExprType::BreakExpr:
 			{
 				return check_expression(dynamic_cast<ast::BreakExpr*>(expr));
+			}
+			case ast::AstExprType::UnaryExpr:
+			{
+				return check_expression(dynamic_cast<ast::UnaryExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

@@ -1140,6 +1140,42 @@ namespace builder
 		return llvm::ConstantTokenNone::get(*llvm_context);
 	}
 
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::UnaryExpr>(ast::UnaryExpr* expr)
+	{
+		llvm::Value* expr_value = generate_code_dispatch(expr->expr.get());
+
+		switch (expr->unop)
+		{
+			case operators::UnaryOp::Plus:
+			{
+				return expr_value;
+			}
+			case operators::UnaryOp::Minus:
+			{
+				switch (expr->expr->get_result_type())
+				{
+					case types::Type::Int:
+					{
+						return llvm_ir_builder->CreateSub(types::get_default_value(*llvm_context, types::Type::Int), expr_value, "neg");
+					}
+					case types::Type::Float:
+					{
+						return llvm_ir_builder->CreateFNeg(expr_value, "fneg");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->unop));
+					}
+				}
+			}
+			default:
+			{
+				return log_error_value("invalid binary operator");
+			}
+		}
+	}
+
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -1195,6 +1231,10 @@ namespace builder
 			case ast::AstExprType::BreakExpr:
 			{
 				return generate_code(dynamic_cast<ast::BreakExpr*>(expr));
+			}
+			case ast::AstExprType::UnaryExpr:
+			{
+				return generate_code(dynamic_cast<ast::UnaryExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

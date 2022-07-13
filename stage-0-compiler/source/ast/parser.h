@@ -65,6 +65,7 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_expression(bool for_call, bool for_if_cond);
 		shared_ptr<ast::BaseExpr> parse_primary();
 		shared_ptr<ast::BaseExpr> parse_binop_rhs(int precedence, shared_ptr<ast::BaseExpr> lhs);
+		shared_ptr<ast::BaseExpr> parse_unary();
 		shared_ptr<ast::BaseExpr> parse_literal();
 		shared_ptr<ast::BaseExpr> parse_variable_declaration();
 		shared_ptr<ast::BaseExpr> parse_variable_reference();

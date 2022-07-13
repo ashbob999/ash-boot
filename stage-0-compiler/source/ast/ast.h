@@ -30,6 +30,7 @@ namespace ast
 		ReturnExpr,
 		ContinueExpr,
 		BreakExpr,
+		UnaryExpr,
 	};
 
 	struct ExpressionLineInfo
@@ -63,6 +64,7 @@ namespace ast
 	class ReturnExpr;
 	class ContinueExpr;
 	class BreakExpr;
+	class UnaryExpr;
 
 	class FunctionPrototype;
 	class FunctionDefinition;
@@ -279,6 +281,18 @@ namespace ast
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
+	};
+
+	class UnaryExpr : public BaseExpr
+	{
+	public:
+		UnaryExpr(BodyExpr* body, operators::UnaryOp unop, shared_ptr<BaseExpr> expr);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		operators::UnaryOp unop;
+		shared_ptr<BaseExpr> expr;
 	};
 
 	// The prototype for a function (i.e. the definition)

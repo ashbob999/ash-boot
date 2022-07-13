@@ -687,7 +687,7 @@ namespace parser
 	shared_ptr<ast::BaseExpr> Parser::parse_expression(bool for_call, bool for_if_cond)
 	{
 		start_;
-		shared_ptr<ast::BaseExpr> lhs = parse_primary();
+		shared_ptr<ast::BaseExpr> lhs = parse_unary();
 		if (lhs == nullptr)
 		{
 			end_;
@@ -801,7 +801,7 @@ namespace parser
 
 			get_next_token();
 
-			shared_ptr<ast::BaseExpr> rhs = parse_primary();
+			shared_ptr<ast::BaseExpr> rhs = parse_unary();
 
 			if (rhs == nullptr)
 			{
@@ -835,6 +835,31 @@ namespace parser
 
 		end_;
 		return nullptr;
+	}
+
+	/// unary_expr
+	///   ::= primary
+	///   ::= unop expression
+	shared_ptr<ast::BaseExpr> Parser::parse_unary()
+	{
+		// if current char is not a unary op, then it is a primary expression
+		if (operators::is_unary_op(last_char) == operators::UnaryOp::None)
+		{
+			return parse_primary();
+		}
+
+		// get the unary operator
+		operators::UnaryOp unop = operators::is_unary_op(last_char);
+
+		get_next_token();
+
+		shared_ptr<ast::BaseExpr> expr = parse_unary();
+		if (!expr)
+		{
+			return nullptr;
+		}
+
+		return make_shared<ast::UnaryExpr>(bodies.back(), unop, expr);
 	}
 
 	/// literal_expr ::= 'curr_type'
