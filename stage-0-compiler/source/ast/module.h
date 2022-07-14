@@ -27,6 +27,7 @@ namespace module
 	{
 	public:
 		void add_module(int module_id);
+		void add_using(int module_id);
 		bool is_module_available(int module_id);
 		int find_function(int name_id, bool is_mangled);
 
