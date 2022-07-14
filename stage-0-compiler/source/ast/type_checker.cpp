@@ -638,6 +638,26 @@ namespace type_checker
 			return log_error(expr, "Unary operator " + operators::to_string(expr->unop) + " does not support the given type: " + type);
 		}
 
+		// if expression is a literal, then pre calc the value
+		// TODO: move into optimisations
+		if (expr->expr->get_type() == ast::AstExprType::LiteralExpr)
+		{
+			ast::LiteralExpr* literal_expr = dynamic_cast<ast::LiteralExpr*>(expr->expr.get());
+
+			switch (expr->unop)
+			{
+				case operators::UnaryOp::Plus:
+				{
+					// do nothing
+				}
+				case operators::UnaryOp::Minus:
+				{
+					literal_expr->value_type->negate_value();
+					ast::change_ast_object(expr, expr->expr);
+				}
+			}
+		}
+
 		return true;
 	}
 

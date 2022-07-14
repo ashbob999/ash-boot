@@ -45,6 +45,7 @@ namespace types
 		virtual llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) = 0;
 		virtual ~BaseType() = default;
 		virtual std::string to_string() = 0;
+		virtual void negate_value();
 
 	public:
 		static shared_ptr<BaseType> create_type(Type curr_type, std::string& str);
@@ -59,6 +60,9 @@ namespace types
 		IntType(std::string& str);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
+		virtual void negate_value() override;
+
+	public:
 		static bool check_range(std::string& literal_string);
 	private:
 		uint64_t data;
@@ -71,6 +75,7 @@ namespace types
 		FloatType(std::string& str);
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
+		virtual void negate_value() override;
 	private:
 		float data;
 	};

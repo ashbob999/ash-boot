@@ -69,6 +69,21 @@ namespace ast
 	class FunctionPrototype;
 	class FunctionDefinition;
 
+	struct parent_data
+	{
+		ast::BaseExpr* parent = nullptr;
+		// location stores information about where the child is located within the parent object
+		//     BodyExpr: location is index of the expressions
+		//     VariableDeclarationExpr: location is 0 for expression
+		//     BinaryExpr: location is 0 for lhs, and 1 for rhs
+		//     CallExpr: location is index of the arguments
+		//     IfExpr: location is 0 for condition, 1 for if body, and 2 for else body
+		//     ForExpr: location is 0 for start,  1 for end, 2 for step, and 3 for body
+		//     WhileExpr: location is 0 for end, and 1 for body
+		//     UnaryExpr: location is 0 for expresion
+		int location = 0;
+	};
+
 	// The expr ast class
 	class BaseExpr
 	{
@@ -78,6 +93,7 @@ namespace ast
 		types::Type result_type = types::Type::None;
 		ExpressionLineInfo line_info;
 		bool is_name_mangled = false;
+		parent_data parent;
 
 	public:
 		BaseExpr(AstExprType ast_type, BodyExpr* body);
@@ -93,6 +109,8 @@ namespace ast
 		virtual ExpressionLineInfo& get_line_info() final;
 		virtual void set_mangled(bool mangled) final;
 		virtual bool is_mangled() final;
+		virtual void set_parent_data(BaseExpr* parent, int location) final;
+		virtual parent_data get_parent_data() final;
 	};
 
 	// Any literal value
@@ -236,13 +254,13 @@ namespace ast
 	class WhileExpr : public BaseExpr
 	{
 	public:
-		WhileExpr(BodyExpr* body, shared_ptr<BaseExpr> end_expr, shared_ptr<BodyExpr> while_body);
+		WhileExpr(BodyExpr* body, shared_ptr<BaseExpr> end_expr, shared_ptr<BaseExpr> while_body);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		shared_ptr<BaseExpr> end_expr;
-		shared_ptr<BodyExpr> while_body;
+		shared_ptr<BaseExpr> while_body;
 	};
 
 	class CommentExpr : public BaseExpr
@@ -322,4 +340,6 @@ namespace ast
 		FunctionPrototype* prototype;
 		shared_ptr<BodyExpr> body;
 	};
+
+	void change_ast_object(ast::BaseExpr* object, shared_ptr<ast::BaseExpr> new_object);
 }

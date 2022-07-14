@@ -176,6 +176,11 @@ namespace types
 		return false;
 	}
 
+	void BaseType::negate_value()
+	{
+		assert(false && "Negation not supported");
+	}
+
 	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string& str)
 	{
 		switch (curr_type)
@@ -259,7 +264,12 @@ namespace types
 
 	std::string IntType::to_string()
 	{
-		return std::to_string(this->data);
+		return std::to_string((int64_t) this->data);
+	}
+
+	void IntType::negate_value()
+	{
+		this->data = -data;
 	}
 
 	bool IntType::check_range(std::string& literal_string)
@@ -390,14 +400,21 @@ namespace types
 
 		data = value;
 	}
+
 	llvm::ConstantData* FloatType::get_value(llvm::LLVMContext* llvm_context)
 	{
 		// create 32 bit floating point number
 		return llvm::ConstantFP::get(*llvm_context, llvm::APFloat(data));
 	}
+
 	std::string FloatType::to_string()
 	{
 		return std::to_string(this->data);
+	}
+
+	void FloatType::negate_value()
+	{
+		this->data = -data;
 	}
 
 	BoolType::BoolType()
