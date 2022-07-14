@@ -83,6 +83,9 @@ function int main() {
 	# scope operator
 	sample::putchar(97);
 	
+	# unary operator
+	var int z = -i;
+	
 	# return value
 	0;
 }

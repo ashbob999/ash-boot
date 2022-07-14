@@ -8,6 +8,7 @@
 - boolean operators (&&, ||)
 - bitwise operators (&, |, ^, <<, >>)
 - compound binary operators (+=, -=, *=, %=, /=, &=, |=, ^=)
+- unary operators (+, -)
 - basic scope
 - extern functions
 - nested functions
