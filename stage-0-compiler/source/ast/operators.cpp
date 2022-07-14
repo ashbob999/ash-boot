@@ -252,6 +252,10 @@ namespace operators
 		{
 			return UnaryOp::BooleanNot;
 		}
+		else if (c == '~')
+		{
+			return UnaryOp::BitwiseNot;
+		}
 		return UnaryOp::None;
 	}
 
@@ -309,6 +313,18 @@ namespace operators
 			case BinaryOp::BitwiseXor:
 			case BinaryOp::BitwiseShiftLeft:
 			case BinaryOp::BitwiseShiftRight:
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool is_bitwise_operator(UnaryOp op)
+	{
+		switch (op)
+		{
+			case UnaryOp::BitwiseNot:
 			{
 				return true;
 			}
@@ -538,6 +554,10 @@ namespace operators
 			{
 				return "BooleanNot (!)";
 			}
+			case UnaryOp::BitwiseNot:
+			{
+				return "BitwiseNot (~)";
+			}
 		}
 	}
 
@@ -617,9 +637,9 @@ namespace operators
 			}
 			case types::Type::Float:
 			{
-				if (!is_boolean_operator(unop))
+				if (!is_boolean_operator(unop) && !is_bitwise_operator(unop))
 				{
-					return true; // all operators supported, apart from boolean operators
+					return true; // all operators supported, apart from boolean/bitwise operators
 				}
 				else
 				{

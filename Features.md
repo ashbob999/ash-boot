@@ -5,8 +5,8 @@
 - simple types (int, float, bool, char)
 - binary operations (=, +, -, *, /, %)
 - comparisons (<, <=, >, >=, ==, !=)
-- boolean operators (&&, ||)
-- bitwise operators (&, |, ^, <<, >>)
+- boolean operators (&&, ||, !)
+- bitwise operators (&, |, ^, <<, >>, ~)
 - compound binary operators (+=, -=, *=, %=, /=, &=, |=, ^=)
 - unary operators (+, -)
 - basic scope

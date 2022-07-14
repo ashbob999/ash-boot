@@ -1173,6 +1173,10 @@ namespace builder
 			{
 				return llvm_ir_builder->CreateNot(expr_value, "boolean_not");
 			}
+			case operators::UnaryOp::BitwiseNot:
+			{
+				return llvm_ir_builder->CreateNot(expr_value, "bitwise_not");
+			}
 			default:
 			{
 				return log_error_value("invalid unary operator");
