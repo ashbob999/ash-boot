@@ -1169,9 +1169,13 @@ namespace builder
 					}
 				}
 			}
+			case operators::UnaryOp::BooleanNot:
+			{
+				return llvm_ir_builder->CreateNot(expr_value, "boolean_not");
+			}
 			default:
 			{
-				return log_error_value("invalid binary operator");
+				return log_error_value("invalid unary operator");
 			}
 		}
 	}

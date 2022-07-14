@@ -45,6 +45,7 @@ namespace operators
 		None,
 		Plus,
 		Minus,
+		BooleanNot,
 	};
 
 	bool is_first_char_valid(char c);
@@ -53,6 +54,7 @@ namespace operators
 	UnaryOp is_unary_op(char c);
 	bool is_binary_comparision(BinaryOp op);
 	bool is_boolean_operator(BinaryOp op);
+	bool is_boolean_operator(UnaryOp op);
 	bool is_bitwise_operator(BinaryOp op);
 	bool is_assignemnt(BinaryOp op);
 	bool is_compound_assignemnt(BinaryOp op);

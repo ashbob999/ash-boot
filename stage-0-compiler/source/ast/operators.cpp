@@ -248,6 +248,10 @@ namespace operators
 		{
 			return UnaryOp::Minus;
 		}
+		else if (c == '!')
+		{
+			return UnaryOp::BooleanNot;
+		}
 		return UnaryOp::None;
 	}
 
@@ -277,6 +281,18 @@ namespace operators
 		{
 			case BinaryOp::BooleanAnd:
 			case BinaryOp::BooleanOr:
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool is_boolean_operator(UnaryOp op)
+	{
+		switch (op)
+		{
+			case UnaryOp::BooleanNot:
 			{
 				return true;
 			}
@@ -518,6 +534,10 @@ namespace operators
 			{
 				return "Minus (-)";
 			}
+			case UnaryOp::BooleanNot:
+			{
+				return "BooleanNot (!)";
+			}
 		}
 	}
 
@@ -580,21 +600,42 @@ namespace operators
 		}
 	}
 
-	bool is_type_supported(UnaryOp nop, types::Type type)
+	bool is_type_supported(UnaryOp unop, types::Type type)
 	{
 		switch (type)
 		{
 			case types::Type::Int:
 			{
-				return true;
+				if (!is_boolean_operator(unop))
+				{
+					return true; // all operators supported, apart from boolean operators
+				}
+				else
+				{
+					return false;
+				}
 			}
 			case types::Type::Float:
 			{
-				return true;
+				if (!is_boolean_operator(unop))
+				{
+					return true; // all operators supported, apart from boolean operators
+				}
+				else
+				{
+					return false;
+				}
 			}
 			case types::Type::Bool:
 			{
-				return false;
+				if (is_boolean_operator(unop))
+				{
+					return true; // only support boolean operators
+				}
+				else
+				{
+					return false;
+				}
 			}
 			case types::Type::Char:
 			{
