@@ -35,7 +35,7 @@ namespace builder
 		llvm::IRBuilder<>* llvm_ir_builder;
 		//std::map<std::string, llvm::AllocaInst*> llvm_named_values;
 		//std::map<std::string, llvm::Type*> llvm_named_types;
-		llvm::TargetMachine* target_machine;
+		llvm::TargetMachine* target_machine = nullptr;
 
 	private:
 		std::vector<llvm::BasicBlock*> loop_continue_blocks;

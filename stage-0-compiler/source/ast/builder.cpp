@@ -47,6 +47,11 @@ namespace builder
 		delete llvm_ir_builder;
 		delete llvm_module;
 		delete llvm_context;
+
+		if (target_machine != nullptr)
+		{
+			delete target_machine;
+		}
 	}
 
 	bool LLVMBuilder::set_target()
