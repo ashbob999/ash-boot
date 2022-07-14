@@ -197,7 +197,7 @@ namespace module
 	{
 		if (scope_expr->binop != operators::BinaryOp::ModuleScope)
 		{
-			assert(false, "Mangler::get_module, Scope Expression has invalid binop.");
+			assert(false && "Mangler::get_module, Scope Expression has invalid binop.");
 		}
 
 		std::string modules;
