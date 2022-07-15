@@ -24,6 +24,7 @@ namespace cli
 
 	private:
 		bool parse_file();
+		bool check_modules();
 		bool check_ast();
 		bool build_ast();
 		bool output_llvm_ir();
@@ -31,11 +32,11 @@ namespace cli
 
 	private:
 		bool parsed = false;
-		std::filesystem::path input_file;
+		std::vector<std::filesystem::path> input_files;
 		std::filesystem::path output_file;
-		std::shared_ptr<ast::BodyExpr> body_ast;
 		builder::LLVMBuilder llvm_builder;
 		OutputType output_type = OutputType::IR;
-		module::Module current_module;
+		int current_module;
+		std::vector<int> build_files_order;
 	};
 }

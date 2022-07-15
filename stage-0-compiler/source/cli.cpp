@@ -54,7 +54,7 @@ namespace cli
 			return;
 		}
 
-		input_file = input_file_path;
+		input_files.push_back(input_file_path);
 
 		std::filesystem::path output_file_path{ argv[2] };
 		output_file = output_file_path;
@@ -62,32 +62,55 @@ namespace cli
 		// argv[3] is output type
 		if (argc >= 4)
 		{
-			// --output-type=[ir|obj]
-			std::string type_str{ argv[3] };
-
-			if (type_str.rfind("--output-type=", 0) == 0)
+			for (int i = 3; i < argc; i++)
 			{
-				std::string option = type_str.substr(14);
+				std::string type_str{ argv[i] };
 
-				if (option == "ir")
+				if (type_str.rfind("--output-type=", 0) == 0) // --output-type=[ir|obj]
 				{
-					output_type = OutputType::IR;
+					std::string option = type_str.substr(14);
+
+					if (option == "ir")
+					{
+						output_type = OutputType::IR;
+					}
+					else if (option == "obj")
+					{
+						output_type = OutputType::OBJ;
+					}
+					else
+					{
+						std::cout << "Invalid value for --output-type option: " << option << std::endl;
+						std::cout << "Valid values are: ir or obj" << std::endl;
+						return;
+					}
 				}
-				else if (option == "obj")
+				else if (type_str.rfind("--input=", 0) == 0) // --input=filename
 				{
-					output_type = OutputType::OBJ;
+					std::string option = type_str.substr(8);
+					std::filesystem::path input_file_path{ option };
+
+					// check if the file path exists
+					if (!std::filesystem::exists(input_file_path))
+					{
+						std::cout << "File: \"" << input_file_path.c_str() << "\" does not exist." << std::endl;
+						return;
+					}
+
+					// check if the file path is an actual file
+					if (!std::filesystem::is_regular_file(input_file_path))
+					{
+						std::cout << "File: \"" << input_file_path.c_str() << "\" must be a regular text file." << std::endl;;
+						return;
+					}
+
+					input_files.push_back(input_file_path);
 				}
 				else
 				{
-					std::cout << "Invalid value for --output-type option: " << option << std::endl;
-					std::cout << "Valid values are: ir or obj" << std::endl;
+					std::cout << "Invalid option: " << type_str << std::endl;
 					return;
 				}
-			}
-			else
-			{
-				std::cout << "Invalid option: " << type_str << std::endl;
-				return;
 			}
 		}
 
@@ -102,6 +125,11 @@ namespace cli
 		}
 
 		if (!parse_file())
+		{
+			return false;
+		}
+
+		if (!check_modules())
 		{
 			return false;
 		}
@@ -141,30 +169,35 @@ namespace cli
 
 	bool CLI::parse_file()
 	{
-		// open the input file stream
-		// TODO: use llvm MemoryBuffer or SourceManager
-		std::ifstream file_stream;
-
-		file_stream.open(input_file);
-
-		if (!file_stream.is_open())
+		for (auto& file : input_files)
 		{
-			std::cout << "File: \"" << input_file.c_str() << "\" could not be opened." << std::endl;
-			return false;
-		}
+			// open the input file stream
+			// TODO: use llvm MemoryBuffer or SourceManager
+			std::ifstream file_stream;
 
-		// parse the file
-		parser::Parser parser{ file_stream , input_file.string() };
-		body_ast = parser.parse_file_as_body();
-		current_module = parser.get_module();
+			file_stream.open(file);
 
-		file_stream.close();
+			if (!file_stream.is_open())
+			{
+				std::cout << "File: \"" << file.c_str() << "\" could not be opened." << std::endl;
+				return false;
+			}
 
-		if (body_ast == nullptr)
-		{
-			std::cout << std::endl;
-			std::cout << "Failed To Parse Code." << std::endl;
-			return false;
+			// parse the file
+			parser::Parser parser{ file_stream , file.string() };
+			shared_ptr<ast::BodyExpr> body_ast = parser.parse_file_as_body();
+			current_module = parser.get_module();
+
+			file_stream.close();
+
+			if (body_ast == nullptr)
+			{
+				std::cout << std::endl;
+				std::cout << "Failed To Parse Code." << std::endl;
+				return false;
+			}
+
+			module::ModuleManager::add_ast(current_module, body_ast);
 		}
 
 		std::cout << "File Was Parsed Successfully" << std::endl;
@@ -172,17 +205,43 @@ namespace cli
 		return true;
 	}
 
+	bool CLI::check_modules()
+	{
+		if (!module::ModuleManager::check_modules())
+		{
+			std::cout << "File Failed Module Checks" << std::endl;
+			return false;
+		}
+
+		// get the build file order
+		build_files_order = module::ModuleManager::get_build_files_order();
+		if (build_files_order.size() == 0)
+		{
+			std::cout << "Module Graph has a circular dependency" << std::endl;
+			return false;
+		}
+
+		std::cout << "File Passed Module Checks" << std::endl;
+
+		return true;
+	}
+
 	bool CLI::check_ast()
 	{
-		// do type checking
-		type_checker::TypeChecker tc;
-
-		tc.set_module(current_module);
-
-		if (!tc.check_types(body_ast.get()))
+		for (auto& f : build_files_order)
 		{
-			std::cout << "File Failed Type Checks" << std::endl;
-			return false;
+			// do type checking
+			type_checker::TypeChecker tc;
+
+			tc.set_file_id(f);
+
+			ast::BaseExpr* body_ast = module::ModuleManager::get_ast(f);
+
+			if (!tc.check_types(body_ast))
+			{
+				std::cout << "File Failed Type Checks" << std::endl;
+				return false;
+			}
 		}
 
 		std::cout << "File Passed Type Checks" << std::endl;
@@ -198,34 +257,44 @@ namespace cli
 			return false;
 		}
 
-		llvm_builder.llvm_module->setSourceFileName(input_file.string());
+		//llvm_builder.llvm_module->setSourceFileName(input_files[0].string());
 
-		// generate all of the function prototypes
-		for (auto& p : body_ast->function_prototypes)
+		for (auto& f : build_files_order)
 		{
-			auto proto = llvm_builder.generate_function_prototype(p.second);
+			ast::BodyExpr* body_ast = module::ModuleManager::get_ast(f);
 
-			if (proto == nullptr)
+			// generate all of the function prototypes
+			for (auto& p : body_ast->function_prototypes)
 			{
-				std::cout << "Failed To Generate LLVM IR Code For Function Prototype: " << module::StringManager::get_string(p.second->name_id) << std::endl;
+				auto proto = llvm_builder.generate_function_prototype(p.second);
 
-				return false;
+				if (proto == nullptr)
+				{
+					std::cout << "Failed To Generate LLVM IR Code For Function Prototype: " << module::StringManager::get_string(p.second->name_id) << std::endl;
+
+					return false;
+				}
 			}
 		}
 
-		// generate all of the top level functions
-		for (auto& f : body_ast->functions)
+		for (auto& f : build_files_order)
 		{
-			auto func = llvm_builder.generate_function_definition(f.get());
+			ast::BodyExpr* body_ast = module::ModuleManager::get_ast(f);
 
-			if (func == nullptr)
+			// generate all of the top level functions
+			for (auto& f : body_ast->functions)
 			{
-				std::cout << "Failed To Generate LLVM IR Code For Function: " << module::StringManager::get_string(f->prototype->name_id) << std::endl;
+				auto func = llvm_builder.generate_function_definition(f.get());
 
-				return false;
+				if (func == nullptr)
+				{
+					std::cout << "Failed To Generate LLVM IR Code For Function: " << module::StringManager::get_string(f->prototype->name_id) << std::endl;
+
+					return false;
+				}
+
+				//std::cout << std::endl << f->to_string(0) << std::endl << std::endl;
 			}
-
-			//std::cout << std::endl << f->to_string(0) << std::endl << std::endl;
 		}
 
 		std::cout << "Successfully Generated LLVM IR Code" << std::endl;

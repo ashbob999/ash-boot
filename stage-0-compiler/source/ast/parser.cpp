@@ -49,7 +49,9 @@ namespace parser
 	};
 
 	Parser::Parser(std::ifstream& input_file, std::string file_name) : input_file(input_file), file_name(file_name)
-	{}
+	{
+		filename_id = module::ModuleManager::get_file_as_module(file_name);
+	}
 
 	shared_ptr<ast::BaseExpr> Parser::parse_file()
 	{
@@ -74,9 +76,9 @@ namespace parser
 		return body;
 	}
 
-	module::Module Parser::get_module()
+	int Parser::get_module()
 	{
-		return this->current_module;
+		return this->filename_id;
 	}
 
 	char Parser::get_char()
@@ -424,7 +426,10 @@ namespace parser
 				}
 				case Token::FunctionDefinition:
 				{
-					this->finished_parsing_modules = true;
+					if (this->finished_parsing_modules == false)
+					{
+						this->update_current_module();
+					}
 
 					shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
 					if (fd != nullptr)
@@ -443,7 +448,10 @@ namespace parser
 				}
 				case Token::ExternFunction:
 				{
-					this->finished_parsing_modules = true;
+					if (this->finished_parsing_modules == false)
+					{
+						this->update_current_module();
+					}
 
 					ast::FunctionPrototype* proto = parse_extern();
 
@@ -1124,6 +1132,11 @@ namespace parser
 
 		ast::FunctionPrototype* proto = parse_function_prototype();
 
+		if (proto == nullptr)
+		{
+			return nullptr;
+		}
+
 		if (curr_token == Token::EndOfExpression)
 		{
 			end_;
@@ -1405,7 +1418,14 @@ namespace parser
 			return false;
 		}
 
-		current_module.add_module(module_id);
+		if (this->current_module == -1)
+		{
+			this->current_module = module_id;
+		}
+		else
+		{
+			this->current_module = module::Mangler::add_module(this->current_module, module_id, false);
+		}
 
 		return true;
 	}
@@ -1491,13 +1511,7 @@ namespace parser
 			module_id = dynamic_cast<ast::VariableReferenceExpr*>(base_expr.get())->name_id;
 		}
 
-		if (!this->current_module.is_module_available(module_id))
-		{
-			log_error_empty("Using expression module: " + module::StringManager::get_string(module_id) + ", does not exist.");
-			return false;
-		}
-
-		this->current_module.add_using(module_id);
+		using_modules.insert(module_id);
 
 		return true;
 	}
@@ -1524,6 +1538,18 @@ namespace parser
 		}
 
 		return token_precedence;
+	}
+
+	void Parser::update_current_module()
+	{
+		this->finished_parsing_modules = true;
+
+		if (current_module == -1)
+		{
+			current_module = filename_id;
+		}
+
+		module::ModuleManager::add_module(filename_id, current_module, using_modules);
 	}
 
 	shared_ptr<ast::BaseExpr> Parser::log_error(std::string error_message)

@@ -14,9 +14,9 @@ namespace type_checker
 		return check_expression_dispatch(body);
 	}
 
-	void TypeChecker::set_module(module::Module mod)
+	void TypeChecker::set_file_id(int file_id)
 	{
-		this->current_module = mod;
+		this->current_file_id = file_id;
 	}
 
 	bool TypeChecker::log_error(ast::BaseExpr* expr, std::string str)
@@ -126,13 +126,13 @@ namespace type_checker
 					continue;
 				}
 			}
-			int id = module::Mangler::mangle(current_module, p.second);
+			int id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), p.second);
 			function_prototypes.insert({ id, p.second });
 			p.second->name_id = id;
 
 			if (body->get_body() == nullptr)
 			{
-				this->current_module.exported_functions.push_back(id);
+				module::ModuleManager::get_exported_functions(this->current_file_id).insert(id);
 			}
 		}
 
@@ -289,7 +289,7 @@ namespace type_checker
 				module_id = dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get())->name_id;
 			}
 
-			if (!this->current_module.is_module_available(module_id))
+			if (!module::ModuleManager::is_module_available(this->current_file_id, module_id))
 			{
 				return log_error(expr, "Binary Operator: " + operators::to_string(expr->binop) + ", lhs module: " + module::StringManager::get_string(module_id) + ", does not exist.");
 			}
@@ -390,7 +390,7 @@ namespace type_checker
 		}
 		else
 		{
-			id = module::Mangler::mangle(current_module, expr);
+			id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), expr);
 			no_module_id = module::Mangler::mangle(expr);
 		}
 
@@ -398,7 +398,7 @@ namespace type_checker
 		if (!scope::is_variable_defined(expr, id, ast::ReferenceType::Function))
 		{
 			// check to see if function exists in the modules
-			int full_function_id = this->current_module.find_function(no_module_id, expr->is_mangled());
+			int full_function_id = module::ModuleManager::find_function(this->current_file_id, no_module_id, expr->is_mangled());
 			if (full_function_id == -1)
 			{
 				return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is not in scope (not defined)");
@@ -418,11 +418,10 @@ namespace type_checker
 		// mangle the call id
 		expr->callee_id = id;
 
-
 		// check function is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
-			return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is not in scope");
+			//return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is not in scope");
 		}
 
 		// check call arguments

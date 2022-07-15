@@ -1,11 +1,13 @@
 #include <iostream>
 
 #include "scope_checker.h"
+#include "module.h"
 
 namespace scope
 {
 	ast::BodyExpr* get_scope(ast::CallExpr* call_expr)
 	{
+		// checks current function, and then all the parents
 		ast::BodyExpr* body = call_expr->get_body();
 
 		// TODO: deal with function overloading
@@ -20,7 +22,13 @@ namespace scope
 			}
 		}
 
-		return body;
+		if (body != nullptr)
+		{
+			return body;
+		}
+
+		// check using modules
+		return module::ModuleManager::find_body(call_expr->callee_id);
 	}
 
 	ast::BodyExpr* get_scope(ast::VariableReferenceExpr* var_ref)

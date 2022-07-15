@@ -10,7 +10,7 @@ namespace type_checker
 	public:
 		TypeChecker();
 		bool check_types(ast::BaseExpr* body);
-		void set_module(module::Module mod);
+		void set_file_id(int file_id);
 
 	private:
 		bool check_function(ast::FunctionDefinition* func);
@@ -21,6 +21,6 @@ namespace type_checker
 		bool log_error(ast::BaseExpr* expr, std::string str);
 
 	private:
-		module::Module current_module;
+		int current_file_id = -1;
 	};
 }

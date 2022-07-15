@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "ast.h"
 #include "module.h"
@@ -54,7 +55,7 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_file();
 		shared_ptr<ast::FunctionDefinition> parse_file_as_func();
 		shared_ptr<ast::BodyExpr> parse_file_as_body();
-		module::Module get_module();
+		int get_module();
 		static const std::unordered_map<operators::BinaryOp, int> binop_precedence;
 	private:
 		char get_char();
@@ -83,6 +84,7 @@ namespace parser
 		bool parse_module();
 		bool parse_using();
 		int get_token_precedence();
+		void update_current_module();
 		shared_ptr<ast::BaseExpr> log_error(std::string error_message);
 		shared_ptr<ast::BodyExpr> log_error_body(std::string error_message);
 		shared_ptr<ast::FunctionPrototype> log_error_prototype(std::string error_message);
@@ -97,7 +99,9 @@ namespace parser
 		std::vector<ast::BodyExpr*> bodies;
 		LineInfo line_info;
 		std::string file_name;
-		module::Module current_module;
+		int filename_id;
+		int current_module = -1;
 		bool finished_parsing_modules = false;
+		std::unordered_set<int> using_modules;
 	};
 }
