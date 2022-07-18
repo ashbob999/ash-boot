@@ -118,6 +118,12 @@ namespace builder
 			module::mangled_data data = module::Mangler::demangle(prototype->name_id);
 
 			proto_name = data.function_name;
+
+			llvm::Function* the_function = llvm_module->getFunction(proto_name);
+			if (the_function != nullptr)
+			{
+				return the_function; // extern function def already exists
+			}
 		}
 		else
 		{
