@@ -11,7 +11,7 @@
 - unary operators (+, -)
 - basic scope
 - extern functions
-- nested functions
+- nested functions (temp disabled)
 - if/else statements
 - for loops
 - while loops

@@ -431,6 +431,11 @@ namespace parser
 						this->update_current_module();
 					}
 
+					if (!is_top_level)
+					{
+						return log_error_body("Nested Functions are currently disabled.");
+					}
+
 					shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
 					if (fd != nullptr)
 					{

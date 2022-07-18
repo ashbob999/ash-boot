@@ -45,6 +45,10 @@ module sample;
 # externally defined functions
 extern int putchar(int c);
 
+function int add(int x, int y) {
+	x + y;
+}
+
 # functions
 function int main() {
 	# variables
@@ -52,10 +56,10 @@ function int main() {
 	var float f = 1.5f;
 	var bool b = true;
 
-	# nested function
-	function int add(int x, int y) {
-		x + y;
-	}
+	# nested function (temp disabled)
+	#function int add(int x, int y) {
+	#	x + y;
+	#}
 
 	# function call
 	var int r = add(i, 7);
