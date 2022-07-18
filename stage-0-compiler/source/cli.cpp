@@ -217,7 +217,6 @@ namespace cli
 		build_files_order = module::ModuleManager::get_build_files_order();
 		if (build_files_order.size() == 0)
 		{
-			std::cout << "Module Graph has a circular dependency" << std::endl;
 			return false;
 		}
 

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iostream>
 
 #include "module.h"
 
@@ -512,16 +513,32 @@ namespace module
 		}
 
 		// if a graph has edges, then the graph has at least one cycle
+		std::unordered_set<int> circular_dependencies;
 		for (auto& p : indegree)
 		{
 			if (p.second > 0)
 			{
-				assert(false && "Module Graph has a circular dependency");
-				return {};
+				circular_dependencies.insert(p.first);
 			}
 		}
 
+		if (circular_dependencies.size() > 0)
+		{
+			handle_circular_dependencies(circular_dependencies);
+			return {};
+		}
+
 		return L;
+	}
+
+	void ModuleManager::handle_circular_dependencies(std::unordered_set<int> circular_dependencies)
+	{
+		log_error("Module Graph has a circular dependency");
+		log_error("Modules involved:");
+		for (auto& m : circular_dependencies)
+		{
+			log_error("\t" + StringManager::get_string(m));
+		}
 	}
 
 	std::vector<int> ModuleManager::get_build_files_order()
