@@ -363,11 +363,11 @@ namespace ast
 
 	BodyExpr::~BodyExpr()
 	{
-		for (auto& proto : function_prototypes)
+		for (auto& proto : original_function_prototypes)
 		{
-			if (proto.second != nullptr)
+			if (proto != nullptr)
 			{
-				delete proto.second;
+				delete proto;
 			}
 		}
 	}
@@ -426,13 +426,12 @@ namespace ast
 	void BodyExpr::add_function(shared_ptr<FunctionDefinition> func)
 	{
 		functions.push_back(func);
-		//auto s = std::make_shared<FunctionPrototype>(func->prototype);
-		function_prototypes[func->prototype->name_id] = func->prototype;
+		original_function_prototypes.push_back(func->prototype);
 	}
 
 	void BodyExpr::add_prototype(FunctionPrototype* proto)
 	{
-		function_prototypes[proto->name_id] = proto;
+		original_function_prototypes.push_back(proto);
 	}
 
 	llvm::Type* BodyExpr::get_llvm_type(llvm::LLVMContext& llvm_context, int str_id)

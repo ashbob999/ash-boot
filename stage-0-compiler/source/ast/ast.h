@@ -157,6 +157,7 @@ namespace ast
 		std::vector<std::pair<int, ReferenceType>> in_scope_vars; // only used for checking vars are in scope, and order of defines
 		std::vector<shared_ptr<BaseExpr>> expressions;
 		std::vector<shared_ptr<FunctionDefinition>> functions;
+		std::vector<FunctionPrototype*> original_function_prototypes;
 		std::map<int, FunctionPrototype*> function_prototypes;
 		//std::map<std::string, FunctionDefinition*> functions;
 		std::map<int, types::Type> named_types;

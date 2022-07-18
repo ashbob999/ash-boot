@@ -14,6 +14,41 @@ namespace type_checker
 		return check_expression_dispatch(body);
 	}
 
+	bool TypeChecker::check_prototypes(ast::BodyExpr* body)
+	{
+		// check and add exported functions
+		if (body->get_body() == nullptr)
+		{
+			for (auto& proto : body->original_function_prototypes)
+			{
+				// if function is main with no args then don't mangle, but only on top level bodies
+				if (body->get_body() == nullptr)
+				{
+					std::string main = "main";
+					int main_id = module::StringManager::get_id(main);
+
+					if (proto->name_id == main_id && proto->args.size() == 0)
+					{
+						continue;
+					}
+				}
+
+				int id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
+
+				int func_id = module::ModuleManager::find_function(this->current_file_id, id, true);
+				if (func_id != -1)
+				{
+					log_error(body, "Function: " + module::StringManager::get_string(func_id) + ", is already defined.");
+					return false;
+				}
+				module::ModuleManager::get_exported_functions(this->current_file_id).insert(id);
+				body->function_prototypes.insert({ id, proto });
+			}
+		}
+
+		return true;
+	}
+
 	void TypeChecker::set_file_id(int file_id)
 	{
 		this->current_file_id = file_id;
@@ -112,7 +147,7 @@ namespace type_checker
 		// mangle all of the function prototypes
 		std::map<int, ast::FunctionPrototype*> function_prototypes;
 
-		for (auto& p : body->function_prototypes)
+		for (auto& proto : body->original_function_prototypes)
 		{
 			// if function is main with no args then don't mangle, but only on top level bodies
 			if (body->get_body() == nullptr)
@@ -120,20 +155,15 @@ namespace type_checker
 				std::string main = "main";
 				int main_id = module::StringManager::get_id(main);
 
-				if (p.first == main_id && p.second->args.size() == 0)
+				if (proto->name_id == main_id && proto->args.size() == 0)
 				{
-					function_prototypes.insert(p);
+					function_prototypes.insert({ proto->name_id, proto });
 					continue;
 				}
 			}
-			int id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), p.second);
-			function_prototypes.insert({ id, p.second });
-			p.second->name_id = id;
-
-			if (body->get_body() == nullptr)
-			{
-				module::ModuleManager::get_exported_functions(this->current_file_id).insert(id);
-			}
+			int id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
+			function_prototypes.insert({ id, proto });
+			proto->name_id = id;
 		}
 
 		body->function_prototypes = function_prototypes;

@@ -227,6 +227,22 @@ namespace cli
 
 	bool CLI::check_ast()
 	{
+		// check for top level prototypes in module
+		for (auto& f : build_files_order)
+		{
+			type_checker::TypeChecker tc;
+
+			tc.set_file_id(f);
+
+			ast::BodyExpr* body_ast = module::ModuleManager::get_ast(f);
+
+			if (!tc.check_prototypes(body_ast))
+			{
+				std::cout << "File Failed Type Checks" << std::endl;
+				return false;
+			}
+		}
+
 		for (auto& f : build_files_order)
 		{
 			// do type checking

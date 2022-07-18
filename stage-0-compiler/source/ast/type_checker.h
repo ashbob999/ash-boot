@@ -10,6 +10,7 @@ namespace type_checker
 	public:
 		TypeChecker();
 		bool check_types(ast::BaseExpr* body);
+		bool check_prototypes(ast::BodyExpr* body);
 		void set_file_id(int file_id);
 
 	private:
