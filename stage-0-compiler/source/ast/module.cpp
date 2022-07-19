@@ -423,7 +423,7 @@ namespace module
 			{
 				int id = Mangler::add_module(module_id, name_id, true);
 
-				if (find(exported_functions.begin(), exported_functions.end(), id) != exported_functions.end())
+				if (std::find(exported_functions.begin(), exported_functions.end(), id) != exported_functions.end())
 				{
 					return id;
 				}
