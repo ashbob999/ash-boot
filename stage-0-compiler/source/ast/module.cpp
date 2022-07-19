@@ -346,7 +346,7 @@ namespace module
 
 				if (f == ModuleManager::file_modules.end())
 				{
-					log_error("Using Module: " + StringManager::get_string(v) + " does not exist");
+					log_error("Using Module '" + StringManager::get_string(v) + "' does not exist (in file: " + StringManager::get_string(filename) + ")");
 					return false;
 				}
 			}
