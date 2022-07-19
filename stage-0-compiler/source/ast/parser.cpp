@@ -2,16 +2,6 @@
 
 #include "parser.h"
 
-//#define __debug
-
-#ifdef __debug
-#define start_ std::cout << "start: " << __FUNCTION__ << std::endl;
-#define end_ std::cout << "end: " << __FUNCTION__ << std::endl;
-#else
-#define start_
-#define end_
-#endif
-
 using std::make_shared;
 
 namespace parser
@@ -69,10 +59,8 @@ namespace parser
 
 	shared_ptr<ast::BodyExpr> Parser::parse_file_as_body()
 	{
-		start_;
 		bodies.push_back(nullptr);
 		shared_ptr<ast::BodyExpr> body = parse_body(ast::BodyType::Global, true, false);
-		end_;
 		return body;
 	}
 
@@ -217,9 +205,6 @@ namespace parser
 					return curr_token;
 				}
 
-#ifdef __debug
-				std::cout << "identifier " << identifier_string << std::endl;
-#endif
 				curr_token = Token::VariableReference;
 				return Token::VariableReference;
 			}
@@ -364,7 +349,6 @@ namespace parser
 	/// top ::= (definition | expression)*
 	shared_ptr<ast::BodyExpr> Parser::parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets)
 	{
-		start_;
 		shared_ptr<ast::BodyExpr> body = make_shared<ast::BodyExpr>(bodies.back(), body_type);
 
 		if (has_curly_brackets)
@@ -382,14 +366,10 @@ namespace parser
 		while (true)
 		{
 			/*curr_token = get_next_token();*/
-#ifdef __debug
-			std::cout << "curr_token = " << (int) curr_token << std::endl;
-#endif
 			switch (curr_token)
 			{
 				case Token::EndOfFile:
 				{
-					end_;
 					if (has_curly_brackets)
 					{
 						bodies.pop_back();
@@ -400,9 +380,6 @@ namespace parser
 				case Token::EndOfExpression:
 				{
 					// skip
-#ifdef __debug
-					std::cout << "end of expression" << std::endl;
-#endif
 					break;
 				}
 				case Token::VariableDeclaration:
@@ -416,7 +393,6 @@ namespace parser
 
 					if (base == nullptr)
 					{
-						end_;
 						return nullptr;
 					}
 
@@ -439,9 +415,6 @@ namespace parser
 					shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
 					if (fd != nullptr)
 					{
-#ifdef __debug
-						std::cout << "added function" << std::endl;
-#endif
 						body->add_function(fd);
 					}
 					else
@@ -527,7 +500,6 @@ namespace parser
 				}
 				case Token::Comment:
 				{
-					end_;
 					parse_comment();
 					break;
 				}
@@ -625,7 +597,6 @@ namespace parser
 				}
 				case Token::BodyEnd:
 				{
-					end_;
 					bodies.pop_back();
 					return body;
 					break;
@@ -634,23 +605,15 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						end_;
 						return log_error_body("Expressions are not allowed in top level code");
 					}
 
 					shared_ptr<ast::BaseExpr> base = parse_expression(false, false);
 					if (base == nullptr)
 					{
-#ifdef __debug
-						std::cout << "base was null";
-#endif
-						end_;
 						return nullptr;
 					}
 
-#ifdef __debug
-					std::cout << "added base" << std::endl;
-#endif
 					body->add_base(base);
 
 					if (curr_token != Token::EndOfExpression)
@@ -664,25 +627,19 @@ namespace parser
 
 			if (curr_token == Token::EndOfExpression)
 			{
-#ifdef __debug
-				std::cout << "end of expression" << std::endl;
-#endif
 				curr_token = get_next_token();
 			}
 		}
 
-		end_;
 		return body;
 	}
 
 	shared_ptr<ast::FunctionDefinition> Parser::parse_top_level()
 	{
-		start_;
 		bodies.push_back(nullptr);
 		shared_ptr<ast::BodyExpr> expr = parse_body(ast::BodyType::Global, true, false);
 		if (expr == nullptr)
 		{
-			end_;
 			return nullptr;
 		}
 
@@ -691,7 +648,6 @@ namespace parser
 		std::vector<int> arg_ids;
 
 		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::Type::Void, types, arg_ids);
-		end_;
 		return make_shared<ast::FunctionDefinition>(proto, expr);
 	}
 
@@ -699,23 +655,19 @@ namespace parser
 	///   ::= primary binop_rhs
 	shared_ptr<ast::BaseExpr> Parser::parse_expression(bool for_call, bool for_if_cond)
 	{
-		start_;
 		shared_ptr<ast::BaseExpr> lhs = parse_unary();
 		if (lhs == nullptr)
 		{
-			end_;
 			return nullptr;
 		}
 
 		if (curr_token == Token::EndOfExpression)
 		{
-			end_;
 			return lhs;
 		}
 
 		if (curr_token == Token::BinaryOperator)
 		{
-			end_;
 			return parse_binop_rhs(0, lhs);
 		}
 
@@ -723,24 +675,20 @@ namespace parser
 		{
 			if (curr_token == Token::Comma)
 			{
-				end_;
 				return lhs;
 			}
 
 			if (curr_token == Token::ParenEnd)
 			{
-				end_;
 				return lhs;
 			}
 		}
 
 		if (for_if_cond)
 		{
-			end_;
 			return lhs;
 		}
 
-		end_;
 		return log_error("Expected end of expression, missing ';'");
 	}
 
@@ -751,36 +699,29 @@ namespace parser
 	///   ::= parenthesis_expr
 	shared_ptr<ast::BaseExpr> Parser::parse_primary()
 	{
-		start_;
 		switch (curr_token)
 		{
 			case Token::VariableReference:
 			{
-				end_;
 				return parse_variable_reference();
 			}
 			case Token::LiteralValue:
 			{
-				end_;
 				return parse_literal();
 			}
 			case Token::ParenStart:
 			{
-				end_;
 				return parse_parenthesis();
 			}
 			case Token::IfStatement:
 			{
-				end_;
 				return parse_if_else();
 			}
 			default:
 			{
-				end_;
 				return log_error("Unknown token when expecting an expression");
 			}
 		}
-		end_;
 		return nullptr;
 	}
 
@@ -788,8 +729,6 @@ namespace parser
 	///   ::= ('+' primary)*
 	shared_ptr<ast::BaseExpr> Parser::parse_binop_rhs(int expr_precedence, shared_ptr<ast::BaseExpr> lhs)
 	{
-		start_;
-
 		while (true)
 		{
 			int token_precedence = get_token_precedence();
@@ -801,14 +740,12 @@ namespace parser
 			if (token_precedence < expr_precedence)
 			{
 				//std::cout << "ealry end" << std::endl;
-				end_;
 				return lhs;
 			}
 
 			operators::BinaryOp binop_type = operators::is_binary_op(identifier_string);
 			if (binop_type == operators::BinaryOp::None)
 			{
-				end_;
 				return log_error("Binary operator is invalid");
 			}
 
@@ -818,7 +755,6 @@ namespace parser
 
 			if (rhs == nullptr)
 			{
-				end_;
 				return nullptr;
 			}
 
@@ -838,7 +774,6 @@ namespace parser
 				rhs = parse_binop_rhs(token_precedence + 1, rhs);
 				if (rhs == nullptr)
 				{
-					end_;
 					return nullptr;
 				}
 			}
@@ -846,7 +781,6 @@ namespace parser
 			lhs = make_shared<ast::BinaryExpr>(bodies.back(), binop_type, lhs, rhs);
 		}
 
-		end_;
 		return nullptr;
 	}
 
@@ -878,10 +812,8 @@ namespace parser
 	/// literal_expr ::= 'curr_type'
 	shared_ptr<ast::BaseExpr> Parser::parse_literal()
 	{
-		start_;
 		if (curr_type == types::Type::None)
 		{
-			end_;
 			return log_error("Literal is not a valid type");
 		}
 
@@ -891,28 +823,23 @@ namespace parser
 		// TODO: not ignore float
 		if (!types::check_range(literal_string, curr_type))
 		{
-			end_;
 			return log_error("Literal value for type: " + types::to_string(curr_type) + " is out of range");
 		}
 
 		get_next_token();
 
-		end_;
 		return make_shared<ast::LiteralExpr>(bodies.back(), curr_type, literal_string);
 	}
 
 	/// variable_declaration_expr ::= var 'curr_type' identifier ('=' expression)?
 	shared_ptr<ast::BaseExpr> Parser::parse_variable_declaration()
 	{
-		start_;
-
 		get_next_token();
 
 		types::Type var_type = types::is_valid_type(identifier_string);
 
 		if (var_type == types::Type::None)
 		{
-			end_;
 			return log_error("Invalid type specified");
 		}
 
@@ -920,7 +847,6 @@ namespace parser
 
 		if (curr_token != Token::VariableReference)
 		{
-			end_;
 			return log_error("Expected identifier after type");
 		}
 
@@ -936,14 +862,12 @@ namespace parser
 			expr = parse_expression(false, false);
 			if (expr == nullptr)
 			{
-				end_;
 				return nullptr;
 			}
 		}
 
 		int name_id = module::StringManager::get_id(name);
 
-		end_;
 		expr->get_body()->named_types[name_id] = var_type;
 		return make_shared<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, expr);
 	}
@@ -953,7 +877,6 @@ namespace parser
 	///   ::= identifier '(' expression* ')'
 	shared_ptr<ast::BaseExpr> Parser::parse_variable_reference()
 	{
-		start_;
 		int name_id = module::StringManager::get_id(identifier_string);
 
 		get_next_token();
@@ -961,16 +884,12 @@ namespace parser
 		// simple variable reference
 		if (curr_token != Token::ParenStart)
 		{
-			end_;
 			return make_shared<ast::VariableReferenceExpr>(bodies.back(), name_id);
 		}
 
 		get_next_token();
 
 		// function call
-#ifdef __debug
-		std::cout << "creating function call" << std::endl;
-#endif
 		std::vector<shared_ptr<ast::BaseExpr>> args;
 		if (curr_token != Token::ParenEnd)
 		{
@@ -983,7 +902,6 @@ namespace parser
 				}
 				else
 				{
-					end_;
 					return nullptr;
 				}
 
@@ -994,7 +912,6 @@ namespace parser
 
 				if (curr_token != Token::Comma)
 				{
-					end_;
 					return log_error("Expected ')' or ',' in function argument list");
 				}
 
@@ -1004,26 +921,22 @@ namespace parser
 
 		get_next_token();
 
-		end_;
 		return make_shared<ast::CallExpr>(bodies.back(), name_id, args);
 	}
 
 	shared_ptr<ast::BaseExpr> Parser::parse_parenthesis()
 	{
-		start_;
 		get_next_token();
 
 		shared_ptr<ast::BaseExpr> expr = parse_expression(false, false);
 
 		if (curr_token != Token::ParenEnd)
 		{
-			end_;
 			return log_error("Expected ')' after expression");
 		}
 
 		if (expr == nullptr)
 		{
-			end_;
 			return nullptr;
 		}
 
@@ -1036,10 +949,8 @@ namespace parser
 	///   ::= type id '(' [type id,]* ')'
 	ast::FunctionPrototype* Parser::parse_function_prototype()
 	{
-		start_;
 		if (curr_token != Token::VariableReference)
 		{
-			end_;
 			log_error_empty("Return type for function prototype is invalid");
 			return nullptr;
 		}
@@ -1048,7 +959,6 @@ namespace parser
 
 		if (return_type == types::Type::None)
 		{
-			end_;
 			log_error_empty("Return type for function prototype is invalid");
 			return nullptr;
 		}
@@ -1057,7 +967,6 @@ namespace parser
 
 		if (curr_token != Token::VariableReference)
 		{
-			end_;
 			log_error_empty("Expected function name in function prototype");
 			return nullptr;
 		}
@@ -1068,7 +977,6 @@ namespace parser
 
 		if (curr_token != Token::ParenStart)
 		{
-			end_;
 			log_error_empty("Expected '(' in function prototype");
 			return nullptr;
 		}
@@ -1084,7 +992,6 @@ namespace parser
 			{
 				if (curr_token != Token::VariableReference)
 				{
-					end_;
 					log_error_empty("Expected variable declaration in function prototype");
 					return nullptr;
 				}
@@ -1094,7 +1001,6 @@ namespace parser
 				get_next_token();
 				if (curr_token != Token::VariableReference)
 				{
-					end_;
 					log_error_empty("Expected a variable identifier in function prototype");
 					return nullptr;
 				}
@@ -1116,7 +1022,6 @@ namespace parser
 					}
 					else
 					{
-						end_;
 						log_error_empty("Invalid character in function prototype");
 						return nullptr;
 					}
@@ -1126,7 +1031,6 @@ namespace parser
 
 		//get_next_token();
 
-		end_;
 		return new ast::FunctionPrototype(name, return_type, types, args);
 	}
 
@@ -1144,7 +1048,6 @@ namespace parser
 
 		if (curr_token == Token::EndOfExpression)
 		{
-			end_;
 			log_error_empty("Expected end of expression, missing ';'");
 			return nullptr;
 		}
@@ -1153,7 +1056,6 @@ namespace parser
 
 		proto->is_extern = true;
 
-		end_;
 		return proto;
 	}
 
@@ -1162,11 +1064,9 @@ namespace parser
 	{
 		get_next_token();
 
-		start_;
 		ast::FunctionPrototype* proto = parse_function_prototype();
 		if (proto == nullptr)
 		{
-			end_;
 			return nullptr;
 		}
 
@@ -1175,7 +1075,6 @@ namespace parser
 		shared_ptr<ast::BodyExpr> body = parse_body(ast::BodyType::Function, false, true);
 		if (body == nullptr)
 		{
-			end_;
 			delete proto;
 			return nullptr;
 		}
@@ -1189,20 +1088,17 @@ namespace parser
 
 		get_next_token();
 
-		end_;
 		return make_shared<ast::FunctionDefinition>(proto, body);
 	}
 
 	shared_ptr<ast::BaseExpr> Parser::parse_if_else()
 	{
-		start_;
 		get_next_token();
 
 		shared_ptr<ast::BaseExpr> cond = parse_expression(false, true);
 
 		if (cond == nullptr)
 		{
-			end_;
 			return log_error("Expected if condition");
 		}
 
@@ -1210,7 +1106,6 @@ namespace parser
 
 		if (if_body == nullptr)
 		{
-			end_;
 			return log_error("Expected if body");
 		}
 
@@ -1218,7 +1113,6 @@ namespace parser
 
 		if (curr_token != Token::ElseStatement)
 		{
-			end_;
 			return log_error("Expected else");
 		}
 
@@ -1228,13 +1122,11 @@ namespace parser
 
 		if (else_body == nullptr)
 		{
-			end_;
 			return log_error("Expected else body");
 		}
 
 		get_next_token();
 
-		end_;
 		return make_shared<ast::IfExpr>(bodies.back(), cond, if_body, else_body);
 	}
 
@@ -1418,7 +1310,6 @@ namespace parser
 
 		if (curr_token != Token::EndOfExpression)
 		{
-			end_;
 			log_error_empty("Expected end of expression, missing ';'");
 			return false;
 		}
@@ -1443,7 +1334,6 @@ namespace parser
 
 		if (curr_token != Token::EndOfExpression)
 		{
-			end_;
 			log_error_empty("Expected end of expression, missing ';'");
 			return false;
 		}
@@ -1577,17 +1467,12 @@ namespace parser
 
 	void Parser::log_error_empty(std::string error_message)
 	{
-		start_;
 		std::cout << error_message << std::endl;
 		log_line_info();
-		end_;
 	}
 
 	void Parser::log_line_info()
 	{
-#ifdef __debug
-		std::cout << '\t' << "Current Token ID: " << (int) curr_token << std::endl;
-#endif
 		std::cout << '\t' << "Current Character: " << last_char << std::endl;
 		//std::cout << '\t' << "curr token: " << (int) curr_token << ", last char: " << last_char << std::endl;
 		if (identifier_string != "")
@@ -1596,9 +1481,6 @@ namespace parser
 		}
 		else
 		{
-#ifdef __debug
-			std::cout << '\t' << "Identifier String: <empty>" << std::endl;
-#endif
 		}
 
 		std::cout << '\t' << "At Line: " << line_info.line_count << " Position: " << line_info.line_pos << std::endl;
