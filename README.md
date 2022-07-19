@@ -20,6 +20,7 @@ The output file will by default contain the ir code, but can be changed using th
 
 ###### Options
 - `--output-type=[type]` chooses what type the output file will be, supported values are `ir` or `obj`.
+- `--input=file` adds another input file to build
 
 ##### Building The Result
 To build from the IR code, first run llc from either the system path, or the one created when building llvm.
