@@ -20,6 +20,7 @@
 - modules can be defined
 - scope operator
 - using statement
+- multiple source files
 
 
 ##### Features Required for Bootstrapping
@@ -40,5 +41,4 @@
 - more types
 - class & inheritance
 - custom types
-- multiple source files
 
