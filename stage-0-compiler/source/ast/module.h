@@ -69,6 +69,7 @@ namespace module
 	private:
 		static std::unordered_set<int> find_using_modules(int module_id);
 		static std::list<int> get_module_order();
+		static std::vector<std::pair<int, int>> get_circular_dependencies();
 		static void handle_circular_dependencies(std::unordered_set<int> circular_dependencies);
 		static void log_error(std::string str);
 

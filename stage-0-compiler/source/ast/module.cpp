@@ -531,13 +531,60 @@ namespace module
 		return L;
 	}
 
+	std::vector<std::pair<int, int>> ModuleManager::get_circular_dependencies()
+	{
+		std::vector<std::pair<int, int>> circular_dependencies;
+
+		// find cycles in dag: https://stackoverflow.com/questions/261573/best-algorithm-for-detecting-cycles-in-a-directed-graph
+		std::unordered_set<int> discovered;
+		std::unordered_set<int> finished;
+
+		std::function<std::vector<std::pair<int, int>>(int)> dfs_visit;
+		dfs_visit = [&](int u)
+		{
+			std::vector<std::pair<int, int>> found_cycles;
+
+			discovered.insert(u);
+
+			for (auto& v : find_using_modules(u))
+			{
+				if (discovered.find(v) != discovered.end())
+				{
+					found_cycles.push_back({ u, v });
+					continue;
+				}
+
+				if (finished.find(v) == finished.end())
+				{
+					auto r = dfs_visit(v);
+					found_cycles.insert(found_cycles.end(), r.begin(), r.end());
+				}
+			}
+
+			discovered.erase(u);
+			finished.insert(u);
+
+			return found_cycles;
+		};
+
+		for (auto& p : ModuleManager::module_contents)
+		{
+			int u = p.first;
+			auto r = dfs_visit(u);
+			circular_dependencies.insert(circular_dependencies.end(), r.begin(), r.end());
+		}
+
+		return circular_dependencies;
+	}
+
 	void ModuleManager::handle_circular_dependencies(std::unordered_set<int> circular_dependencies)
 	{
-		log_error("Module Graph has a circular dependency");
-		log_error("Modules involved:");
-		for (auto& m : circular_dependencies)
+		log_error("Module Graph has circular dependencies:");
+
+		auto r = get_circular_dependencies();
+		for (auto p : r)
 		{
-			log_error("\t" + StringManager::get_string(m));
+			log_error("\tIn module '" + StringManager::get_string(p.first) + "': requiring '" + StringManager::get_string(p.second) + "' creates a cycle.");
 		}
 	}
 
