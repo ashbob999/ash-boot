@@ -1472,6 +1472,7 @@ namespace parser
 
 	void Parser::log_line_info()
 	{
+		std::cout << '\t' << "File: " << module::StringManager::get_string(this->filename_id) << std::endl;
 		std::cout << '\t' << "Current Character: " << last_char << std::endl;
 		//std::cout << '\t' << "curr token: " << (int) curr_token << ", last char: " << last_char << std::endl;
 		if (identifier_string != "")

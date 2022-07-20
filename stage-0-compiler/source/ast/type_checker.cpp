@@ -57,6 +57,7 @@ namespace type_checker
 	bool TypeChecker::log_error(ast::BaseExpr* expr, std::string str)
 	{
 		std::cout << str << std::endl;
+		std::cout << '\t' << "In File: " << module::StringManager::get_string(this->current_file_id) << std::endl;
 
 		/*
 		// TODO: use when file is read into char array
