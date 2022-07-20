@@ -15,17 +15,11 @@ namespace types
 
 	bool Type::operator==(const Type& other)
 	{
-		if (this->type_enum != other.type_enum)
+		if (this->type_enum == other.type_enum && this->data == other.data)
 		{
-			return false;
+			return true;
 		}
-
-		if (this->data != other.data)
-		{
-			return false;
-		}
-
-		return true;
+		return false;
 	}
 
 	bool Type::operator!=(const Type& other)
@@ -33,15 +27,36 @@ namespace types
 		return !(*this == other);
 	}
 
+	Type::Type(TypeEnum type_enum, int size, bool is_signed) : type_enum(type_enum)
+	{
+		// data bit-0: sign bit
+		// data bit1-31: size bits
+		data = size << 1;
+		if (is_signed)
+		{
+			data |= 1;
+		}
+	}
+
+	int Type::get_size() const
+	{
+		return data >> 1;
+	}
+
+	bool Type::is_signed() const
+	{
+		return (data & 1) == 1;
+	}
+
 	Type is_valid_type(std::string& str)
 	{
 		if (str == "int")
 		{
-			return TypeEnum::Int;
+			return { TypeEnum::Int, 32, true };
 		}
 		else if (str == "float")
 		{
-			return TypeEnum::Float;
+			return { TypeEnum::Float, 32, true };
 		}
 		else if (str == "void")
 		{
@@ -49,11 +64,11 @@ namespace types
 		}
 		else if (str == "bool")
 		{
-			return TypeEnum::Bool;
+			return { TypeEnum::Bool, 1, false };
 		}
 		else if (str == "char")
 		{
-			return TypeEnum::Char;
+			return { TypeEnum::Char, 8, true };
 		}
 		return TypeEnum::None;
 	}
@@ -74,22 +89,22 @@ namespace types
 
 		if (std::regex_match(str, match, int_regex))
 		{
-			return { true, TypeEnum::Int };
+			return { true, get_default_type(TypeEnum::Int) };
 		}
 		else if (std::regex_match(str, match, float_regex))
 		{
-			return { true, TypeEnum::Float };
+			return { true, get_default_type(TypeEnum::Float) };
 		}
 		else if (std::regex_match(str, match, bool_regex))
 		{
-			return { true, TypeEnum::Bool };
+			return { true, get_default_type(TypeEnum::Bool) };
 		}
 		else if (std::regex_match(str, match, char_regex))
 		{
-			return { true, TypeEnum::Char };
+			return { true, get_default_type(TypeEnum::Char) };
 		}
 
-		return { false, TypeEnum::None };
+		return { false, get_default_type(TypeEnum::None) };
 	}
 
 	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, Type type)
@@ -97,30 +112,37 @@ namespace types
 		switch (type.type_enum)
 		{
 			case TypeEnum::Int:
+			case TypeEnum::Bool:
+			case TypeEnum::Char:
 			{
-				return llvm::Type::getInt32Ty(llvm_context);
+				return llvm::IntegerType::get(llvm_context, type.get_size());
 			}
 			case TypeEnum::Float:
 			{
-				return llvm::Type::getFloatTy(llvm_context);
+				if (type.get_size() == 32)
+				{
+					return llvm::Type::getFloatTy(llvm_context);
+				}
+				break;
 			}
 			case TypeEnum::Void:
 			{
 				return llvm::Type::getVoidTy(llvm_context);
 			}
-			case TypeEnum::Bool:
-			{
+
+			/*{
 				return llvm::Type::getInt1Ty(llvm_context);
 			}
-			case TypeEnum::Char:
+
 			{
 				return llvm::Type::getInt8Ty(llvm_context);
-			}
+			}*/
 			default:
 			{
 				return nullptr;
 			}
 		}
+		return nullptr;
 	}
 
 	llvm::Value* get_default_value(llvm::LLVMContext& llvm_context, Type type)
@@ -128,21 +150,23 @@ namespace types
 		switch (type.type_enum)
 		{
 			case TypeEnum::Int:
+			case TypeEnum::Bool:
+			case TypeEnum::Char:
 			{
-				return llvm::ConstantInt::get(llvm_context, llvm::APInt(32, 0, true));
+				return llvm::ConstantInt::get(llvm_context, llvm::APInt(type.get_size(), 0, type.is_signed()));
 			}
 			case TypeEnum::Float:
 			{
 				return llvm::ConstantFP::get(llvm_context, llvm::APFloat((float) 0));
 			}
-			case TypeEnum::Bool:
-			{
+
+			/*{
 				return llvm::ConstantInt::get(llvm_context, llvm::APInt(1, 0, false));
 			}
-			case TypeEnum::Char:
+
 			{
 				return llvm::ConstantInt::get(llvm_context, llvm::APInt(8, 0, true));
-			}
+			}*/
 			default:
 			{
 				return nullptr;
@@ -160,11 +184,11 @@ namespace types
 			}
 			case TypeEnum::Int:
 			{
-				return "Int";
+				return "Int (" + std::to_string(type.get_size()) + ", " + (type.is_signed() ? "signed" : "unsigned") + ")";
 			}
 			case TypeEnum::Float:
 			{
-				return "Float";
+				return "Float (" + std::to_string(type.get_size()) + ")";
 			}
 			case TypeEnum::Void:
 			{
@@ -173,6 +197,10 @@ namespace types
 			case TypeEnum::Bool:
 			{
 				return "Bool";
+			}
+			case TypeEnum::Char:
+			{
+				return "Char";
 			}
 		}
 	}
@@ -200,6 +228,33 @@ namespace types
 			}
 		}
 		return false;
+	}
+
+	Type get_default_type(TypeEnum type_enum)
+	{
+		switch (type_enum)
+		{
+			case TypeEnum::Int:
+			{
+				return { TypeEnum::Int, 32, true };
+			}
+			case TypeEnum::Float:
+			{
+				return { TypeEnum::Float, 32, true };
+			}
+			case TypeEnum::Bool:
+			{
+				return { TypeEnum::Bool, 1, false };
+			}
+			case TypeEnum::Char:
+			{
+				return { TypeEnum::Char, 8, true };
+			}
+			default:
+			{
+				return type_enum;
+			}
+		}
 	}
 
 	void BaseType::negate_value()

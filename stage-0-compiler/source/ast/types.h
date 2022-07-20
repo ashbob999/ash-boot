@@ -28,11 +28,16 @@ namespace types
 
 		Type();
 		Type(TypeEnum type_enum);
+		Type(TypeEnum type_enum, int size, bool is_signed);
 		bool operator==(const Type& other);
 		bool operator!=(const Type& other);
+		int get_size() const;
+		bool is_signed() const;
 	};
 
 	Type is_valid_type(std::string& str);
+
+	Type get_default_type(TypeEnum type_enum);
 
 	std::pair<bool, Type> check_type_string(std::string& str);
 

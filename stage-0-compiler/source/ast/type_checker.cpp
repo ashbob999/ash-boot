@@ -476,7 +476,7 @@ namespace type_checker
 		}
 
 		// check the condition has type bool
-		if (expr->condition->get_result_type() != types::TypeEnum::Bool)
+		if (expr->condition->get_result_type().type_enum != types::TypeEnum::Bool)
 		{
 			return log_error(expr, "If condition must have type bool");
 		}
@@ -531,7 +531,7 @@ namespace type_checker
 		}
 
 		// check the end condition has type bool
-		if (expr->end_expr->get_result_type() != types::TypeEnum::Bool)
+		if (expr->end_expr->get_result_type().type_enum != types::TypeEnum::Bool)
 		{
 			return log_error(expr, "For end condition must have type bool");
 		}
@@ -567,7 +567,7 @@ namespace type_checker
 		}
 
 		// check the end condition has type bool
-		if (expr->end_expr->get_result_type() != types::TypeEnum::Bool)
+		if (expr->end_expr->get_result_type().type_enum != types::TypeEnum::Bool)
 		{
 			return log_error(expr, "While end condition must have type bool");
 		}

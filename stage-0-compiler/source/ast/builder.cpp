@@ -648,7 +648,7 @@ namespace builder
 
 				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "and.res");
 
-				phi_node->addIncoming(types::get_default_value(*llvm_context, types::TypeEnum::Bool), lhs_end_block);
+				phi_node->addIncoming(types::get_default_value(*llvm_context, types::get_default_type(types::TypeEnum::Bool)), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
@@ -725,7 +725,7 @@ namespace builder
 
 				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "or.res");
 
-				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::TypeEnum::Bool), 1, false), lhs_end_block);
+				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(types::TypeEnum::Bool)), 1, false), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
@@ -871,7 +871,7 @@ namespace builder
 
 		// convert condition to a bool, by comparing it to zero
 		// TODO: fix
-		cond_value = llvm_ir_builder->CreateICmpEQ(cond_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::TypeEnum::Bool), 1, false), "ifcond");
+		cond_value = llvm_ir_builder->CreateICmpEQ(cond_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(types::TypeEnum::Bool)), 1, false), "ifcond");
 
 		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
@@ -1168,7 +1168,7 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
-						return llvm_ir_builder->CreateSub(types::get_default_value(*llvm_context, types::TypeEnum::Int), expr_value, "neg");
+						return llvm_ir_builder->CreateSub(types::get_default_value(*llvm_context, types::get_default_type(types::TypeEnum::Int)), expr_value, "neg");
 					}
 					case types::TypeEnum::Float:
 					{

@@ -190,7 +190,7 @@ namespace ast
 
 	types::Type LiteralExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = this->curr_type;
 		}
@@ -199,7 +199,7 @@ namespace ast
 
 	bool LiteralExpr::check_types()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = this->curr_type;
 		}
@@ -245,7 +245,7 @@ namespace ast
 
 	types::Type VariableDeclarationExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = this->curr_type;
 		}
@@ -281,7 +281,7 @@ namespace ast
 
 	types::Type VariableReferenceExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			//result_type = this->get_body()->named_types[this->name];
 			result_type = scope::get_scope(this)->named_types[this->name_id];
@@ -325,7 +325,7 @@ namespace ast
 
 	types::Type BinaryExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			if (is_binary_comparision(this->binop))
 			{
@@ -402,7 +402,7 @@ namespace ast
 
 	types::Type BodyExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			if (this->expressions.size() > 0)
 			{
@@ -479,7 +479,7 @@ namespace ast
 
 	types::Type CallExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			//result_type = scope::get_scope(shared_ptr<CallExpr>(this))->function_prototypes[this->callee]->return_type;
 			result_type = scope::get_scope(this)->function_prototypes[this->callee_id]->return_type;
@@ -549,7 +549,7 @@ namespace ast
 
 	types::Type IfExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			if (this->should_return_value)
 			{
@@ -565,7 +565,7 @@ namespace ast
 
 	bool IfExpr::check_types()
 	{
-		if (this->condition->get_result_type() == types::TypeEnum::Bool)
+		if (this->condition->get_result_type().type_enum == types::TypeEnum::Bool)
 		{
 			if (this->should_return_value)
 			{
@@ -634,7 +634,7 @@ namespace ast
 
 	types::Type ForExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = types::TypeEnum::Void;
 		}
@@ -643,7 +643,7 @@ namespace ast
 
 	bool ForExpr::check_types()
 	{
-		if (end_expr->get_result_type() == types::TypeEnum::Bool)
+		if (end_expr->get_result_type().type_enum == types::TypeEnum::Bool)
 		{
 			return true;
 		}
@@ -678,7 +678,7 @@ namespace ast
 
 	types::Type WhileExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = types::TypeEnum::Void;
 		}
@@ -687,7 +687,7 @@ namespace ast
 
 	bool WhileExpr::check_types()
 	{
-		if (end_expr->get_result_type() == types::TypeEnum::Bool)
+		if (end_expr->get_result_type().type_enum == types::TypeEnum::Bool)
 		{
 			return true;
 		}
@@ -743,7 +743,7 @@ namespace ast
 
 	types::Type ReturnExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			if (ret_expr == nullptr)
 			{
@@ -791,7 +791,7 @@ namespace ast
 
 	types::Type ContinueExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = types::TypeEnum::Void;
 		}
@@ -832,7 +832,7 @@ namespace ast
 
 	types::Type BreakExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = types::TypeEnum::Void;
 		}
@@ -880,7 +880,7 @@ namespace ast
 
 	types::Type UnaryExpr::get_result_type()
 	{
-		if (result_type == types::TypeEnum::None)
+		if (result_type.type_enum == types::TypeEnum::None)
 		{
 			result_type = this->expr->get_result_type();
 		}
