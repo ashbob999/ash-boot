@@ -11,7 +11,7 @@ using std::shared_ptr;
 namespace types
 {
 	// the available supported native types
-	enum class Type
+	enum class TypeEnum
 	{
 		None,
 		Int, // 32-bit signed int
@@ -19,6 +19,17 @@ namespace types
 		Void,
 		Bool, // either true (1), false (0)
 		Char, // 8-bit signed integer
+	};
+
+	struct Type
+	{
+		TypeEnum type_enum;
+		int data;
+
+		Type();
+		Type(TypeEnum type_enum);
+		bool operator==(const Type& other);
+		bool operator!=(const Type& other);
 	};
 
 	Type is_valid_type(std::string& str);

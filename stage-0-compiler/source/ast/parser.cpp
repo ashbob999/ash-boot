@@ -198,7 +198,7 @@ namespace parser
 			{
 				// check if identifier is a bool
 				std::pair<bool, types::Type> res = types::check_type_string(identifier_string);
-				if (res.first && res.second == types::Type::Bool)
+				if (res.first && res.second == types::TypeEnum::Bool)
 				{
 					curr_type = res.second;
 					curr_token = Token::LiteralValue;
@@ -647,7 +647,7 @@ namespace parser
 		std::vector<types::Type> types;
 		std::vector<int> arg_ids;
 
-		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::Type::Void, types, arg_ids);
+		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::TypeEnum::Void, types, arg_ids);
 		return make_shared<ast::FunctionDefinition>(proto, expr);
 	}
 
@@ -811,7 +811,7 @@ namespace parser
 	/// literal_expr ::= 'curr_type'
 	shared_ptr<ast::BaseExpr> Parser::parse_literal()
 	{
-		if (curr_type == types::Type::None)
+		if (curr_type == types::TypeEnum::None)
 		{
 			return log_error("Literal is not a valid type");
 		}
@@ -837,7 +837,7 @@ namespace parser
 
 		types::Type var_type = types::is_valid_type(identifier_string);
 
-		if (var_type == types::Type::None)
+		if (var_type == types::TypeEnum::None)
 		{
 			return log_error("Invalid type specified");
 		}
@@ -956,7 +956,7 @@ namespace parser
 
 		types::Type return_type = types::is_valid_type(identifier_string);
 
-		if (return_type == types::Type::None)
+		if (return_type == types::TypeEnum::None)
 		{
 			log_error_empty("Return type for function prototype is invalid");
 			return nullptr;
@@ -1141,7 +1141,7 @@ namespace parser
 
 		types::Type var_type = types::is_valid_type(identifier_string);
 
-		if (var_type == types::Type::None)
+		if (var_type == types::TypeEnum::None)
 		{
 			return log_error("Invalid type after for");
 		}

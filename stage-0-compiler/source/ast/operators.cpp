@@ -567,9 +567,9 @@ namespace operators
 		{
 			return false; // module scope operator does not apply to types
 		}
-		switch (type)
+		switch (type.type_enum)
 		{
-			case types::Type::Int:
+			case types::TypeEnum::Int:
 			{
 				if (!is_boolean_operator(binop))
 				{
@@ -580,7 +580,7 @@ namespace operators
 					return false;
 				}
 			}
-			case types::Type::Float:
+			case types::TypeEnum::Float:
 			{
 				if (!is_boolean_operator(binop) && !is_bitwise_operator(binop))
 				{
@@ -591,7 +591,7 @@ namespace operators
 					return false;
 				}
 			}
-			case types::Type::Bool:
+			case types::TypeEnum::Bool:
 			{
 				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment || is_boolean_operator(binop))
 				{
@@ -602,7 +602,7 @@ namespace operators
 					return false;
 				}
 			}
-			case types::Type::Char:
+			case types::TypeEnum::Char:
 			{
 				if (is_binary_comparision(binop) || binop == BinaryOp::Assignment)
 				{
@@ -622,9 +622,9 @@ namespace operators
 
 	bool is_type_supported(UnaryOp unop, types::Type type)
 	{
-		switch (type)
+		switch (type.type_enum)
 		{
-			case types::Type::Int:
+			case types::TypeEnum::Int:
 			{
 				if (!is_boolean_operator(unop))
 				{
@@ -635,7 +635,7 @@ namespace operators
 					return false;
 				}
 			}
-			case types::Type::Float:
+			case types::TypeEnum::Float:
 			{
 				if (!is_boolean_operator(unop) && !is_bitwise_operator(unop))
 				{
@@ -646,7 +646,7 @@ namespace operators
 					return false;
 				}
 			}
-			case types::Type::Bool:
+			case types::TypeEnum::Bool:
 			{
 				if (is_boolean_operator(unop))
 				{
@@ -657,7 +657,7 @@ namespace operators
 					return false;
 				}
 			}
-			case types::Type::Char:
+			case types::TypeEnum::Char:
 			{
 				return false;
 			}

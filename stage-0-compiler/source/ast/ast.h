@@ -90,7 +90,7 @@ namespace ast
 	protected:
 		AstExprType ast_type = AstExprType::BaseExpr;
 		BodyExpr* body;
-		types::Type result_type = types::Type::None;
+		types::Type result_type = types::TypeEnum::None;
 		ExpressionLineInfo line_info;
 		bool is_name_mangled = false;
 		parent_data parent;

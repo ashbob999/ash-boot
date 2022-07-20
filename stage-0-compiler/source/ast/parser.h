@@ -95,7 +95,7 @@ namespace parser
 		std::string identifier_string;
 		char last_char = '\0';
 		Token curr_token = Token::None;
-		types::Type curr_type = types::Type::None;
+		types::Type curr_type = types::TypeEnum::None;
 		std::vector<ast::BodyExpr*> bodies;
 		LineInfo line_info;
 		std::string file_name;

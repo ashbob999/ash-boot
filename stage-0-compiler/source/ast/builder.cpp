@@ -216,7 +216,7 @@ namespace builder
 			else
 			{
 				// check for void return type
-				if (function_definition->prototype->return_type == types::Type::Void)
+				if (function_definition->prototype->return_type == types::TypeEnum::Void)
 				{
 					llvm_ir_builder->CreateRetVoid();
 				}
@@ -424,13 +424,13 @@ namespace builder
 			case operators::BinaryOp::Division:
 			{
 				// TODO: deal with divide by zero errors
-				switch (expr->get_result_type())
+				switch (expr->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
 						return llvm_ir_builder->CreateSDiv(lhs, rhs, "sdiv");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFDiv(lhs, rhs, "fdiv");
 					}
@@ -443,13 +443,13 @@ namespace builder
 			case operators::BinaryOp::Modulo:
 			{
 				// TODO: deal with divide by zero errors
-				switch (expr->get_result_type())
+				switch (expr->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
 						return llvm_ir_builder->CreateSRem(lhs, rhs, "srem");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFRem(lhs, rhs, "frem");
 					}
@@ -461,14 +461,14 @@ namespace builder
 			}
 			case operators::BinaryOp::LessThan:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
-					case types::Type::Char:
+					case types::TypeEnum::Int:
+					case types::TypeEnum::Char:
 					{
 						return llvm_ir_builder->CreateICmpSLT(lhs, rhs, "lt");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFCmpOLT(lhs, rhs, "lt");
 					}
@@ -480,14 +480,14 @@ namespace builder
 			}
 			case operators::BinaryOp::LessThanEqual:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
-					case types::Type::Char:
+					case types::TypeEnum::Int:
+					case types::TypeEnum::Char:
 					{
 						return llvm_ir_builder->CreateICmpSLE(lhs, rhs, "lte");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFCmpOLE(lhs, rhs, "lte");
 					}
@@ -499,14 +499,14 @@ namespace builder
 			}
 			case operators::BinaryOp::GreaterThan:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
-					case types::Type::Char:
+					case types::TypeEnum::Int:
+					case types::TypeEnum::Char:
 					{
 						return llvm_ir_builder->CreateICmpSGT(lhs, rhs, "gt");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFCmpOGT(lhs, rhs, "gt");
 					}
@@ -518,14 +518,14 @@ namespace builder
 			}
 			case operators::BinaryOp::GreaterThanEqual:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
-					case types::Type::Char:
+					case types::TypeEnum::Int:
+					case types::TypeEnum::Char:
 					{
 						return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "gte");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFCmpOGE(lhs, rhs, "gte");
 					}
@@ -537,15 +537,15 @@ namespace builder
 			}
 			case operators::BinaryOp::EqualTo:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
-					case types::Type::Bool:
-					case types::Type::Char:
+					case types::TypeEnum::Int:
+					case types::TypeEnum::Bool:
+					case types::TypeEnum::Char:
 					{
 						return llvm_ir_builder->CreateICmpEQ(lhs, rhs, "eq");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFCmpOEQ(lhs, rhs, "eq");
 					}
@@ -557,15 +557,15 @@ namespace builder
 			}
 			case operators::BinaryOp::NotEqualTo:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
-					case types::Type::Bool:
-					case types::Type::Char:
+					case types::TypeEnum::Int:
+					case types::TypeEnum::Bool:
+					case types::TypeEnum::Char:
 					{
 						return llvm_ir_builder->CreateICmpNE(lhs, rhs, "ne");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFCmpONE(lhs, rhs, "ne");
 					}
@@ -648,7 +648,7 @@ namespace builder
 
 				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "and.res");
 
-				phi_node->addIncoming(types::get_default_value(*llvm_context, types::Type::Bool), lhs_end_block);
+				phi_node->addIncoming(types::get_default_value(*llvm_context, types::TypeEnum::Bool), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
@@ -725,15 +725,15 @@ namespace builder
 
 				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "or.res");
 
-				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type::Bool), 1, false), lhs_end_block);
+				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::TypeEnum::Bool), 1, false), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
 			case operators::BinaryOp::BitwiseAnd:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
 						return llvm_ir_builder->CreateAnd(lhs, rhs, "bitwise_and");
 					}
@@ -745,9 +745,9 @@ namespace builder
 			}
 			case operators::BinaryOp::BitwiseOr:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
 						return llvm_ir_builder->CreateOr(lhs, rhs, "bitwise_or");
 					}
@@ -759,9 +759,9 @@ namespace builder
 			}
 			case operators::BinaryOp::BitwiseXor:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
 						return llvm_ir_builder->CreateXor(lhs, rhs, "bitwise_xor");
 					}
@@ -773,9 +773,9 @@ namespace builder
 			}
 			case operators::BinaryOp::BitwiseShiftLeft:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
 						return llvm_ir_builder->CreateShl(lhs, rhs, "shift_left");
 					}
@@ -787,9 +787,9 @@ namespace builder
 			}
 			case operators::BinaryOp::BitwiseShiftRight:
 			{
-				switch (expr->lhs->get_result_type())
+				switch (expr->lhs->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
 						return llvm_ir_builder->CreateAShr(lhs, rhs, "shift_right");
 					}
@@ -848,7 +848,7 @@ namespace builder
 		}
 
 		// void return types cannot have a name
-		if (expr->get_result_type() == types::Type::Void)
+		if (expr->get_result_type() == types::TypeEnum::Void)
 		{
 			return llvm_ir_builder->CreateCall(callee_func, args);
 		}
@@ -871,7 +871,7 @@ namespace builder
 
 		// convert condition to a bool, by comparing it to zero
 		// TODO: fix
-		cond_value = llvm_ir_builder->CreateICmpEQ(cond_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type::Bool), 1, false), "ifcond");
+		cond_value = llvm_ir_builder->CreateICmpEQ(cond_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::TypeEnum::Bool), 1, false), "ifcond");
 
 		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
@@ -1164,13 +1164,13 @@ namespace builder
 			}
 			case operators::UnaryOp::Minus:
 			{
-				switch (expr->expr->get_result_type())
+				switch (expr->expr->get_result_type().type_enum)
 				{
-					case types::Type::Int:
+					case types::TypeEnum::Int:
 					{
-						return llvm_ir_builder->CreateSub(types::get_default_value(*llvm_context, types::Type::Int), expr_value, "neg");
+						return llvm_ir_builder->CreateSub(types::get_default_value(*llvm_context, types::TypeEnum::Int), expr_value, "neg");
 					}
-					case types::Type::Float:
+					case types::TypeEnum::Float:
 					{
 						return llvm_ir_builder->CreateFNeg(expr_value, "fneg");
 					}

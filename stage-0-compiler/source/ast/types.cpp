@@ -7,29 +7,55 @@ using std::make_shared;
 
 namespace types
 {
+	Type::Type() : type_enum(TypeEnum::None), data(0)
+	{}
+
+	Type::Type(TypeEnum type_enum) : type_enum(type_enum), data(0)
+	{}
+
+	bool Type::operator==(const Type& other)
+	{
+		if (this->type_enum != other.type_enum)
+		{
+			return false;
+		}
+
+		if (this->data != other.data)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool Type::operator!=(const Type& other)
+	{
+		return !(*this == other);
+	}
+
 	Type is_valid_type(std::string& str)
 	{
 		if (str == "int")
 		{
-			return Type::Int;
+			return TypeEnum::Int;
 		}
 		else if (str == "float")
 		{
-			return Type::Float;
+			return TypeEnum::Float;
 		}
 		else if (str == "void")
 		{
-			return Type::Void;
+			return TypeEnum::Void;
 		}
 		else if (str == "bool")
 		{
-			return Type::Bool;
+			return TypeEnum::Bool;
 		}
 		else if (str == "char")
 		{
-			return Type::Char;
+			return TypeEnum::Char;
 		}
-		return Type::None;
+		return TypeEnum::None;
 	}
 
 	std::pair<bool, Type> check_type_string(std::string& str)
@@ -48,45 +74,45 @@ namespace types
 
 		if (std::regex_match(str, match, int_regex))
 		{
-			return { true, Type::Int };
+			return { true, TypeEnum::Int };
 		}
 		else if (std::regex_match(str, match, float_regex))
 		{
-			return { true, Type::Float };
+			return { true, TypeEnum::Float };
 		}
 		else if (std::regex_match(str, match, bool_regex))
 		{
-			return { true, Type::Bool };
+			return { true, TypeEnum::Bool };
 		}
 		else if (std::regex_match(str, match, char_regex))
 		{
-			return { true, Type::Char };
+			return { true, TypeEnum::Char };
 		}
 
-		return { false, Type::None };
+		return { false, TypeEnum::None };
 	}
 
 	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, Type type)
 	{
-		switch (type)
+		switch (type.type_enum)
 		{
-			case Type::Int:
+			case TypeEnum::Int:
 			{
 				return llvm::Type::getInt32Ty(llvm_context);
 			}
-			case Type::Float:
+			case TypeEnum::Float:
 			{
 				return llvm::Type::getFloatTy(llvm_context);
 			}
-			case Type::Void:
+			case TypeEnum::Void:
 			{
 				return llvm::Type::getVoidTy(llvm_context);
 			}
-			case Type::Bool:
+			case TypeEnum::Bool:
 			{
 				return llvm::Type::getInt1Ty(llvm_context);
 			}
-			case Type::Char:
+			case TypeEnum::Char:
 			{
 				return llvm::Type::getInt8Ty(llvm_context);
 			}
@@ -99,21 +125,21 @@ namespace types
 
 	llvm::Value* get_default_value(llvm::LLVMContext& llvm_context, Type type)
 	{
-		switch (type)
+		switch (type.type_enum)
 		{
-			case Type::Int:
+			case TypeEnum::Int:
 			{
 				return llvm::ConstantInt::get(llvm_context, llvm::APInt(32, 0, true));
 			}
-			case Type::Float:
+			case TypeEnum::Float:
 			{
 				return llvm::ConstantFP::get(llvm_context, llvm::APFloat((float) 0));
 			}
-			case Type::Bool:
+			case TypeEnum::Bool:
 			{
 				return llvm::ConstantInt::get(llvm_context, llvm::APInt(1, 0, false));
 			}
-			case Type::Char:
+			case TypeEnum::Char:
 			{
 				return llvm::ConstantInt::get(llvm_context, llvm::APInt(8, 0, true));
 			}
@@ -126,25 +152,25 @@ namespace types
 
 	std::string to_string(Type type)
 	{
-		switch (type)
+		switch (type.type_enum)
 		{
-			case Type::None:
+			case TypeEnum::None:
 			{
 				return "None";
 			}
-			case Type::Int:
+			case TypeEnum::Int:
 			{
 				return "Int";
 			}
-			case Type::Float:
+			case TypeEnum::Float:
 			{
 				return "Float";
 			}
-			case Type::Void:
+			case TypeEnum::Void:
 			{
 				return "Void";
 			}
-			case Type::Bool:
+			case TypeEnum::Bool:
 			{
 				return "Bool";
 			}
@@ -153,22 +179,22 @@ namespace types
 
 	bool check_range(std::string& literal_string, Type type)
 	{
-		switch (type)
+		switch (type.type_enum)
 		{
-			case types::Type::Int:
+			case types::TypeEnum::Int:
 			{
 				return IntType::check_range(literal_string);
 			}
-			case types::Type::Float:
+			case types::TypeEnum::Float:
 			{
 				// TODO: do an actual range check for floats
 				return true;
 			}
-			case types::Type::Bool:
+			case types::TypeEnum::Bool:
 			{
 				return true;
 			}
-			case types::Type::Char:
+			case types::TypeEnum::Char:
 			{
 				return true;
 			}
@@ -183,21 +209,21 @@ namespace types
 
 	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string& str)
 	{
-		switch (curr_type)
+		switch (curr_type.type_enum)
 		{
-			case Type::Int:
+			case TypeEnum::Int:
 			{
 				return make_shared<IntType>(str);
 			}
-			case Type::Float:
+			case TypeEnum::Float:
 			{
 				return make_shared<FloatType>(str);
 			}
-			case Type::Bool:
+			case TypeEnum::Bool:
 			{
 				return make_shared<BoolType>(str);
 			}
-			case Type::Char:
+			case TypeEnum::Char:
 			{
 				return make_shared<CharType>(str);
 			}
