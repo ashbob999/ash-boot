@@ -200,11 +200,11 @@ namespace types
 			}
 			case TypeEnum::Int:
 			{
-				return "Int (" + std::to_string(type.get_size()) + ", " + (type.is_signed() ? "signed" : "unsigned") + ")";
+				return "i" + std::to_string(type.get_size());
 			}
 			case TypeEnum::Float:
 			{
-				return "Float (" + std::to_string(type.get_size()) + ")";
+				return "f" + std::to_string(type.get_size());
 			}
 			case TypeEnum::Void:
 			{
