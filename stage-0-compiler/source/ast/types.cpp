@@ -114,7 +114,7 @@ namespace types
 		else if (std::regex_match(str, match, float_regex))
 		{
 			int size = 32;
-			if (str.back() >= '0' && str.back() <= '9')
+			if (*(str.end() - 3) == 'f' && str.back() >= '0' && str.back() <= '9')
 			{
 				char c1 = *(str.end() - 2);
 				char c2 = *(str.end() - 1);
