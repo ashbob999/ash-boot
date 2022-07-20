@@ -212,7 +212,7 @@ namespace parser
 
 		// literal:
 		//		int: [+-]?[0-9][0-9]*
-		//		float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)[f]?
+		//		float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)(f(32|64)?)?
 		if (std::isdigit(last_char) /* || types::BaseType::is_sign_char(last_char)*/)
 		{
 			identifier_string = last_char;

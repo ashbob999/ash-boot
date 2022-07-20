@@ -71,7 +71,11 @@ namespace types
 			int size = std::stoi(std::string{ str.begin() + 1, str.end() });
 			if (size == 32)
 			{
-				return { TypeEnum::Float, 32, true };
+				return { TypeEnum::Float, size, true };
+			}
+			else if (size == 64)
+			{
+				return { TypeEnum::Float, size, true };
 			}
 		}
 		else if (str == "void")
@@ -93,11 +97,11 @@ namespace types
 	{
 		// type formats
 		// int: [+-]?[0-9][0-9]*
-		// float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)[f]?
+		// float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)(f(32|64)?)?
 		// char: '([^']|\\.)'
 
 		std::regex int_regex{ "[+-]?[0-9][0-9]*" };
-		std::regex float_regex{ "[+-]?[0-9][0-9]*[.][0-9][0-9]*[f]?" };
+		std::regex float_regex{ "[+-]?[0-9][0-9]*[.][0-9][0-9]*(f(32|64)?)?" };
 		std::regex bool_regex{ "(true|false)" };
 		std::regex char_regex{ "'([^']|\\\\.)'" };
 
@@ -109,7 +113,14 @@ namespace types
 		}
 		else if (std::regex_match(str, match, float_regex))
 		{
-			return { true, get_default_type(TypeEnum::Float) };
+			int size = 32;
+			if (str.back() >= '0' && str.back() <= '9')
+			{
+				char c1 = *(str.end() - 2);
+				char c2 = *(str.end() - 1);
+				size = (c1 - '0') * 10 + (c2 - '0');
+			}
+			return { true, {TypeEnum::Float, size, true} };
 		}
 		else if (std::regex_match(str, match, bool_regex))
 		{
@@ -138,6 +149,10 @@ namespace types
 				if (type.get_size() == 32)
 				{
 					return llvm::Type::getFloatTy(llvm_context);
+				}
+				else if (type.get_size() == 64)
+				{
+					return llvm::Type::getDoubleTy(llvm_context);
 				}
 				break;
 			}
@@ -173,7 +188,15 @@ namespace types
 			}
 			case TypeEnum::Float:
 			{
-				return llvm::ConstantFP::get(llvm_context, llvm::APFloat((float) 0));
+				if (type.get_size() == 32)
+				{
+					return llvm::ConstantFP::get(llvm_context, llvm::APFloat(0.0f));
+				}
+				else if (type.get_size() == 64)
+				{
+					return llvm::ConstantFP::get(llvm_context, llvm::APFloat(0.0));
+				}
+				break;
 			}
 
 			/*{
@@ -278,29 +301,42 @@ namespace types
 		assert(false && "Negation not supported");
 	}
 
+	void BaseType::set_type(Type& type)
+	{
+		this->type = type;
+	}
+
 	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string& str)
 	{
+		shared_ptr<BaseType> type = nullptr;
+
 		switch (curr_type.type_enum)
 		{
 			case TypeEnum::Int:
 			{
-				return make_shared<IntType>(str);
+				type = make_shared<IntType>(str);
+				break;
 			}
 			case TypeEnum::Float:
 			{
-				return make_shared<FloatType>(str);
+				type = make_shared<FloatType>(str);
+				break;
 			}
 			case TypeEnum::Bool:
 			{
-				return make_shared<BoolType>(str);
+				type = make_shared<BoolType>(str);
+				break;
 			}
 			case TypeEnum::Char:
 			{
-				return make_shared<CharType>(str);
+				type = make_shared<CharType>(str);
+				break;
 			}
 		}
 
-		return nullptr;
+		type->set_type(curr_type);
+
+		return type;
 	}
 
 	bool BaseType::is_sign_char(char c)
@@ -446,7 +482,7 @@ namespace types
 		//float value = 0;
 
 		// parse the numbers
-		for (; i < str.length() - 1; i++)
+		for (; str[i] != 'f' && i < str.length(); i++)
 		{
 			if (str[i] == '.')
 			{
@@ -470,22 +506,8 @@ namespace types
 			}
 		}
 
-		// handle last char either 0-9 or f
-		if (is_digit(str[i]))
-		{
-			if (!in_fraction)
-			{
-				whole = whole * 10 + (str[i] - '0');
-			}
-			else
-			{
-				fraction = fraction * 10 + (str[i] - '0');
-				decimal_power *= 10;
-			}
-		}
-
-		float value = (float) whole;
-		value += (float) fraction / (float) decimal_power;
+		double value = (double) whole;
+		value += (double) fraction / (double) decimal_power;
 
 		// replace the sign value
 		if (is_negative)
@@ -500,8 +522,16 @@ namespace types
 
 	llvm::ConstantData* FloatType::get_value(llvm::LLVMContext* llvm_context)
 	{
-		// create 32 bit floating point number
-		return llvm::ConstantFP::get(*llvm_context, llvm::APFloat(data));
+		if (this->type.get_size() == 32)
+		{
+			// create 32 bit floating point number
+			return llvm::ConstantFP::get(*llvm_context, llvm::APFloat((float) data));
+		}
+		else if (this->type.get_size() == 64)
+		{
+			// create 64 bit floating point number
+			return llvm::ConstantFP::get(*llvm_context, llvm::APFloat(data));
+		}
 	}
 
 	std::string FloatType::to_string()

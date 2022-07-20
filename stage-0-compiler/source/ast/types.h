@@ -57,11 +57,17 @@ namespace types
 
 	class BaseType
 	{
+	protected:
+		Type type;
+
 	public:
 		virtual llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) = 0;
 		virtual ~BaseType() = default;
 		virtual std::string to_string() = 0;
 		virtual void negate_value();
+
+	private:
+		virtual void set_type(Type& type) final;
 
 	public:
 		static shared_ptr<BaseType> create_type(Type curr_type, std::string& str);
@@ -93,7 +99,7 @@ namespace types
 		std::string to_string() override;
 		virtual void negate_value() override;
 	private:
-		float data;
+		double data;
 	};
 
 	class BoolType : public BaseType
