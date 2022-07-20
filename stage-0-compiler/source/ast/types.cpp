@@ -54,9 +54,25 @@ namespace types
 		{
 			return { TypeEnum::Int, 32, true };
 		}
+		else if (str[0] == 'i' && str.length() > 1)
+		{
+			int size = std::stoi(std::string{ str.begin() + 1, str.end() });
+			if (size == 32)
+			{
+				return { TypeEnum::Int, 32, true };
+			}
+		}
 		else if (str == "float")
 		{
 			return { TypeEnum::Float, 32, true };
+		}
+		else if (str[0] == 'f' && str.length() > 1)
+		{
+			int size = std::stoi(std::string{ str.begin() + 1, str.end() });
+			if (size == 32)
+			{
+				return { TypeEnum::Float, 32, true };
+			}
 		}
 		else if (str == "void")
 		{
