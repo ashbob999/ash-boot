@@ -386,8 +386,8 @@ namespace builder
 			return rhs;
 		}
 
-		llvm::Value* lhs;
-		llvm::Value* rhs;
+		llvm::Value* lhs = nullptr;
+		llvm::Value* rhs = nullptr;
 
 		// don't pre generate the code for the lhs & rhs if the binop is a boolean operator, or a module scope binop
 		if (!operators::is_boolean_operator(expr->binop) && expr->binop != operators::BinaryOp::ModuleScope)

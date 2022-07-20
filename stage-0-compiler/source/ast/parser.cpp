@@ -722,7 +722,6 @@ namespace parser
 				return log_error("Unknown token when expecting an expression");
 			}
 		}
-		return nullptr;
 	}
 
 	/// binop_rhs
