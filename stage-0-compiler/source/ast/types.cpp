@@ -103,17 +103,10 @@ namespace types
 			c1 = 'i';
 			c2 = 'u';
 		}
-		else if (type == TypeEnum::Bool)
-		{
-			return { 1, false };
-		}
-		else if (type == TypeEnum::Char)
-		{
-			return { 8, true };
-		}
 		else
 		{
-			return { 0, false };
+			Type t = get_default_type(type);
+			return { t.get_size(), t.is_signed() };
 		}
 
 		int i = str.length() - 1;
@@ -122,9 +115,10 @@ namespace types
 			i--;
 		}
 
-		if (i == 0)
+		if (i == 0 || i == str.length() - 1)
 		{
-			return { 32, true };
+			Type t = get_default_type(type);
+			return { t.get_size(), t.is_signed() };
 		}
 
 		return { std::stoi(std::string{ str.begin() + i + 1, str.end() }), str[i] != 'u' };
@@ -560,8 +554,8 @@ namespace types
 		}
 		else
 		{*/
-			int cmp = literal_string.compare(int_max);
-			return cmp <= 0;
+		int cmp = literal_string.compare(int_max);
+		return cmp <= 0;
 		//}
 
 		return false;
