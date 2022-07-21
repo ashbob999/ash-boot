@@ -38,12 +38,12 @@ namespace types
 		}
 	}
 
-	int Type::get_size() const
+	int Type::get_size()
 	{
 		return data >> 1;
 	}
 
-	bool Type::is_signed() const
+	bool Type::is_signed()
 	{
 		return (data & 1) == 1;
 	}
@@ -57,9 +57,9 @@ namespace types
 		else if (str[0] == 'i' && str.length() > 1)
 		{
 			int size = std::stoi(std::string{ str.begin() + 1, str.end() });
-			if (size == 32)
+			if (size >= 8 && size <= 64 && (size & (size - 1)) == 0)
 			{
-				return { TypeEnum::Int, 32, true };
+				return { TypeEnum::Int, size, true };
 			}
 		}
 		else if (str == "float")
@@ -69,11 +69,7 @@ namespace types
 		else if (str[0] == 'f' && str.length() > 1)
 		{
 			int size = std::stoi(std::string{ str.begin() + 1, str.end() });
-			if (size == 32)
-			{
-				return { TypeEnum::Float, size, true };
-			}
-			else if (size == 64)
+			if (size >= 32 && size <= 64 && (size & (size - 1)) == 0)
 			{
 				return { TypeEnum::Float, size, true };
 			}
@@ -93,14 +89,52 @@ namespace types
 		return TypeEnum::None;
 	}
 
+	int get_literal_size(std::string& str, TypeEnum type)
+	{
+		char c = '\0';
+		if (type == TypeEnum::Float)
+		{
+			c = 'f';
+		}
+		else if (type == TypeEnum::Int)
+		{
+			c = 'i';
+		}
+		else if (type == TypeEnum::Bool)
+		{
+			return 1;
+		}
+		else if (type == TypeEnum::Char)
+		{
+			return 8;
+		}
+		else
+		{
+			return 0;
+		}
+
+		int i = str.length() - 1;
+		while (i > 0 && str[i] != c)
+		{
+			i--;
+		}
+
+		if (i == 0)
+		{
+			return 32;
+		}
+
+		return std::stoi(std::string{ str.begin() + i + 1, str.end() });
+	}
+
 	std::pair<bool, Type> check_type_string(std::string& str)
 	{
 		// type formats
-		// int: [+-]?[0-9][0-9]*
+		// int: [+-]?[0-9][0-9]*(i(8|16|32|64)?)?
 		// float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)(f(32|64)?)?
 		// char: '([^']|\\.)'
 
-		std::regex int_regex{ "[+-]?[0-9][0-9]*" };
+		std::regex int_regex{ "[+-]?[0-9][0-9]*(i(8|16|32|64)?)?" };
 		std::regex float_regex{ "[+-]?[0-9][0-9]*[.][0-9][0-9]*(f(32|64)?)?" };
 		std::regex bool_regex{ "(true|false)" };
 		std::regex char_regex{ "'([^']|\\\\.)'" };
@@ -109,17 +143,12 @@ namespace types
 
 		if (std::regex_match(str, match, int_regex))
 		{
-			return { true, get_default_type(TypeEnum::Int) };
+			int size = get_literal_size(str, TypeEnum::Int);
+			return { true, {TypeEnum::Int, size, true} };
 		}
 		else if (std::regex_match(str, match, float_regex))
 		{
-			int size = 32;
-			if (*(str.end() - 3) == 'f' && str.back() >= '0' && str.back() <= '9')
-			{
-				char c1 = *(str.end() - 2);
-				char c2 = *(str.end() - 1);
-				size = (c1 - '0') * 10 + (c2 - '0');
-			}
+			int size = get_literal_size(str, TypeEnum::Float);
 			return { true, {TypeEnum::Float, size, true} };
 		}
 		else if (std::regex_match(str, match, bool_regex))
@@ -373,7 +402,7 @@ namespace types
 		uint64_t value = 0;
 
 		// parse the numbers
-		for (; i < str.length(); i++)
+		for (; i < str.length() && std::isdigit(str[i]); i++)
 		{
 			value = value * 10 + (str[i] - '0');
 		}
@@ -392,7 +421,7 @@ namespace types
 	llvm::ConstantData* IntType::get_value(llvm::LLVMContext* llvm_context)
 	{
 		// create 32 bit signed int type
-		return llvm::ConstantInt::get(*llvm_context, llvm::APInt(32, data, true));
+		return llvm::ConstantInt::get(*llvm_context, llvm::APInt(type.get_size(), data, true));
 	}
 
 	std::string IntType::to_string()
@@ -421,13 +450,13 @@ namespace types
 				neg = true;
 			}
 
-			literal_string.erase(0);
+			literal_string.erase(literal_string.begin());
 		}
 
 		// strip leading zeroes
-		while (literal_string[0] == '0')
+		while (literal_string[0] == '0' && literal_string.size() > 1)
 		{
-			literal_string.erase(0);
+			literal_string.erase(literal_string.begin());
 		}
 
 		if (literal_string.size() < length)
