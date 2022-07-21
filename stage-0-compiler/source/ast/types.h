@@ -37,7 +37,7 @@ namespace types
 
 	Type is_valid_type(std::string& str);
 
-	int get_literal_size(std::string& str, TypeEnum type);
+	std::pair<int, bool> get_literal_size(std::string& str, TypeEnum type);
 
 	Type get_default_type(TypeEnum type_enum);
 

@@ -211,13 +211,13 @@ namespace parser
 		}
 
 		// literal:
-		//		int: [+-]?[0-9][0-9]*(i(8|16|32|64)?)?
+		//		int: [+-]?[0-9][0-9]*((i|u)(8|16|32|64)?)?
 		//		float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)(f(32|64)?)?
 		if (std::isdigit(last_char) /* || types::BaseType::is_sign_char(last_char)*/)
 		{
 			identifier_string = last_char;
 			char next_char = peek_char();
-			while (std::isdigit(next_char) /*|| types::BaseType::is_sign_char(next_char)*/ || next_char == '.' || next_char == 'f' || next_char == 'i')
+			while (std::isdigit(next_char) /*|| types::BaseType::is_sign_char(next_char)*/ || next_char == '.' || next_char == 'f' || next_char == 'i' || next_char == 'u')
 			{
 				last_char = get_char();
 				identifier_string += last_char;
