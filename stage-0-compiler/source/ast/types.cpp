@@ -52,7 +52,7 @@ namespace types
 	{
 		if (str == "int")
 		{
-			return { TypeEnum::Int, 32, true };
+			return get_default_type(TypeEnum::Int);
 		}
 		else if ((str[0] == 'i' || str[0] == 'u') && str.length() > 1)
 		{
@@ -64,7 +64,7 @@ namespace types
 		}
 		else if (str == "float")
 		{
-			return { TypeEnum::Float, 32, true };
+			return get_default_type(TypeEnum::Float);
 		}
 		else if (str[0] == 'f' && str.length() > 1)
 		{
@@ -192,14 +192,6 @@ namespace types
 			{
 				return llvm::Type::getVoidTy(llvm_context);
 			}
-
-			/*{
-				return llvm::Type::getInt1Ty(llvm_context);
-			}
-
-			{
-				return llvm::Type::getInt8Ty(llvm_context);
-			}*/
 			default:
 			{
 				return nullptr;
@@ -230,14 +222,6 @@ namespace types
 				}
 				break;
 			}
-
-			/*{
-				return llvm::ConstantInt::get(llvm_context, llvm::APInt(1, 0, false));
-			}
-
-			{
-				return llvm::ConstantInt::get(llvm_context, llvm::APInt(8, 0, true));
-			}*/
 			default:
 			{
 				return nullptr;
@@ -444,24 +428,114 @@ namespace types
 		this->data = -data;
 	}
 
-	bool IntType::check_range(std::string& literal_string)
+	bool IntType::check_range(std::string& str)
 	{
-		std::string int_min = "2147483648"; // -2147483648
-		std::string int_max = "2147483647"; //  2147483647
-		int length = 10;
+		std::pair<int, bool> data = get_literal_data(str, TypeEnum::Int);
 
-		bool neg = false;
+		std::string int_min;// = "2147483648"; // -2147483648
+		std::string int_max;// = "2147483647"; //  2147483647
+		int length;// = 10;
 
-		// strip any sign chars
-		if (is_sign_char(literal_string[0]))
+		// TODO: issue with signed range, eg. for i8: 128 represents -128
+
+		switch (data.first)
 		{
-			if (literal_string[0] == '-')
+			case 8:
 			{
-				neg = true;
+				if (data.second) // signed
+				{
+					int_min = "000";
+					int_max = "128";
+				}
+				else  // unsigned
+				{
+					int_min = "000";
+					int_max = "255";
+				}
+				length = 3;
+				break;
 			}
+			case 16:
+			{
+				if (data.second) // signed
+				{
+					int_min = "00000";
+					int_max = "32768";
+				}
+				else  // unsigned
+				{
+					int_min = "00000";
+					int_max = "65535";
+				}
+				length = 5;
+				break;
+			}
+			case 32:
+			{
+				if (data.second) // signed
+				{
+					int_min = "0000000000";
+					int_max = "2147483648";
+				}
+				else  // unsigned
+				{
+					int_min = "0000000000";
+					int_max = "4294967295";
+				}
+				length = 10;
+				break;
+			}
+			case 64:
+			{
+				if (data.second) // signed
+				{
+					int_min = "0000000000000000000";
+					int_max = "9223372036854775808";
+					length = 19;
+				}
+				else  // unsigned
+				{
+					int_min = "00000000000000000000";
+					int_max = "18446744073709551615";
+					length = 20;
+				}
 
-			literal_string.erase(literal_string.begin());
+				break;
+			}
+			default:
+			{
+				return false;
+			}
 		}
+
+		std::string literal_string;
+		for (auto& c : str)
+		{
+			if (!std::isdigit(c))
+			{
+				break;
+			}
+			else
+			{
+				literal_string += c;
+			}
+		}
+
+		int j = 2147483649L;
+
+		//// TODO: check if needed
+		//bool neg = false;
+
+		//// strip any sign chars
+		//if (is_sign_char(literal_string[0]))
+		//{
+		//	if (literal_string[0] == '-')
+		//	{
+		//		neg = true;
+		//	}
+
+		//	literal_string.erase(literal_string.begin());
+		//}
 
 		// strip leading zeroes
 		while (literal_string[0] == '0' && literal_string.size() > 1)
@@ -479,16 +553,16 @@ namespace types
 			return false;
 		}
 
-		if (neg)
+		/*if (neg)
 		{
 			int cmp = literal_string.compare(int_min);
 			return cmp <= 0;
 		}
 		else
-		{
+		{*/
 			int cmp = literal_string.compare(int_max);
 			return cmp <= 0;
-		}
+		//}
 
 		return false;
 	}
