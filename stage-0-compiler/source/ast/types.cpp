@@ -127,12 +127,12 @@ namespace types
 	std::pair<bool, Type> check_type_string(std::string& str)
 	{
 		// type formats
-		// int: [+-]?[0-9][0-9]*(i(8|16|32|64)?)?
-		// float: [+-]?([0-9][0-9]*)[.]([0-9][0-9]*)(f(32|64)?)?
+		// int: [0-9][0-9]*(i(8|16|32|64)?)?
+		// float: ([0-9][0-9]*)[.]([0-9][0-9]*)(f(32|64)?)?
 		// char: '([^']|\\.)'
 
-		std::regex int_regex{ "[+-]?[0-9][0-9]*((i|u)(8|16|32|64)?)?" };
-		std::regex float_regex{ "[+-]?[0-9][0-9]*[.][0-9][0-9]*(f(32|64)?)?" };
+		std::regex int_regex{ "[0-9][0-9]*((i|u)(8|16|32|64)?)?" };
+		std::regex float_regex{ "[0-9][0-9]*[.][0-9][0-9]*(f(32|64)?)?" };
 		std::regex bool_regex{ "(true|false)" };
 		std::regex char_regex{ "'([^']|\\\\.)'" };
 
@@ -356,11 +356,6 @@ namespace types
 		return type;
 	}
 
-	bool BaseType::is_sign_char(char c)
-	{
-		return c == '+' || c == '-';
-	}
-
 	bool BaseType::is_digit(char c)
 	{
 		return c >= '0' && c <= '9';
@@ -373,19 +368,7 @@ namespace types
 
 	IntType::IntType(std::string& str)
 	{
-		bool is_negative = false;
-
 		int i = 0;
-
-		// does the number have a sign
-		if (is_sign_char(str[i]))
-		{
-			if (str[i] == '-')
-			{
-				is_negative = true;
-			}
-			i++;
-		}
 
 		uint64_t value = 0;
 
@@ -393,12 +376,6 @@ namespace types
 		for (; i < str.length() && std::isdigit(str[i]); i++)
 		{
 			value = value * 10 + (str[i] - '0');
-		}
-
-		// replace the sign value
-		if (is_negative)
-		{
-			value *= -1;
 		}
 
 		//std::cout << "int " << value << std::endl;
@@ -426,9 +403,9 @@ namespace types
 	{
 		std::pair<int, bool> data = get_literal_data(str, TypeEnum::Int);
 
-		std::string int_min;// = "2147483648"; // -2147483648
-		std::string int_max;// = "2147483647"; //  2147483647
-		int length;// = 10;
+		std::string int_min;
+		std::string int_max;
+		int length;
 
 		// TODO: issue with signed range, eg. for i8: 128 represents -128
 
@@ -517,20 +494,6 @@ namespace types
 
 		int j = 2147483649L;
 
-		//// TODO: check if needed
-		//bool neg = false;
-
-		//// strip any sign chars
-		//if (is_sign_char(literal_string[0]))
-		//{
-		//	if (literal_string[0] == '-')
-		//	{
-		//		neg = true;
-		//	}
-
-		//	literal_string.erase(literal_string.begin());
-		//}
-
 		// strip leading zeroes
 		while (literal_string[0] == '0' && literal_string.size() > 1)
 		{
@@ -547,16 +510,8 @@ namespace types
 			return false;
 		}
 
-		/*if (neg)
-		{
-			int cmp = literal_string.compare(int_min);
-			return cmp <= 0;
-		}
-		else
-		{*/
 		int cmp = literal_string.compare(int_max);
 		return cmp <= 0;
-		//}
 
 		return false;
 	}
@@ -568,25 +523,12 @@ namespace types
 
 	FloatType::FloatType(std::string& str)
 	{
-		bool is_negative = false;
 		int whole = 0;
 		int fraction = 0;
 		int decimal_power = 1;
 		bool in_fraction = false;
 
 		int i = 0;
-
-		// does the number have a sign
-		if (is_sign_char(str[i]))
-		{
-			if (str[0] == '-')
-			{
-				is_negative = true;
-			}
-			i++;
-		}
-
-		//float value = 0;
 
 		// parse the numbers
 		for (; str[i] != 'f' && i < str.length(); i++)
@@ -615,12 +557,6 @@ namespace types
 
 		double value = (double) whole;
 		value += (double) fraction / (double) decimal_power;
-
-		// replace the sign value
-		if (is_negative)
-		{
-			value *= -1;
-		}
 
 		//std::cout << "float " << value << std::endl;
 

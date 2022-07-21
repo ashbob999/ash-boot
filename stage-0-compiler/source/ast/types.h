@@ -73,7 +73,6 @@ namespace types
 
 	public:
 		static shared_ptr<BaseType> create_type(Type curr_type, std::string& str);
-		static bool is_sign_char(char c);
 		static bool is_digit(char c);
 	};
 
