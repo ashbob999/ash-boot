@@ -108,6 +108,37 @@ namespace parser
 		return input_file.peek();
 	}
 
+	void Parser::skip_char()
+	{
+		last_char = get_char();
+		line_info.line_pos_start = line_info.line_pos;
+		identifier_string = last_char;
+		curr_token = Token::None;
+	}
+
+	Token Parser::peek_next_token()
+	{
+		// store state
+		char last_c = last_char;
+		std::string id_str = identifier_string;
+		Token curr_tok = curr_token;
+		types::Type curr_ty = curr_type;
+		LineInfo line_inf = line_info;
+		int pos = this->input_file.tellg();
+
+		Token next_tok = get_next_token();
+
+		// restore state
+		last_char = last_c;
+		identifier_string = id_str;
+		curr_token = curr_tok;
+		curr_type = curr_ty;
+		line_info = line_inf;
+		this->input_file.seekg(pos);
+
+		return next_tok;
+	}
+
 	Token Parser::get_next_token()
 	{
 		identifier_string = "";
@@ -324,6 +355,20 @@ namespace parser
 				curr_token = Token::BinaryOperator;
 				return curr_token;
 			}
+		}
+
+		// angle start
+		if (last_char == '<')
+		{
+			curr_token = Token::AngleStart;
+			return curr_token;
+		}
+
+		// angle end
+		if (last_char == '>')
+		{
+			curr_token = Token::AngleEnd;
+			return curr_token;
 		}
 
 		// comma
@@ -699,19 +744,24 @@ namespace parser
 	///   ::= parenthesis_expr
 	shared_ptr<ast::BaseExpr> Parser::parse_primary()
 	{
+		shared_ptr<ast::BaseExpr> expr;
+
 		switch (curr_token)
 		{
 			case Token::VariableReference:
 			{
-				return parse_variable_reference();
+				expr = parse_variable_reference();
+				break;
 			}
 			case Token::LiteralValue:
 			{
-				return parse_literal();
+				expr = parse_literal();
+				break;
 			}
 			case Token::ParenStart:
 			{
-				return parse_parenthesis();
+				expr = parse_parenthesis();
+				break;
 			}
 			case Token::IfStatement:
 			{
@@ -722,6 +772,31 @@ namespace parser
 				return log_error("Unknown token when expecting an expression");
 			}
 		}
+
+		if (expr == nullptr)
+		{
+			return nullptr;
+		}
+
+		// allows cast to be chained
+		while (true)
+		{
+			char next_char = peek_char();
+
+			get_next_token();
+
+			if (next_char == '<')
+			{
+				// parse cast
+				expr = parse_cast(expr);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		return expr;
 	}
 
 	/// binop_rhs
@@ -825,7 +900,7 @@ namespace parser
 			return log_error("Literal value for type: " + types::to_string(curr_type) + " is out of range");
 		}
 
-		get_next_token();
+		// next token will be eaten in parse_primary
 
 		return make_shared<ast::LiteralExpr>(bodies.back(), curr_type, literal_string);
 	}
@@ -878,13 +953,18 @@ namespace parser
 	{
 		int name_id = module::StringManager::get_id(identifier_string);
 
-		get_next_token();
+		// peek at next token
+		Token next_token = peek_next_token();
 
 		// simple variable reference
-		if (curr_token != Token::ParenStart)
+		if (next_token != Token::ParenStart)
 		{
+			// next token will be eaten in parse_primary
 			return make_shared<ast::VariableReferenceExpr>(bodies.back(), name_id);
 		}
+
+		// eat '(' token
+		get_next_token();
 
 		get_next_token();
 
@@ -918,7 +998,7 @@ namespace parser
 			}
 		}
 
-		get_next_token();
+		// next token will be eaten in parse_primary
 
 		return make_shared<ast::CallExpr>(bodies.back(), name_id, args);
 	}
@@ -939,7 +1019,7 @@ namespace parser
 			return nullptr;
 		}
 
-		get_next_token();
+		// next token will be eaten in parse_primary
 
 		return expr;
 	}
@@ -1290,6 +1370,40 @@ namespace parser
 		get_next_token();
 
 		return make_shared<ast::BreakExpr>(bodies.back());
+	}
+
+	/// cast_expr ::= expression<type>
+	shared_ptr<ast::BaseExpr> Parser::parse_cast(shared_ptr<ast::BaseExpr> expr)
+	{
+		char next_char = peek_char();
+
+		if (!std::isalpha(next_char))
+		{
+			skip_char(); // eat '<'
+			return log_error("Cast Expression expected a type specifier after '<'");
+		}
+
+		get_next_token();
+
+		if (curr_token != Token::VariableReference)
+		{
+			return log_error("Cast Expression expected a type specifier after '<'");
+		}
+
+		int type_id = module::StringManager::get_id(identifier_string);
+
+		next_char = peek_char();
+
+		skip_char(); // eat '>'
+
+		if (next_char != '>')
+		{
+			return log_error("Cast Expression expected '>' after type specifier");
+		}
+
+		// next token will be eaten in parse_primary
+
+		return make_shared<ast::CastExpr>(bodies.back(), type_id, expr);
 	}
 
 	/// moduleexpr ::= 'module' identifier

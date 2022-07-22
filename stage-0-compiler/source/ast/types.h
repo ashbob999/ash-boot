@@ -51,6 +51,8 @@ namespace types
 
 	bool check_range(std::string& literal_string, Type type);
 
+	bool is_cast_valid(Type from, Type target);
+
 	union type_value
 	{
 		int _int;

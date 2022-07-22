@@ -76,7 +76,7 @@ function int main() {
 	var int bv = if b {1;} else {2;};
 	
 	# for loop
-	for int i = 0; i< 10; i = i+1 {
+	for int i = 0; i < 10; i = i+1 {
 		
 	}
 	
@@ -90,6 +90,11 @@ function int main() {
 	
 	# unary operator
 	var int z = -i;
+	
+	# cast
+	var i8 c1 = 8i8;
+	var i64 c2 = c1<i64>;
+	var f32 c3 = c1<i32><f32>;
 	
 	# return value
 	0;

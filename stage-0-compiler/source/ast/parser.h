@@ -33,6 +33,8 @@ namespace parser
 		BodyEnd,
 		ParenStart,
 		ParenEnd,
+		AngleStart,
+		AngleEnd,
 		Comma,
 		Comment,
 		None,
@@ -60,6 +62,8 @@ namespace parser
 	private:
 		char get_char();
 		char peek_char();
+		void skip_char();
+		Token peek_next_token();
 		Token get_next_token();
 		shared_ptr<ast::BodyExpr> parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets);
 		shared_ptr<ast::FunctionDefinition> parse_top_level();
@@ -81,6 +85,7 @@ namespace parser
 		shared_ptr<ast::BaseExpr> parse_return();
 		shared_ptr<ast::BaseExpr> parse_continue();
 		shared_ptr<ast::BaseExpr> parse_break();
+		shared_ptr<ast::BaseExpr> parse_cast(shared_ptr<ast::BaseExpr> expr);
 		bool parse_module();
 		bool parse_using();
 		int get_token_precedence();

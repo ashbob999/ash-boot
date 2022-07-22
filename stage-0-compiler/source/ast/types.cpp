@@ -313,6 +313,45 @@ namespace types
 		}
 	}
 
+	bool is_cast_valid(Type from, Type target)
+	{
+		// TODO: add casts for bool and char
+		switch (from.type_enum)
+		{
+			case TypeEnum::Int:
+			{
+				bool sign_diff = from.is_signed() != target.is_signed();
+				bool size_diff = from.get_size() != target.get_size();
+
+				// only allow either size or sign cast not both
+				if (sign_diff && size_diff)
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+			case TypeEnum::Float:
+			{
+				return true;
+			}
+			case TypeEnum::Bool:
+			{
+				return false;
+			}
+			case TypeEnum::Char:
+			{
+				return false;
+			}
+			default:
+			{
+				return false;
+			}
+		}
+	}
+
 	void BaseType::negate_value()
 	{
 		assert(false && "Negation not supported");

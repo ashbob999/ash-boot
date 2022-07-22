@@ -892,6 +892,40 @@ namespace ast
 		return true;
 	}
 
+	CastExpr::CastExpr(BodyExpr* body, int target_type_id, shared_ptr<BaseExpr> expr)
+		: BaseExpr(AstExprType::CastExpr, body), target_type_id(target_type_id), expr(expr)
+	{}
+
+	std::string CastExpr::to_string(int depth)
+	{
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "Cast Operation: {" << '\n';
+		str << tabs << '\t' << "Target Type: " << types::to_string(target_type) << '\n';
+		str << tabs << '\t' << "Expression: {" << '\n';
+		str << this->expr->to_string(depth + 2);
+		str << tabs << '\t' << "}" << '\n';
+		str << tabs << "}," << '\n';
+
+		return str.str();
+	}
+
+	types::Type CastExpr::get_result_type()
+	{
+		if (result_type.type_enum == types::TypeEnum::None)
+		{
+			result_type = target_type;
+		}
+		return result_type;
+	}
+
+	bool CastExpr::check_types()
+	{
+		return true;
+	}
+
 	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)
 		: name_id(module::StringManager::get_id(name)), return_type(return_type), types(types), args(args)
 	{}

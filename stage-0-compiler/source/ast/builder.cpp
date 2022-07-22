@@ -1195,6 +1195,100 @@ namespace builder
 		}
 	}
 
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::CastExpr>(ast::CastExpr* expr)
+	{
+		llvm::Value* expr_value = generate_code_dispatch(expr->expr.get());
+
+		types::Type from_type = expr->expr->get_result_type();
+		types::Type target_type = expr->get_result_type();
+
+		if (from_type == target_type)
+		{
+			return expr_value;
+		}
+
+		switch (from_type.type_enum)
+		{
+			case types::TypeEnum::Int:
+			{
+				switch (target_type.type_enum)
+				{
+					case types::TypeEnum::Int:
+					{
+						if (from_type.is_signed() != target_type.is_signed()) // sign cast
+						{
+							// TODO: maybe use bitcast instead
+							return expr_value;
+						}
+						else // size cast
+						{
+							if (from_type.get_size() > target_type.get_size()) // truncate
+							{
+								return llvm_ir_builder->CreateTrunc(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_int_trunc");
+							}
+							else // extend
+							{
+								if (from_type.is_signed()) // signed
+								{
+									return llvm_ir_builder->CreateSExt(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_si_ext");
+								}
+								else // unsigned
+								{
+									return llvm_ir_builder->CreateZExt(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_ui_ext");
+								}
+							}
+						}
+					}
+					case types::TypeEnum::Float:
+					{
+						if (from_type.is_signed()) // signed
+						{
+							return llvm_ir_builder->CreateSIToFP(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_si_fp");
+						}
+						else // unsigned
+						{
+							return llvm_ir_builder->CreateUIToFP(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_ui_fp");
+						}
+					}
+				}
+			}
+			case types::TypeEnum::Float:
+			{
+				switch (target_type.type_enum)
+				{
+					case types::TypeEnum::Int:
+					{
+						// TODO: deal with numbers out of int range
+						if (target_type.is_signed()) // signed
+						{
+							return llvm_ir_builder->CreateFPToSI(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_si");
+						}
+						else // unsigned
+						{
+							return llvm_ir_builder->CreateFPToUI(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_ui");
+						}
+					}
+					case types::TypeEnum::Float:
+					{
+						if (from_type.get_size() > target_type.get_size()) // truncate
+						{
+							return llvm_ir_builder->CreateFPTrunc(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_trunc");
+						}
+						else // extend
+						{
+							return llvm_ir_builder->CreateFPExt(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_ext");
+						}
+					}
+				}
+			}
+			default:
+			{
+				return log_error_value("invalid cast");
+			}
+		}
+	}
+
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -1254,6 +1348,10 @@ namespace builder
 			case ast::AstExprType::UnaryExpr:
 			{
 				return generate_code(dynamic_cast<ast::UnaryExpr*>(expr));
+			}
+			case ast::AstExprType::CastExpr:
+			{
+				return generate_code(dynamic_cast<ast::CastExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

@@ -691,6 +691,37 @@ namespace type_checker
 		return true;
 	}
 
+	template<>
+	bool TypeChecker::check_expression<ast::CastExpr>(ast::CastExpr* expr)
+	{
+		// check expression
+		if (!check_expression_dispatch(expr->expr.get()))
+		{
+			return false;
+		}
+
+		types::Type from_type = expr->expr->get_result_type();
+
+		// check target type is a valid type
+		types::Type type = types::is_valid_type(module::StringManager::get_string(expr->target_type_id));
+		if (type.type_enum == types::TypeEnum::None)
+		{
+			return log_error(expr, "Cast target type is invalid: " + module::StringManager::get_string(expr->target_type_id));
+		}
+
+		expr->target_type = type;
+
+		// check that type can be converted into the target type
+		if (!types::is_cast_valid(from_type, type))
+		{
+			std::string type1 = types::to_string(from_type);
+			std::string type2 = types::to_string(type);
+			return log_error(expr, "Cannot cast from type: " + type1 + ", to type: " + type2);
+		}
+
+		return true;
+	}
+
 	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -750,6 +781,10 @@ namespace type_checker
 			case ast::AstExprType::UnaryExpr:
 			{
 				return check_expression(dynamic_cast<ast::UnaryExpr*>(expr));
+			}
+			case ast::AstExprType::CastExpr:
+			{
+				return check_expression(dynamic_cast<ast::CastExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

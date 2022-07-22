@@ -31,6 +31,7 @@ namespace ast
 		ContinueExpr,
 		BreakExpr,
 		UnaryExpr,
+		CastExpr,
 	};
 
 	struct ExpressionLineInfo
@@ -65,6 +66,7 @@ namespace ast
 	class ContinueExpr;
 	class BreakExpr;
 	class UnaryExpr;
+	class CastExpr;
 
 	class FunctionPrototype;
 	class FunctionDefinition;
@@ -311,6 +313,19 @@ namespace ast
 		bool check_types() override;
 
 		operators::UnaryOp unop;
+		shared_ptr<BaseExpr> expr;
+	};
+
+	class CastExpr : public BaseExpr
+	{
+	public:
+		CastExpr(BodyExpr* body, int target_type_id, shared_ptr<BaseExpr> expr);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		int target_type_id;
+		types::Type target_type;
 		shared_ptr<BaseExpr> expr;
 	};
 
