@@ -55,12 +55,6 @@ namespace types
 
 	bool is_numeric(TypeEnum type);
 
-	union type_value
-	{
-		int _int;
-		float _float;
-	};
-
 	class BaseType
 	{
 	protected:
