@@ -315,35 +315,71 @@ namespace types
 
 	bool is_cast_valid(Type from, Type target)
 	{
-		// TODO: add casts for bool and char
 		switch (from.type_enum)
 		{
-			case TypeEnum::Int:
+			case TypeEnum::Int: // int -> numeric
 			{
-				bool sign_diff = from.is_signed() != target.is_signed();
-				bool size_diff = from.get_size() != target.get_size();
+				switch (target.type_enum)
+				{
+					case TypeEnum::Bool:
+					case TypeEnum::Char:
+					{
+						return true;
+					}
+					case TypeEnum::Float:
+					{
+						return true;
+					}
+					case TypeEnum::Int:
+					{
+						bool sign_diff = from.is_signed() != target.is_signed();
+						bool size_diff = from.get_size() != target.get_size();
 
-				// only allow either size or sign cast not both
-				if (sign_diff && size_diff)
-				{
-					return false;
-				}
-				else
-				{
-					return true;
+						// only allow either size or sign cast not both
+						if (sign_diff && size_diff)
+						{
+							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+					default:
+					{
+						return false;
+					}
 				}
 			}
+			case TypeEnum::Float: // float -> numeric
+			{
+				return is_numeric(target.type_enum);
+			}
+			case TypeEnum::Bool: // bool -> numeric
+			{
+				return is_numeric(target.type_enum);
+			}
+			case TypeEnum::Char: // char -> numeric
+			{
+				return is_numeric(target.type_enum);
+			}
+			default:
+			{
+				return false;
+			}
+		}
+	}
+
+	bool is_numeric(TypeEnum type)
+	{
+		switch (type)
+		{
+			case TypeEnum::Int:
+			case TypeEnum::Bool:
+			case TypeEnum::Char:
 			case TypeEnum::Float:
 			{
 				return true;
-			}
-			case TypeEnum::Bool:
-			{
-				return false;
-			}
-			case TypeEnum::Char:
-			{
-				return false;
 			}
 			default:
 			{

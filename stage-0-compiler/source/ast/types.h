@@ -53,6 +53,8 @@ namespace types
 
 	bool is_cast_valid(Type from, Type target);
 
+	bool is_numeric(TypeEnum type);
+
 	union type_value
 	{
 		int _int;

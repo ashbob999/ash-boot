@@ -1211,15 +1211,26 @@ namespace builder
 		switch (from_type.type_enum)
 		{
 			case types::TypeEnum::Int:
+			case types::TypeEnum::Bool:
+			case types::TypeEnum::Char:
 			{
 				switch (target_type.type_enum)
 				{
 					case types::TypeEnum::Int:
+					case types::TypeEnum::Bool:
+					case types::TypeEnum::Char:
 					{
-						if (from_type.is_signed() != target_type.is_signed()) // sign cast
+						if (from_type.get_size() == target_type.get_size()) // same size
 						{
-							// TODO: maybe use bitcast instead
-							return expr_value;
+							if (from_type.is_signed() != target_type.is_signed()) // sign cast
+							{
+								// TODO: maybe use bitcast instead
+								return expr_value;
+							}
+							else // identical cast
+							{
+								return expr_value;
+							}
 						}
 						else // size cast
 						{
@@ -1251,6 +1262,10 @@ namespace builder
 							return llvm_ir_builder->CreateUIToFP(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_ui_fp");
 						}
 					}
+					default:
+					{
+						return log_error_value("invalid target cast type");
+					}
 				}
 			}
 			case types::TypeEnum::Float:
@@ -1258,8 +1273,10 @@ namespace builder
 				switch (target_type.type_enum)
 				{
 					case types::TypeEnum::Int:
+					case types::TypeEnum::Bool:
+					case types::TypeEnum::Char:
 					{
-						// TODO: deal with numbers out of int range
+						// TODO: deal with numbers out of int range (use saturation intrinsics)
 						if (target_type.is_signed()) // signed
 						{
 							return llvm_ir_builder->CreateFPToSI(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_si");
@@ -1280,6 +1297,10 @@ namespace builder
 							return llvm_ir_builder->CreateFPExt(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_ext");
 						}
 					}
+					default:
+					{
+						return log_error_value("invalid target cast type");
+					}
 				}
 			}
 			default:
@@ -1287,6 +1308,8 @@ namespace builder
 				return log_error_value("invalid cast");
 			}
 		}
+		null_end;
+		return nullptr;
 	}
 
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
