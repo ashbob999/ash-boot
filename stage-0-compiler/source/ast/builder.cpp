@@ -1217,7 +1217,6 @@ namespace builder
 				switch (target_type.type_enum)
 				{
 					case types::TypeEnum::Int:
-					case types::TypeEnum::Bool:
 					case types::TypeEnum::Char:
 					{
 						if (from_type.get_size() == target_type.get_size()) // same size
@@ -1251,6 +1250,10 @@ namespace builder
 							}
 						}
 					}
+					case types::TypeEnum::Bool:
+					{
+						return llvm_ir_builder->CreateICmpNE(expr_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(from_type.type_enum)), 0, false), "convert_to_bool");
+					}
 					case types::TypeEnum::Float:
 					{
 						if (from_type.is_signed()) // signed
@@ -1273,7 +1276,6 @@ namespace builder
 				switch (target_type.type_enum)
 				{
 					case types::TypeEnum::Int:
-					case types::TypeEnum::Bool:
 					case types::TypeEnum::Char:
 					{
 						// TODO: deal with numbers out of int range (use saturation intrinsics)

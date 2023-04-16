@@ -353,7 +353,14 @@ namespace types
 			}
 			case TypeEnum::Float: // float -> numeric
 			{
-				return is_numeric(target.type_enum);
+				if (target.type_enum == TypeEnum::Bool)
+				{
+					return false;
+				}
+				else
+				{
+					return is_numeric(target.type_enum);
+				}
 			}
 			case TypeEnum::Bool: // bool -> numeric
 			{
