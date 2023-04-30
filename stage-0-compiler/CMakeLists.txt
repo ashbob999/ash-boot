@@ -31,7 +31,7 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 include_directories(./include)
 
 # Now build our tools
-add_executable(ash-boot-stage0 "source/main.cpp" "source/ast/ast.cpp" "source/ast/types.cpp" "source/ast/builder.cpp" "source/ast/parser.cpp" "source/ast/type_checker.cpp" "source/ast/module.cpp" "source/ast/scope_checker.cpp" "source/ast/operators.cpp" "source/cli.cpp")
+add_executable(ash-boot-stage0 "source/main.cpp" "source/ast/ast.cpp" "source/ast/types.cpp" "source/ast/builder.cpp" "source/ast/parser.cpp" "source/ast/type_checker.cpp" "source/ast/module.cpp" "source/ast/scope_checker.cpp" "source/ast/operators.cpp" "source/cli.cpp" "source/config.h")
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use

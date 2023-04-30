@@ -303,7 +303,7 @@ namespace module
 
 	std::unordered_map<int, std::vector<int>> Mangler::mangled_map;
 
-	void ModuleManager::add_ast(int filename, shared_ptr<ast::BodyExpr> ast_body)
+	void ModuleManager::add_ast(int filename, ptr_type<ast::BodyExpr> ast_body)
 	{
 		ModuleManager::ast_files[filename] = ast_body;
 	}
@@ -627,7 +627,7 @@ namespace module
 	// filename -> module name
 	std::unordered_map<int, int> ModuleManager::file_modules;
 	// filename -> ast bodyexpr
-	std::unordered_map<int, shared_ptr<ast::BodyExpr>> ModuleManager::ast_files;
+	std::unordered_map<int, ptr_type<ast::BodyExpr>> ModuleManager::ast_files;
 	// module name -> filenames
 	std::unordered_map<int, std::unordered_set<int>> ModuleManager::module_contents;
 	// filename -> usings

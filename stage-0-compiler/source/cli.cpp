@@ -6,6 +6,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/IR/LegacyPassManager.h"
 
+#include "config.h"
 #include "ast/parser.h"
 #include "ast/type_checker.h"
 
@@ -185,7 +186,7 @@ namespace cli
 
 			// parse the file
 			parser::Parser parser{ file_stream , file.string() };
-			shared_ptr<ast::BodyExpr> body_ast = parser.parse_file_as_body();
+			ptr_type<ast::BodyExpr> body_ast = parser.parse_file_as_body();
 			current_module = parser.get_module();
 
 			file_stream.close();

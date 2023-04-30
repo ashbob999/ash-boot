@@ -3,8 +3,6 @@
 
 #include "types.h"
 
-using std::make_shared;
-
 namespace types
 {
 	Type::Type() : type_enum(TypeEnum::None), data(0)
@@ -405,30 +403,30 @@ namespace types
 		this->type = type;
 	}
 
-	shared_ptr<BaseType> BaseType::create_type(Type curr_type, std::string& str)
+	ptr_type<BaseType> BaseType::create_type(Type curr_type, std::string& str)
 	{
-		shared_ptr<BaseType> type = nullptr;
+		ptr_type<BaseType> type = nullptr;
 
 		switch (curr_type.type_enum)
 		{
 			case TypeEnum::Int:
 			{
-				type = make_shared<IntType>(str);
+				type = make_ptr<IntType>(str);
 				break;
 			}
 			case TypeEnum::Float:
 			{
-				type = make_shared<FloatType>(str);
+				type = make_ptr<FloatType>(str);
 				break;
 			}
 			case TypeEnum::Bool:
 			{
-				type = make_shared<BoolType>(str);
+				type = make_ptr<BoolType>(str);
 				break;
 			}
 			case TypeEnum::Char:
 			{
-				type = make_shared<CharType>(str);
+				type = make_ptr<CharType>(str);
 				break;
 			}
 		}

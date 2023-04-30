@@ -7,10 +7,9 @@
 
 #include "llvm/IR/Instructions.h"
 
+#include "../config.h"
 #include "types.h"
 #include "operators.h"
-
-using std::shared_ptr;
 
 namespace ast
 {
@@ -126,7 +125,7 @@ namespace ast
 		bool check_types() override;
 
 		types::Type curr_type;
-		shared_ptr<types::BaseType> value_type;
+		ptr_type<types::BaseType> value_type;
 	};
 
 	enum class BodyType
@@ -147,8 +146,8 @@ namespace ast
 		types::Type get_result_type() override;
 		bool check_types() override;
 
-		void add_base(shared_ptr<BaseExpr> expr);
-		void add_function(shared_ptr<FunctionDefinition> func);
+		void add_base(ptr_type<BaseExpr> expr);
+		void add_function(ptr_type<FunctionDefinition> func);
 		void add_prototype(FunctionPrototype* proto);
 		// TODO: remove?
 		llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, int str_id);
@@ -157,8 +156,8 @@ namespace ast
 		FunctionPrototype* parent_function = nullptr;
 		BodyType body_type;
 		std::vector<std::pair<int, ReferenceType>> in_scope_vars; // only used for checking vars are in scope, and order of defines
-		std::vector<shared_ptr<BaseExpr>> expressions;
-		std::vector<shared_ptr<FunctionDefinition>> functions;
+		std::vector<ptr_type<BaseExpr>> expressions;
+		std::vector<ptr_type<FunctionDefinition>> functions;
 		std::vector<FunctionPrototype*> original_function_prototypes;
 		std::map<int, FunctionPrototype*> function_prototypes;
 		//std::map<std::string, FunctionDefinition*> functions;
@@ -172,7 +171,7 @@ namespace ast
 	class VariableDeclarationExpr : public BaseExpr
 	{
 	public:
-		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, shared_ptr<BaseExpr> expr);
+		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, ptr_type<BaseExpr> expr);
 		~VariableDeclarationExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
@@ -180,7 +179,7 @@ namespace ast
 
 		types::Type curr_type;
 		int name_id;
-		shared_ptr<BaseExpr> expr;
+		ptr_type<BaseExpr> expr;
 	};
 
 	// Any variable reference
@@ -199,71 +198,71 @@ namespace ast
 	class BinaryExpr : public BaseExpr
 	{
 	public:
-		BinaryExpr(BodyExpr* body, operators::BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs);
+		BinaryExpr(BodyExpr* body, operators::BinaryOp binop, ptr_type<BaseExpr> lhs, ptr_type<BaseExpr> rhs);
 		~BinaryExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		operators::BinaryOp binop;
-		shared_ptr<BaseExpr> lhs;
-		shared_ptr<BaseExpr> rhs;
+		ptr_type<BaseExpr> lhs;
+		ptr_type<BaseExpr> rhs;
 	};
 
 	class CallExpr : public BaseExpr, std::enable_shared_from_this<CallExpr>
 	{
 	public:
-		CallExpr(BodyExpr* body, int callee_id, std::vector<shared_ptr<BaseExpr>>& args);
+		CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args);
 		~CallExpr() override;
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		int callee_id;
-		std::vector<shared_ptr<BaseExpr>> args;
+		std::vector<ptr_type<BaseExpr>> args;
 		bool is_extern = false;
 	};
 
 	class IfExpr : public BaseExpr
 	{
 	public:
-		IfExpr(BodyExpr* body, shared_ptr<BaseExpr> condition, shared_ptr<BaseExpr> if_body, shared_ptr<BaseExpr>else_body);
+		IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr>else_body);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		bool should_return_value = true; // should the if return a value after being evaluated
-		shared_ptr<BaseExpr> condition;
-		shared_ptr<BaseExpr> if_body;
-		shared_ptr<BaseExpr> else_body;
+		ptr_type<BaseExpr> condition;
+		ptr_type<BaseExpr> if_body;
+		ptr_type<BaseExpr> else_body;
 	};
 
 	class ForExpr : public BaseExpr
 	{
 	public:
-		ForExpr(BodyExpr* body, types::Type var_type, int name_id, shared_ptr<BaseExpr> start_expr, shared_ptr<BaseExpr> end_expr, shared_ptr<BaseExpr> step_expr, shared_ptr<BodyExpr> for_body);
+		ForExpr(BodyExpr* body, types::Type var_type, int name_id, ptr_type<BaseExpr> start_expr, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> step_expr, ptr_type<BodyExpr> for_body);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		types::Type var_type;
 		int name_id;
-		shared_ptr<BaseExpr> start_expr;
-		shared_ptr<BaseExpr> end_expr;
-		shared_ptr<BaseExpr> step_expr;
-		shared_ptr<BodyExpr> for_body;
+		ptr_type<BaseExpr> start_expr;
+		ptr_type<BaseExpr> end_expr;
+		ptr_type<BaseExpr> step_expr;
+		ptr_type<BodyExpr> for_body;
 	};
 
 	class WhileExpr : public BaseExpr
 	{
 	public:
-		WhileExpr(BodyExpr* body, shared_ptr<BaseExpr> end_expr, shared_ptr<BaseExpr> while_body);
+		WhileExpr(BodyExpr* body, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> while_body);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
-		shared_ptr<BaseExpr> end_expr;
-		shared_ptr<BaseExpr> while_body;
+		ptr_type<BaseExpr> end_expr;
+		ptr_type<BaseExpr> while_body;
 	};
 
 	class CommentExpr : public BaseExpr
@@ -278,12 +277,12 @@ namespace ast
 	class ReturnExpr : public BaseExpr
 	{
 	public:
-		ReturnExpr(BodyExpr* body, shared_ptr<BaseExpr> ret_expr);
+		ReturnExpr(BodyExpr* body, ptr_type<BaseExpr> ret_expr);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
-		shared_ptr<BaseExpr> ret_expr;
+		ptr_type<BaseExpr> ret_expr;
 	};
 
 	class ContinueExpr : public BaseExpr
@@ -307,26 +306,26 @@ namespace ast
 	class UnaryExpr : public BaseExpr
 	{
 	public:
-		UnaryExpr(BodyExpr* body, operators::UnaryOp unop, shared_ptr<BaseExpr> expr);
+		UnaryExpr(BodyExpr* body, operators::UnaryOp unop, ptr_type<BaseExpr> expr);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		operators::UnaryOp unop;
-		shared_ptr<BaseExpr> expr;
+		ptr_type<BaseExpr> expr;
 	};
 
 	class CastExpr : public BaseExpr
 	{
 	public:
-		CastExpr(BodyExpr* body, int target_type_id, shared_ptr<BaseExpr> expr);
+		CastExpr(BodyExpr* body, int target_type_id, ptr_type<BaseExpr> expr);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
 		int target_type_id;
 		types::Type target_type;
-		shared_ptr<BaseExpr> expr;
+		ptr_type<BaseExpr> expr;
 	};
 
 	// The prototype for a function (i.e. the definition)
@@ -348,14 +347,14 @@ namespace ast
 	class FunctionDefinition
 	{
 	public:
-		FunctionDefinition(FunctionPrototype* prototype, shared_ptr<BodyExpr> body);
+		FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body);
 		~FunctionDefinition();
 		std::string to_string(int depth);
 		bool check_return_type();
 
 		FunctionPrototype* prototype;
-		shared_ptr<BodyExpr> body;
+		ptr_type<BodyExpr> body;
 	};
 
-	void change_ast_object(ast::BaseExpr* object, shared_ptr<ast::BaseExpr> new_object);
+	void change_ast_object(ast::BaseExpr* object, ptr_type<ast::BaseExpr> new_object);
 }

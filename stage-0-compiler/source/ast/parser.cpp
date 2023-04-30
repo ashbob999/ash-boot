@@ -2,8 +2,6 @@
 
 #include "parser.h"
 
-using std::make_shared;
-
 namespace parser
 {
 	// the operator precedences, higher binds tighter, same binds to the left
@@ -43,24 +41,24 @@ namespace parser
 		filename_id = module::ModuleManager::get_file_as_module(file_name);
 	}
 
-	shared_ptr<ast::BaseExpr> Parser::parse_file()
+	ptr_type<ast::BaseExpr> Parser::parse_file()
 	{
-		shared_ptr<ast::BaseExpr> file_body = parse_body(ast::BodyType::Global, true, false);
+		ptr_type<ast::BaseExpr> file_body = parse_body(ast::BodyType::Global, true, false);
 
 		return file_body;
 	}
 
-	shared_ptr<ast::FunctionDefinition> Parser::parse_file_as_func()
+	ptr_type<ast::FunctionDefinition> Parser::parse_file_as_func()
 	{
-		shared_ptr<ast::FunctionDefinition> func = parse_top_level();
+		ptr_type<ast::FunctionDefinition> func = parse_top_level();
 
 		return func;
 	}
 
-	shared_ptr<ast::BodyExpr> Parser::parse_file_as_body()
+	ptr_type<ast::BodyExpr> Parser::parse_file_as_body()
 	{
 		bodies.push_back(nullptr);
-		shared_ptr<ast::BodyExpr> body = parse_body(ast::BodyType::Global, true, false);
+		ptr_type<ast::BodyExpr> body = parse_body(ast::BodyType::Global, true, false);
 		return body;
 	}
 
@@ -392,9 +390,9 @@ namespace parser
 	}
 
 	/// top ::= (definition | expression)*
-	shared_ptr<ast::BodyExpr> Parser::parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets)
+	ptr_type<ast::BodyExpr> Parser::parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets)
 	{
-		shared_ptr<ast::BodyExpr> body = make_shared<ast::BodyExpr>(bodies.back(), body_type);
+		ptr_type<ast::BodyExpr> body = make_ptr<ast::BodyExpr>(bodies.back(), body_type);
 
 		if (has_curly_brackets)
 		{
@@ -434,7 +432,7 @@ namespace parser
 						return log_error_body("Expressions are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_variable_declaration();
+					ptr_type<ast::BaseExpr> base = parse_variable_declaration();
 
 					if (base == nullptr)
 					{
@@ -457,7 +455,7 @@ namespace parser
 						return log_error_body("Nested Functions are currently disabled.");
 					}
 
-					shared_ptr<ast::FunctionDefinition> fd = parse_function_definition();
+					ptr_type<ast::FunctionDefinition> fd = parse_function_definition();
 					if (fd != nullptr)
 					{
 						body->add_function(fd);
@@ -493,14 +491,14 @@ namespace parser
 						return log_error_body("If statements are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_if_else();
+					ptr_type<ast::BaseExpr> base = parse_if_else();
 
 					if (base == nullptr)
 					{
 						return nullptr;
 					}
 
-					shared_ptr<ast::IfExpr> if_expr = std::dynamic_pointer_cast<ast::IfExpr>(base);
+					ptr_type<ast::IfExpr> if_expr = std::dynamic_pointer_cast<ast::IfExpr>(base);
 					if_expr->should_return_value = false;
 
 					body->add_base(base);
@@ -514,7 +512,7 @@ namespace parser
 						return log_error_body("For statements are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_for_loop();
+					ptr_type<ast::BaseExpr> base = parse_for_loop();
 
 					if (base == nullptr)
 					{
@@ -532,7 +530,7 @@ namespace parser
 						return log_error_body("While statements are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_while_loop();
+					ptr_type<ast::BaseExpr> base = parse_while_loop();
 
 					if (base == nullptr)
 					{
@@ -555,7 +553,7 @@ namespace parser
 						return log_error_body("Return statements are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_return();
+					ptr_type<ast::BaseExpr> base = parse_return();
 
 					if (base == nullptr)
 					{
@@ -573,7 +571,7 @@ namespace parser
 						return log_error_body("Continue statements are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_continue();
+					ptr_type<ast::BaseExpr> base = parse_continue();
 
 					if (base == nullptr)
 					{
@@ -591,7 +589,7 @@ namespace parser
 						return log_error_body("Break statements are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_break();
+					ptr_type<ast::BaseExpr> base = parse_break();
 
 					if (base == nullptr)
 					{
@@ -653,7 +651,7 @@ namespace parser
 						return log_error_body("Expressions are not allowed in top level code");
 					}
 
-					shared_ptr<ast::BaseExpr> base = parse_expression(false, false);
+					ptr_type<ast::BaseExpr> base = parse_expression(false, false);
 					if (base == nullptr)
 					{
 						return nullptr;
@@ -679,10 +677,10 @@ namespace parser
 		return body;
 	}
 
-	shared_ptr<ast::FunctionDefinition> Parser::parse_top_level()
+	ptr_type<ast::FunctionDefinition> Parser::parse_top_level()
 	{
 		bodies.push_back(nullptr);
-		shared_ptr<ast::BodyExpr> expr = parse_body(ast::BodyType::Global, true, false);
+		ptr_type<ast::BodyExpr> expr = parse_body(ast::BodyType::Global, true, false);
 		if (expr == nullptr)
 		{
 			return nullptr;
@@ -693,14 +691,14 @@ namespace parser
 		std::vector<int> arg_ids;
 
 		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::TypeEnum::Void, types, arg_ids);
-		return make_shared<ast::FunctionDefinition>(proto, expr);
+		return make_ptr<ast::FunctionDefinition>(proto, expr);
 	}
 
 	/// expression
 	///   ::= primary binop_rhs
-	shared_ptr<ast::BaseExpr> Parser::parse_expression(bool for_call, bool for_if_cond)
+	ptr_type<ast::BaseExpr> Parser::parse_expression(bool for_call, bool for_if_cond)
 	{
-		shared_ptr<ast::BaseExpr> lhs = parse_unary();
+		ptr_type<ast::BaseExpr> lhs = parse_unary();
 		if (lhs == nullptr)
 		{
 			return nullptr;
@@ -742,9 +740,9 @@ namespace parser
 	///   ::= variable_reference_expr
 	///   ::= literal_expr
 	///   ::= parenthesis_expr
-	shared_ptr<ast::BaseExpr> Parser::parse_primary()
+	ptr_type<ast::BaseExpr> Parser::parse_primary()
 	{
-		shared_ptr<ast::BaseExpr> expr;
+		ptr_type<ast::BaseExpr> expr;
 
 		switch (curr_token)
 		{
@@ -801,7 +799,7 @@ namespace parser
 
 	/// binop_rhs
 	///   ::= ('+' primary)*
-	shared_ptr<ast::BaseExpr> Parser::parse_binop_rhs(int expr_precedence, shared_ptr<ast::BaseExpr> lhs)
+	ptr_type<ast::BaseExpr> Parser::parse_binop_rhs(int expr_precedence, ptr_type<ast::BaseExpr> lhs)
 	{
 		while (true)
 		{
@@ -825,7 +823,7 @@ namespace parser
 
 			get_next_token();
 
-			shared_ptr<ast::BaseExpr> rhs = parse_unary();
+			ptr_type<ast::BaseExpr> rhs = parse_unary();
 
 			if (rhs == nullptr)
 			{
@@ -852,7 +850,7 @@ namespace parser
 				}
 			}
 
-			lhs = make_shared<ast::BinaryExpr>(bodies.back(), binop_type, lhs, rhs);
+			lhs = make_ptr<ast::BinaryExpr>(bodies.back(), binop_type, lhs, rhs);
 		}
 
 		return nullptr;
@@ -861,7 +859,7 @@ namespace parser
 	/// unary_expr
 	///   ::= primary
 	///   ::= unop expression
-	shared_ptr<ast::BaseExpr> Parser::parse_unary()
+	ptr_type<ast::BaseExpr> Parser::parse_unary()
 	{
 		// if current char is not a unary op, then it is a primary expression
 		if (operators::is_unary_op(last_char) == operators::UnaryOp::None)
@@ -874,17 +872,17 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> expr = parse_unary();
+		ptr_type<ast::BaseExpr> expr = parse_unary();
 		if (!expr)
 		{
 			return nullptr;
 		}
 
-		return make_shared<ast::UnaryExpr>(bodies.back(), unop, expr);
+		return make_ptr<ast::UnaryExpr>(bodies.back(), unop, expr);
 	}
 
 	/// literal_expr ::= 'curr_type'
-	shared_ptr<ast::BaseExpr> Parser::parse_literal()
+	ptr_type<ast::BaseExpr> Parser::parse_literal()
 	{
 		if (curr_type.type_enum == types::TypeEnum::None)
 		{
@@ -902,11 +900,11 @@ namespace parser
 
 		// next token will be eaten in parse_primary
 
-		return make_shared<ast::LiteralExpr>(bodies.back(), curr_type, literal_string);
+		return make_ptr<ast::LiteralExpr>(bodies.back(), curr_type, literal_string);
 	}
 
 	/// variable_declaration_expr ::= var 'curr_type' identifier ('=' expression)?
-	shared_ptr<ast::BaseExpr> Parser::parse_variable_declaration()
+	ptr_type<ast::BaseExpr> Parser::parse_variable_declaration()
 	{
 		get_next_token();
 
@@ -927,7 +925,7 @@ namespace parser
 		std::string name = identifier_string;
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> expr = nullptr;
+		ptr_type<ast::BaseExpr> expr = nullptr;
 
 		if (last_char == '=')
 		{
@@ -943,13 +941,13 @@ namespace parser
 		int name_id = module::StringManager::get_id(name);
 
 		expr->get_body()->named_types[name_id] = var_type;
-		return make_shared<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, expr);
+		return make_ptr<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, expr);
 	}
 
 	/// variable_reference_expr
 	///   ::= identifier
 	///   ::= identifier '(' expression* ')'
-	shared_ptr<ast::BaseExpr> Parser::parse_variable_reference()
+	ptr_type<ast::BaseExpr> Parser::parse_variable_reference()
 	{
 		int name_id = module::StringManager::get_id(identifier_string);
 
@@ -960,7 +958,7 @@ namespace parser
 		if (next_token != Token::ParenStart)
 		{
 			// next token will be eaten in parse_primary
-			return make_shared<ast::VariableReferenceExpr>(bodies.back(), name_id);
+			return make_ptr<ast::VariableReferenceExpr>(bodies.back(), name_id);
 		}
 
 		// eat '(' token
@@ -969,12 +967,12 @@ namespace parser
 		get_next_token();
 
 		// function call
-		std::vector<shared_ptr<ast::BaseExpr>> args;
+		std::vector<ptr_type<ast::BaseExpr>> args;
 		if (curr_token != Token::ParenEnd)
 		{
 			while (true)
 			{
-				shared_ptr<ast::BaseExpr> arg = parse_expression(true, false);
+				ptr_type<ast::BaseExpr> arg = parse_expression(true, false);
 				if (arg != nullptr)
 				{
 					args.push_back(arg);
@@ -1000,14 +998,14 @@ namespace parser
 
 		// next token will be eaten in parse_primary
 
-		return make_shared<ast::CallExpr>(bodies.back(), name_id, args);
+		return make_ptr<ast::CallExpr>(bodies.back(), name_id, args);
 	}
 
-	shared_ptr<ast::BaseExpr> Parser::parse_parenthesis()
+	ptr_type<ast::BaseExpr> Parser::parse_parenthesis()
 	{
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> expr = parse_expression(false, false);
+		ptr_type<ast::BaseExpr> expr = parse_expression(false, false);
 
 		if (curr_token != Token::ParenEnd)
 		{
@@ -1139,7 +1137,7 @@ namespace parser
 	}
 
 	/// definition ::= 'function' prototype expression
-	shared_ptr<ast::FunctionDefinition> Parser::parse_function_definition()
+	ptr_type<ast::FunctionDefinition> Parser::parse_function_definition()
 	{
 		get_next_token();
 
@@ -1151,7 +1149,7 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BodyExpr> body = parse_body(ast::BodyType::Function, false, true);
+		ptr_type<ast::BodyExpr> body = parse_body(ast::BodyType::Function, false, true);
 		if (body == nullptr)
 		{
 			delete proto;
@@ -1167,21 +1165,21 @@ namespace parser
 
 		get_next_token();
 
-		return make_shared<ast::FunctionDefinition>(proto, body);
+		return make_ptr<ast::FunctionDefinition>(proto, body);
 	}
 
-	shared_ptr<ast::BaseExpr> Parser::parse_if_else()
+	ptr_type<ast::BaseExpr> Parser::parse_if_else()
 	{
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> cond = parse_expression(false, true);
+		ptr_type<ast::BaseExpr> cond = parse_expression(false, true);
 
 		if (cond == nullptr)
 		{
 			return log_error("Expected if condition");
 		}
 
-		shared_ptr<ast::BodyExpr> if_body = parse_body(ast::BodyType::Conditional, false, true);
+		ptr_type<ast::BodyExpr> if_body = parse_body(ast::BodyType::Conditional, false, true);
 
 		if (if_body == nullptr)
 		{
@@ -1197,7 +1195,7 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BodyExpr> else_body = parse_body(ast::BodyType::Conditional, false, true);
+		ptr_type<ast::BodyExpr> else_body = parse_body(ast::BodyType::Conditional, false, true);
 
 		if (else_body == nullptr)
 		{
@@ -1206,11 +1204,11 @@ namespace parser
 
 		get_next_token();
 
-		return make_shared<ast::IfExpr>(bodies.back(), cond, if_body, else_body);
+		return make_ptr<ast::IfExpr>(bodies.back(), cond, if_body, else_body);
 	}
 
 	/// forexpr ::= 'for' 'type' identifier '=' expr ';' expr (';' expr)? '{' expression* '}'
-	shared_ptr<ast::BaseExpr> Parser::parse_for_loop()
+	ptr_type<ast::BaseExpr> Parser::parse_for_loop()
 	{
 		get_next_token();
 
@@ -1244,7 +1242,7 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> start_expr = parse_expression(false, false);
+		ptr_type<ast::BaseExpr> start_expr = parse_expression(false, false);
 
 		if (start_expr == nullptr)
 		{
@@ -1253,7 +1251,7 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> end_expr = parse_expression(false, false);
+		ptr_type<ast::BaseExpr> end_expr = parse_expression(false, false);
 
 		if (end_expr == nullptr)
 		{
@@ -1262,7 +1260,7 @@ namespace parser
 
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> step_expr;
+		ptr_type<ast::BaseExpr> step_expr;
 
 		// optional step expression
 		if (curr_token != Token::BodyStart)
@@ -1275,7 +1273,7 @@ namespace parser
 			}
 		}
 
-		shared_ptr<ast::BodyExpr> for_body = parse_body(ast::BodyType::Loop, false, true);
+		ptr_type<ast::BodyExpr> for_body = parse_body(ast::BodyType::Loop, false, true);
 
 		if (for_body == nullptr)
 		{
@@ -1294,15 +1292,15 @@ namespace parser
 
 		start_expr->get_body()->named_types[name_id] = var_type;
 
-		return make_shared<ast::ForExpr>(bodies.back(), var_type, name_id, start_expr, end_expr, step_expr, for_body);
+		return make_ptr<ast::ForExpr>(bodies.back(), var_type, name_id, start_expr, end_expr, step_expr, for_body);
 	}
 
 	/// whileexpr ::= 'while' expr '{' expression* '}'
-	shared_ptr<ast::BaseExpr> Parser::parse_while_loop()
+	ptr_type<ast::BaseExpr> Parser::parse_while_loop()
 	{
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> end_expr = parse_expression(false, true);
+		ptr_type<ast::BaseExpr> end_expr = parse_expression(false, true);
 
 		if (end_expr == nullptr)
 		{
@@ -1311,7 +1309,7 @@ namespace parser
 
 		//get_next_token();
 
-		shared_ptr<ast::BodyExpr> while_body = parse_body(ast::BodyType::Loop, false, true);
+		ptr_type<ast::BodyExpr> while_body = parse_body(ast::BodyType::Loop, false, true);
 
 		if (while_body == nullptr)
 		{
@@ -1320,10 +1318,10 @@ namespace parser
 
 		get_next_token();
 
-		return make_shared<ast::WhileExpr>(bodies.back(), end_expr, while_body);
+		return make_ptr<ast::WhileExpr>(bodies.back(), end_expr, while_body);
 	}
 
-	shared_ptr<ast::BaseExpr> Parser::parse_comment()
+	ptr_type<ast::BaseExpr> Parser::parse_comment()
 	{
 		// skip till end of line
 		while (last_char != '\n')
@@ -1333,15 +1331,15 @@ namespace parser
 
 		curr_token = Token::EndOfExpression;
 
-		return make_shared<ast::CommentExpr>(bodies.back());
+		return make_ptr<ast::CommentExpr>(bodies.back());
 	}
 
 	/// returnexpr ::= 'return' expr?
-	shared_ptr<ast::BaseExpr> Parser::parse_return()
+	ptr_type<ast::BaseExpr> Parser::parse_return()
 	{
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> expr;
+		ptr_type<ast::BaseExpr> expr;
 
 		if (curr_token != Token::EndOfExpression)
 		{
@@ -1353,27 +1351,27 @@ namespace parser
 			}
 		}
 
-		return make_shared<ast::ReturnExpr>(bodies.back(), expr);
+		return make_ptr<ast::ReturnExpr>(bodies.back(), expr);
 	}
 
 	/// continueexpr ::= 'continue'
-	shared_ptr<ast::BaseExpr> Parser::parse_continue()
+	ptr_type<ast::BaseExpr> Parser::parse_continue()
 	{
 		get_next_token();
 
-		return make_shared<ast::ContinueExpr>(bodies.back());
+		return make_ptr<ast::ContinueExpr>(bodies.back());
 	}
 
 	/// breakexpr ::= 'break'
-	shared_ptr<ast::BaseExpr> Parser::parse_break()
+	ptr_type<ast::BaseExpr> Parser::parse_break()
 	{
 		get_next_token();
 
-		return make_shared<ast::BreakExpr>(bodies.back());
+		return make_ptr<ast::BreakExpr>(bodies.back());
 	}
 
 	/// cast_expr ::= expression<type>
-	shared_ptr<ast::BaseExpr> Parser::parse_cast(shared_ptr<ast::BaseExpr> expr)
+	ptr_type<ast::BaseExpr> Parser::parse_cast(ptr_type<ast::BaseExpr> expr)
 	{
 		char next_char = peek_char();
 
@@ -1403,7 +1401,7 @@ namespace parser
 
 		// next token will be eaten in parse_primary
 
-		return make_shared<ast::CastExpr>(bodies.back(), type_id, expr);
+		return make_ptr<ast::CastExpr>(bodies.back(), type_id, expr);
 	}
 
 	/// moduleexpr ::= 'module' identifier
@@ -1443,7 +1441,7 @@ namespace parser
 	{
 		get_next_token();
 
-		shared_ptr<ast::BaseExpr> base_expr = parse_expression(false, false);
+		ptr_type<ast::BaseExpr> base_expr = parse_expression(false, false);
 
 		if (curr_token != Token::EndOfExpression)
 		{
@@ -1560,19 +1558,19 @@ namespace parser
 		module::ModuleManager::add_module(filename_id, current_module, using_modules);
 	}
 
-	shared_ptr<ast::BaseExpr> Parser::log_error(std::string error_message)
+	ptr_type<ast::BaseExpr> Parser::log_error(std::string error_message)
 	{
 		log_error_empty(error_message);
 		return nullptr;
 	}
 
-	shared_ptr<ast::BodyExpr> Parser::log_error_body(std::string error_message)
+	ptr_type<ast::BodyExpr> Parser::log_error_body(std::string error_message)
 	{
 		log_error_empty(error_message);
 		return nullptr;
 	}
 
-	shared_ptr<ast::FunctionPrototype> Parser::log_error_prototype(std::string error_message)
+	ptr_type<ast::FunctionPrototype> Parser::log_error_prototype(std::string error_message)
 	{
 		log_error_empty(error_message);
 		return nullptr;

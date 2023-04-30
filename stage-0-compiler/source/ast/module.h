@@ -8,6 +8,7 @@
 #include <list>
 #include <unordered_set>
 
+#include "../config.h"
 #include "ast.h"
 
 namespace module
@@ -55,7 +56,7 @@ namespace module
 	class ModuleManager
 	{
 	public:
-		static void add_ast(int filename, shared_ptr<ast::BodyExpr> ast_body);
+		static void add_ast(int filename, ptr_type<ast::BodyExpr> ast_body);
 		static int get_file_as_module(std::string& file_name);
 		static void add_module(int filename, int module_id, std::unordered_set<int>& usings);
 		static bool check_modules();
@@ -77,7 +78,7 @@ namespace module
 		// filename -> module name
 		static std::unordered_map<int, int> file_modules;
 		// filename -> ast bodyexpr
-		static std::unordered_map<int, shared_ptr<ast::BodyExpr>> ast_files;
+		static std::unordered_map<int, ptr_type<ast::BodyExpr>> ast_files;
 		// module name -> filenames
 		static std::unordered_map<int, std::unordered_set<int>> module_contents;
 		// filename -> usings

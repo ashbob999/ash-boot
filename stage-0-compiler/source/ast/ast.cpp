@@ -207,7 +207,7 @@ namespace ast
 		return true;
 	}
 
-	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, shared_ptr<BaseExpr> expr)
+	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, ptr_type<BaseExpr> expr)
 		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name_id(name_id), expr(expr)
 	{
 		if (expr != nullptr)
@@ -294,7 +294,7 @@ namespace ast
 		return true;
 	}
 
-	BinaryExpr::BinaryExpr(BodyExpr* body, operators::BinaryOp binop, shared_ptr<BaseExpr> lhs, shared_ptr<BaseExpr> rhs)
+	BinaryExpr::BinaryExpr(BodyExpr* body, operators::BinaryOp binop, ptr_type<BaseExpr> lhs, ptr_type<BaseExpr> rhs)
 		: BaseExpr(AstExprType::BinaryExpr, body), binop(binop), lhs(lhs), rhs(rhs)
 	{
 		lhs->set_parent_data(this, 0);
@@ -417,13 +417,13 @@ namespace ast
 		return true;
 	}
 
-	void BodyExpr::add_base(shared_ptr<BaseExpr> expr)
+	void BodyExpr::add_base(ptr_type<BaseExpr> expr)
 	{
 		expr->set_parent_data(this, expressions.size());
 		expressions.push_back(expr);
 	}
 
-	void BodyExpr::add_function(shared_ptr<FunctionDefinition> func)
+	void BodyExpr::add_function(ptr_type<FunctionDefinition> func)
 	{
 		functions.push_back(func);
 		original_function_prototypes.push_back(func->prototype);
@@ -446,7 +446,7 @@ namespace ast
 		return type;
 	}
 
-	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<shared_ptr<BaseExpr>>& args)
+	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args)
 		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), args(args)
 	{
 		for (int i = 0; i < args.size(); i++)
@@ -481,7 +481,7 @@ namespace ast
 	{
 		if (result_type.type_enum == types::TypeEnum::None)
 		{
-			//result_type = scope::get_scope(shared_ptr<CallExpr>(this))->function_prototypes[this->callee]->return_type;
+			//result_type = scope::get_scope(ptr_type<CallExpr>(this))->function_prototypes[this->callee]->return_type;
 			result_type = scope::get_scope(this)->function_prototypes[this->callee_id]->return_type;
 			//result_type = this->get_body()->function_prototypes[this->callee]->return_type;
 		}
@@ -500,7 +500,7 @@ namespace ast
 		BodyExpr* b1 = this->get_body();
 		BodyExpr* b2 = this->get_body()->get_body();
 		*/
-		//shared_ptr<FunctionPrototype> proto = scope::get_scope(shared_ptr<CallExpr>(this))->function_prototypes[this->callee];
+		//ptr_type<FunctionPrototype> proto = scope::get_scope(ptr_type<CallExpr>(this))->function_prototypes[this->callee];
 		FunctionPrototype* proto = scope::get_scope(this)->function_prototypes[this->callee_id];
 
 		for (int i = 0; i < this->args.size(); i++)
@@ -514,7 +514,7 @@ namespace ast
 		return true;
 	}
 
-	IfExpr::IfExpr(BodyExpr* body, shared_ptr<BaseExpr> condition, shared_ptr<BaseExpr> if_body, shared_ptr<BaseExpr> else_body)
+	IfExpr::IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr> else_body)
 		: BaseExpr(AstExprType::IfExpr, body), condition(condition), if_body(if_body), else_body(else_body)
 	{
 		condition->set_parent_data(this, 0);
@@ -582,7 +582,7 @@ namespace ast
 		return false;
 	}
 
-	ForExpr::ForExpr(BodyExpr* body, types::Type var_type, int name_id, shared_ptr<BaseExpr> start_expr, shared_ptr<BaseExpr> end_expr, shared_ptr<BaseExpr> step_expr, shared_ptr<BodyExpr> for_body)
+	ForExpr::ForExpr(BodyExpr* body, types::Type var_type, int name_id, ptr_type<BaseExpr> start_expr, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> step_expr, ptr_type<BodyExpr> for_body)
 		: BaseExpr(AstExprType::ForExpr, body), var_type(var_type), name_id(name_id), start_expr(start_expr), end_expr(end_expr), step_expr(step_expr), for_body(for_body)
 	{
 		start_expr->set_parent_data(this, 0);
@@ -650,7 +650,7 @@ namespace ast
 		return false;
 	}
 
-	WhileExpr::WhileExpr(BodyExpr* body, shared_ptr<BaseExpr> end_expr, shared_ptr<BaseExpr> while_body)
+	WhileExpr::WhileExpr(BodyExpr* body, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> while_body)
 		: BaseExpr(AstExprType::WhileExpr, body), end_expr(end_expr), while_body(while_body)
 	{
 		end_expr->set_parent_data(this, 0);
@@ -713,7 +713,7 @@ namespace ast
 		return true;
 	}
 
-	ReturnExpr::ReturnExpr(BodyExpr* body, shared_ptr<BaseExpr> ret_expr)
+	ReturnExpr::ReturnExpr(BodyExpr* body, ptr_type<BaseExpr> ret_expr)
 		: BaseExpr(AstExprType::ReturnExpr, body), ret_expr(ret_expr)
 	{}
 
@@ -856,7 +856,7 @@ namespace ast
 		return false;
 	}
 
-	UnaryExpr::UnaryExpr(BodyExpr* body, operators::UnaryOp unop, shared_ptr<BaseExpr> expr)
+	UnaryExpr::UnaryExpr(BodyExpr* body, operators::UnaryOp unop, ptr_type<BaseExpr> expr)
 		: BaseExpr(ast::AstExprType::UnaryExpr, body), unop(unop), expr(expr)
 	{
 		expr->set_parent_data(this, 0);
@@ -892,7 +892,7 @@ namespace ast
 		return true;
 	}
 
-	CastExpr::CastExpr(BodyExpr* body, int target_type_id, shared_ptr<BaseExpr> expr)
+	CastExpr::CastExpr(BodyExpr* body, int target_type_id, ptr_type<BaseExpr> expr)
 		: BaseExpr(AstExprType::CastExpr, body), target_type_id(target_type_id), expr(expr)
 	{}
 
@@ -952,7 +952,7 @@ namespace ast
 		return str.str();
 	}
 
-	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, shared_ptr<BodyExpr> body)
+	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body)
 		: prototype(prototype), body(body)
 	{}
 
@@ -995,7 +995,7 @@ namespace ast
 		return false;
 	}
 
-	void change_ast_object(ast::BaseExpr* object, shared_ptr<ast::BaseExpr> new_object)
+	void change_ast_object(ast::BaseExpr* object, ptr_type<ast::BaseExpr> new_object)
 	{
 		if (object == nullptr)
 		{

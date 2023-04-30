@@ -6,7 +6,7 @@
 
 #include "llvm/IR/Constants.h"
 
-using std::shared_ptr;
+#include "../config.h"
 
 namespace types
 {
@@ -70,7 +70,7 @@ namespace types
 		virtual void set_type(Type& type) final;
 
 	public:
-		static shared_ptr<BaseType> create_type(Type curr_type, std::string& str);
+		static ptr_type<BaseType> create_type(Type curr_type, std::string& str);
 		static bool is_digit(char c);
 	};
 

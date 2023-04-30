@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include "../config.h"
 #include "type_checker.h"
 #include "scope_checker.h"
 
@@ -797,7 +798,7 @@ namespace type_checker
 
 		operators::BinaryOp op = operators::extract_compound_assignment_operator(expr->binop);
 
-		shared_ptr<ast::BinaryExpr> op_expr = std::make_shared<ast::BinaryExpr>(expr->get_body(), op, expr->lhs, expr->rhs);
+		ptr_type<ast::BinaryExpr> op_expr = make_ptr<ast::BinaryExpr>(expr->get_body(), op, expr->lhs, expr->rhs);
 
 		expr->binop = operators::BinaryOp::Assignment;
 		expr->rhs = op_expr;
