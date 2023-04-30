@@ -209,7 +209,7 @@ namespace ast
 		ptr_type<BaseExpr> rhs;
 	};
 
-	class CallExpr : public BaseExpr, std::enable_shared_from_this<CallExpr>
+	class CallExpr : public BaseExpr
 	{
 	public:
 		CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args);
