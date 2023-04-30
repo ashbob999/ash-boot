@@ -684,7 +684,7 @@ namespace type_checker
 				case operators::UnaryOp::Minus:
 				{
 					literal_expr->value_type->negate_value();
-					ast::change_ast_object(expr, expr->expr);
+					ast::change_ast_object(expr, std::move(expr->expr));
 				}
 			}
 		}
@@ -798,10 +798,10 @@ namespace type_checker
 
 		operators::BinaryOp op = operators::extract_compound_assignment_operator(expr->binop);
 
-		ptr_type<ast::BinaryExpr> op_expr = make_ptr<ast::BinaryExpr>(expr->get_body(), op, expr->lhs, expr->rhs);
+		ptr_type<ast::BinaryExpr> op_expr = make_ptr<ast::BinaryExpr>(expr->get_body(), op, std::move(expr->lhs), std::move(expr->rhs));
 
 		expr->binop = operators::BinaryOp::Assignment;
-		expr->rhs = op_expr;
+		expr->rhs = std::move(op_expr);
 	}
 
 }

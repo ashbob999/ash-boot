@@ -447,10 +447,11 @@ namespace ast
 	}
 
 	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args)
-		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), args(std::move(args))
+		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), args(args.size())
 	{
 		for (int i = 0; i < this->args.size(); i++)
 		{
+			this->args[i] = std::move(args[i]);
 			this->args[i]->set_parent_data(this, i);
 		}
 	}
@@ -1072,7 +1073,15 @@ namespace ast
 				}
 				else
 				{
-					expr->for_body = std::dynamic_pointer_cast<BodyExpr>(std::move(new_object));
+					ast::BaseExpr* baseExpr = new_object.get();
+					new_object.reset();
+
+					ast::BodyExpr* bodyExpr = dynamic_cast<ast::BodyExpr*>(baseExpr);
+					if (bodyExpr == nullptr)
+					{
+						assert(false && "expr is not of type BodyExpr");
+					}
+					expr->for_body = ptr_type<ast::BodyExpr>(bodyExpr);
 				}
 				break;
 			}

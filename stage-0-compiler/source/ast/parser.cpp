@@ -439,7 +439,7 @@ namespace parser
 						return nullptr;
 					}
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					break;
 				}
@@ -458,7 +458,7 @@ namespace parser
 					ptr_type<ast::FunctionDefinition> fd = parse_function_definition();
 					if (fd != nullptr)
 					{
-						body->add_function(fd);
+						body->add_function(std::move(fd));
 					}
 					else
 					{
@@ -498,10 +498,10 @@ namespace parser
 						return nullptr;
 					}
 
-					ptr_type<ast::IfExpr> if_expr = std::dynamic_pointer_cast<ast::IfExpr>(base);
+					ast::IfExpr* if_expr = dynamic_cast<ast::IfExpr*>(base.get());
 					if_expr->should_return_value = false;
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					break;
 				}
@@ -519,7 +519,7 @@ namespace parser
 						return nullptr;
 					}
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					break;
 				}
@@ -537,7 +537,7 @@ namespace parser
 						return nullptr;
 					}
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					break;
 				}
@@ -560,7 +560,7 @@ namespace parser
 						return nullptr;
 					}
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					break;
 				}
@@ -578,7 +578,7 @@ namespace parser
 						return nullptr;
 					}
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					break;
 				}
@@ -596,7 +596,7 @@ namespace parser
 						return nullptr;
 					}
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					break;
 				}
@@ -657,7 +657,7 @@ namespace parser
 						return nullptr;
 					}
 
-					body->add_base(base);
+					body->add_base(std::move(base));
 
 					if (curr_token != Token::EndOfExpression)
 					{
@@ -691,7 +691,7 @@ namespace parser
 		std::vector<int> arg_ids;
 
 		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::TypeEnum::Void, types, arg_ids);
-		return make_ptr<ast::FunctionDefinition>(proto, expr);
+		return make_ptr<ast::FunctionDefinition>(proto, std::move(expr));
 	}
 
 	/// expression
@@ -711,7 +711,7 @@ namespace parser
 
 		if (curr_token == Token::BinaryOperator)
 		{
-			return parse_binop_rhs(0, lhs);
+			return parse_binop_rhs(0, std::move(lhs));
 		}
 
 		if (for_call)
@@ -786,7 +786,7 @@ namespace parser
 			if (next_char == '<')
 			{
 				// parse cast
-				expr = parse_cast(expr);
+				expr = parse_cast(std::move(expr));
 			}
 			else
 			{
@@ -843,7 +843,7 @@ namespace parser
 			if (token_precedence < next_precedence)
 			{
 				//std::cout << "parse right first" << std::endl;
-				rhs = parse_binop_rhs(token_precedence + 1, rhs);
+				rhs = parse_binop_rhs(token_precedence + 1, std::move(rhs));
 				if (rhs == nullptr)
 				{
 					return nullptr;
@@ -878,7 +878,7 @@ namespace parser
 			return nullptr;
 		}
 
-		return make_ptr<ast::UnaryExpr>(bodies.back(), unop, expr);
+		return make_ptr<ast::UnaryExpr>(bodies.back(), unop, std::move(expr));
 	}
 
 	/// literal_expr ::= 'curr_type'
@@ -941,7 +941,7 @@ namespace parser
 		int name_id = module::StringManager::get_id(name);
 
 		expr->get_body()->named_types[name_id] = var_type;
-		return make_ptr<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, expr);
+		return make_ptr<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, std::move(expr));
 	}
 
 	/// variable_reference_expr
@@ -975,7 +975,7 @@ namespace parser
 				ptr_type<ast::BaseExpr> arg = parse_expression(true, false);
 				if (arg != nullptr)
 				{
-					args.push_back(arg);
+					args.push_back(std::move(arg));
 				}
 				else
 				{
@@ -1165,7 +1165,7 @@ namespace parser
 
 		get_next_token();
 
-		return make_ptr<ast::FunctionDefinition>(proto, body);
+		return make_ptr<ast::FunctionDefinition>(proto, std::move(body));
 	}
 
 	ptr_type<ast::BaseExpr> Parser::parse_if_else()
@@ -1204,7 +1204,7 @@ namespace parser
 
 		get_next_token();
 
-		return make_ptr<ast::IfExpr>(bodies.back(), cond, if_body, else_body);
+		return make_ptr<ast::IfExpr>(bodies.back(), std::move(cond), std::move(if_body), std::move(else_body));
 	}
 
 	/// forexpr ::= 'for' 'type' identifier '=' expr ';' expr (';' expr)? '{' expression* '}'
@@ -1292,7 +1292,7 @@ namespace parser
 
 		start_expr->get_body()->named_types[name_id] = var_type;
 
-		return make_ptr<ast::ForExpr>(bodies.back(), var_type, name_id, start_expr, end_expr, step_expr, for_body);
+		return make_ptr<ast::ForExpr>(bodies.back(), var_type, name_id, std::move(start_expr), std::move(end_expr), std::move(step_expr), std::move(for_body));
 	}
 
 	/// whileexpr ::= 'while' expr '{' expression* '}'
@@ -1318,7 +1318,7 @@ namespace parser
 
 		get_next_token();
 
-		return make_ptr<ast::WhileExpr>(bodies.back(), end_expr, while_body);
+		return make_ptr<ast::WhileExpr>(bodies.back(), std::move(end_expr), std::move(while_body));
 	}
 
 	ptr_type<ast::BaseExpr> Parser::parse_comment()
@@ -1351,7 +1351,7 @@ namespace parser
 			}
 		}
 
-		return make_ptr<ast::ReturnExpr>(bodies.back(), expr);
+		return make_ptr<ast::ReturnExpr>(bodies.back(), std::move(expr));
 	}
 
 	/// continueexpr ::= 'continue'

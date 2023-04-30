@@ -186,7 +186,7 @@ namespace cli
 
 			// parse the file
 			parser::Parser parser{ file_stream , file.string() };
-			ptr_type<ast::BodyExpr> body_ast = parser.parse_file_as_body();
+			ptr_type<ast::BodyExpr> body_ast = std::move(parser.parse_file_as_body());
 			current_module = parser.get_module();
 
 			file_stream.close();
@@ -198,7 +198,7 @@ namespace cli
 				return false;
 			}
 
-			module::ModuleManager::add_ast(current_module, body_ast);
+			module::ModuleManager::add_ast(current_module, std::move(body_ast));
 		}
 
 		std::cout << "File Was Parsed Successfully" << std::endl;
