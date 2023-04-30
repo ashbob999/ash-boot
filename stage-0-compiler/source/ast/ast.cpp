@@ -208,11 +208,11 @@ namespace ast
 	}
 
 	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, ptr_type<BaseExpr> expr)
-		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name_id(name_id), expr(expr)
+		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name_id(name_id), expr(std::move(expr))
 	{
-		if (expr != nullptr)
+		if (this->expr != nullptr)
 		{
-			expr->set_parent_data(this, 0);
+			this->expr->set_parent_data(this, 0);
 		}
 	}
 
@@ -295,10 +295,10 @@ namespace ast
 	}
 
 	BinaryExpr::BinaryExpr(BodyExpr* body, operators::BinaryOp binop, ptr_type<BaseExpr> lhs, ptr_type<BaseExpr> rhs)
-		: BaseExpr(AstExprType::BinaryExpr, body), binop(binop), lhs(lhs), rhs(rhs)
+		: BaseExpr(AstExprType::BinaryExpr, body), binop(binop), lhs(std::move(lhs)), rhs(std::move(rhs))
 	{
-		lhs->set_parent_data(this, 0);
-		rhs->set_parent_data(this, 1);
+		this->lhs->set_parent_data(this, 0);
+		this->rhs->set_parent_data(this, 1);
 	}
 
 	BinaryExpr::~BinaryExpr()
@@ -420,13 +420,13 @@ namespace ast
 	void BodyExpr::add_base(ptr_type<BaseExpr> expr)
 	{
 		expr->set_parent_data(this, expressions.size());
-		expressions.push_back(expr);
+		expressions.push_back(std::move(expr));
 	}
 
 	void BodyExpr::add_function(ptr_type<FunctionDefinition> func)
 	{
-		functions.push_back(func);
 		original_function_prototypes.push_back(func->prototype);
+		functions.push_back(std::move(func));
 	}
 
 	void BodyExpr::add_prototype(FunctionPrototype* proto)
@@ -447,11 +447,11 @@ namespace ast
 	}
 
 	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args)
-		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), args(args)
+		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), args(std::move(args))
 	{
-		for (int i = 0; i < args.size(); i++)
+		for (int i = 0; i < this->args.size(); i++)
 		{
-			args[i]->set_parent_data(this, i);
+			this->args[i]->set_parent_data(this, i);
 		}
 	}
 
@@ -515,11 +515,11 @@ namespace ast
 	}
 
 	IfExpr::IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr> else_body)
-		: BaseExpr(AstExprType::IfExpr, body), condition(condition), if_body(if_body), else_body(else_body)
+		: BaseExpr(AstExprType::IfExpr, body), condition(std::move(condition)), if_body(std::move(if_body)), else_body(std::move(else_body))
 	{
-		condition->set_parent_data(this, 0);
-		if_body->set_parent_data(this, 1);
-		else_body->set_parent_data(this, 2);
+		this->condition->set_parent_data(this, 0);
+		this->if_body->set_parent_data(this, 1);
+		this->else_body->set_parent_data(this, 2);
 	}
 
 	std::string IfExpr::to_string(int depth)
@@ -583,15 +583,15 @@ namespace ast
 	}
 
 	ForExpr::ForExpr(BodyExpr* body, types::Type var_type, int name_id, ptr_type<BaseExpr> start_expr, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> step_expr, ptr_type<BodyExpr> for_body)
-		: BaseExpr(AstExprType::ForExpr, body), var_type(var_type), name_id(name_id), start_expr(start_expr), end_expr(end_expr), step_expr(step_expr), for_body(for_body)
+		: BaseExpr(AstExprType::ForExpr, body), var_type(var_type), name_id(name_id), start_expr(std::move(start_expr)), end_expr(std::move(end_expr)), step_expr(std::move(step_expr)), for_body(std::move(for_body))
 	{
-		start_expr->set_parent_data(this, 0);
-		end_expr->set_parent_data(this, 1);
-		if (step_expr != nullptr)
+		this->start_expr->set_parent_data(this, 0);
+		this->end_expr->set_parent_data(this, 1);
+		if (this->step_expr != nullptr)
 		{
-			step_expr->set_parent_data(this, 2);
+			this->step_expr->set_parent_data(this, 2);
 		}
-		for_body->set_parent_data(this, 3);
+		this->for_body->set_parent_data(this, 3);
 	}
 
 	std::string ForExpr::to_string(int depth)
@@ -651,10 +651,10 @@ namespace ast
 	}
 
 	WhileExpr::WhileExpr(BodyExpr* body, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> while_body)
-		: BaseExpr(AstExprType::WhileExpr, body), end_expr(end_expr), while_body(while_body)
+		: BaseExpr(AstExprType::WhileExpr, body), end_expr(std::move(end_expr)), while_body(std::move(while_body))
 	{
-		end_expr->set_parent_data(this, 0);
-		while_body->set_parent_data(this, 1);
+		this->end_expr->set_parent_data(this, 0);
+		this->while_body->set_parent_data(this, 1);
 	}
 
 	std::string WhileExpr::to_string(int depth)
@@ -714,7 +714,7 @@ namespace ast
 	}
 
 	ReturnExpr::ReturnExpr(BodyExpr* body, ptr_type<BaseExpr> ret_expr)
-		: BaseExpr(AstExprType::ReturnExpr, body), ret_expr(ret_expr)
+		: BaseExpr(AstExprType::ReturnExpr, body), ret_expr(std::move(ret_expr))
 	{}
 
 	std::string ReturnExpr::to_string(int depth)
@@ -857,9 +857,9 @@ namespace ast
 	}
 
 	UnaryExpr::UnaryExpr(BodyExpr* body, operators::UnaryOp unop, ptr_type<BaseExpr> expr)
-		: BaseExpr(ast::AstExprType::UnaryExpr, body), unop(unop), expr(expr)
+		: BaseExpr(ast::AstExprType::UnaryExpr, body), unop(unop), expr(std::move(expr))
 	{
-		expr->set_parent_data(this, 0);
+		this->expr->set_parent_data(this, 0);
 	}
 
 	std::string UnaryExpr::to_string(int depth)
@@ -893,7 +893,7 @@ namespace ast
 	}
 
 	CastExpr::CastExpr(BodyExpr* body, int target_type_id, ptr_type<BaseExpr> expr)
-		: BaseExpr(AstExprType::CastExpr, body), target_type_id(target_type_id), expr(expr)
+		: BaseExpr(AstExprType::CastExpr, body), target_type_id(target_type_id), expr(std::move(expr))
 	{}
 
 	std::string CastExpr::to_string(int depth)
@@ -953,7 +953,7 @@ namespace ast
 	}
 
 	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body)
-		: prototype(prototype), body(body)
+		: prototype(prototype), body(std::move(body))
 	{}
 
 	FunctionDefinition::~FunctionDefinition()
@@ -1010,13 +1010,13 @@ namespace ast
 			case AstExprType::BodyExpr:
 			{
 				BodyExpr* expr = dynamic_cast<BodyExpr*>(object_parent.parent);
-				expr->expressions[object_parent.location] = new_object;
+				expr->expressions[object_parent.location] = std::move(new_object);
 				break;
 			}
 			case AstExprType::VariableDeclarationExpr:
 			{
 				VariableDeclarationExpr* expr = dynamic_cast<VariableDeclarationExpr*>(object_parent.parent);
-				expr->expr = new_object;
+				expr->expr = std::move(new_object);
 				break;
 			}
 			case AstExprType::BinaryExpr:
@@ -1024,18 +1024,18 @@ namespace ast
 				BinaryExpr* expr = dynamic_cast<BinaryExpr*>(object_parent.parent);
 				if (object_parent.location == 0)
 				{
-					expr->lhs = new_object;
+					expr->lhs = std::move(new_object);
 				}
 				else
 				{
-					expr->rhs = new_object;
+					expr->rhs = std::move(new_object);
 				}
 				break;
 			}
 			case AstExprType::CallExpr:
 			{
 				CallExpr* expr = dynamic_cast<CallExpr*>(object_parent.parent);
-				expr->args[object_parent.location] = new_object;
+				expr->args[object_parent.location] = std::move(new_object);
 				break;
 			}
 			case AstExprType::IfExpr:
@@ -1043,15 +1043,15 @@ namespace ast
 				IfExpr* expr = dynamic_cast<IfExpr*>(object_parent.parent);
 				if (object_parent.location == 0)
 				{
-					expr->condition = new_object;
+					expr->condition = std::move(new_object);
 				}
 				else if (object_parent.location == 1)
 				{
-					expr->if_body = new_object;
+					expr->if_body = std::move(new_object);
 				}
 				else
 				{
-					expr->else_body = new_object;
+					expr->else_body = std::move(new_object);
 				}
 				break;
 			}
@@ -1060,19 +1060,19 @@ namespace ast
 				ForExpr* expr = dynamic_cast<ForExpr*>(object_parent.parent);
 				if (object_parent.location == 0)
 				{
-					expr->start_expr = new_object;
+					expr->start_expr = std::move(new_object);
 				}
 				else if (object_parent.location == 1)
 				{
-					expr->end_expr = new_object;
+					expr->end_expr = std::move(new_object);
 				}
 				else if (object_parent.location == 2)
 				{
-					expr->start_expr = new_object;
+					expr->start_expr = std::move(new_object);
 				}
 				else
 				{
-					expr->for_body = std::dynamic_pointer_cast<BodyExpr>(new_object);
+					expr->for_body = std::dynamic_pointer_cast<BodyExpr>(std::move(new_object));
 				}
 				break;
 			}
@@ -1081,23 +1081,23 @@ namespace ast
 				WhileExpr* expr = dynamic_cast<WhileExpr*>(object_parent.parent);
 				if (object_parent.location == 0)
 				{
-					expr->end_expr = new_object;
+					expr->end_expr = std::move(new_object);
 				}
 				else
 				{
-					expr->while_body = new_object;
+					expr->while_body = std::move(new_object);
 				}
 				break;
 			}
 			case AstExprType::UnaryExpr:
 			{
 				UnaryExpr* expr = dynamic_cast<UnaryExpr*>(object_parent.parent);
-				expr->expr = new_object;
+				expr->expr = std::move(new_object);
 				break;
 			}
 			default:
 			{
-				assert(false && "canot change ast object");
+				assert(false && "cannot change ast object");
 			}
 		}
 	}

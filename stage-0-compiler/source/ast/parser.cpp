@@ -812,7 +812,7 @@ namespace parser
 			if (token_precedence < expr_precedence)
 			{
 				//std::cout << "ealry end" << std::endl;
-				return lhs;
+				return std::move(lhs);
 			}
 
 			operators::BinaryOp binop_type = operators::is_binary_op(identifier_string);
@@ -850,7 +850,7 @@ namespace parser
 				}
 			}
 
-			lhs = make_ptr<ast::BinaryExpr>(bodies.back(), binop_type, lhs, rhs);
+			lhs = std::move(make_ptr<ast::BinaryExpr>(bodies.back(), binop_type, std::move(lhs), std::move(rhs)));
 		}
 
 		return nullptr;
@@ -1401,7 +1401,7 @@ namespace parser
 
 		// next token will be eaten in parse_primary
 
-		return make_ptr<ast::CastExpr>(bodies.back(), type_id, expr);
+		return make_ptr<ast::CastExpr>(bodies.back(), type_id, std::move(expr));
 	}
 
 	/// moduleexpr ::= 'module' identifier

@@ -305,7 +305,7 @@ namespace module
 
 	void ModuleManager::add_ast(int filename, ptr_type<ast::BodyExpr> ast_body)
 	{
-		ModuleManager::ast_files[filename] = ast_body;
+		ModuleManager::ast_files[filename] = std::move(ast_body);
 	}
 
 	int ModuleManager::get_file_as_module(std::string& file_name)
