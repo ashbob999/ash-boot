@@ -29,8 +29,8 @@ namespace types
 		Type();
 		Type(TypeEnum type_enum);
 		Type(TypeEnum type_enum, int size, bool is_signed);
-		bool operator==(const Type& other);
-		bool operator!=(const Type& other);
+		bool operator==(const Type& other) const;
+		bool operator!=(const Type& other) const;
 		int get_size();
 		bool is_signed();
 	};
@@ -82,6 +82,7 @@ namespace types
 		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
 		std::string to_string() override;
 		virtual void negate_value() override;
+		bool operator==(const IntType& other)const;
 
 	public:
 		static bool check_range(std::string& literal_string);

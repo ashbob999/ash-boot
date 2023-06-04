@@ -972,10 +972,10 @@ namespace builder
 		llvm_ir_builder->SetInsertPoint(loop_body_block);
 
 		// push the step block for continue statements
-		this->loop_continue_blocks.push_back(step_block);
+		this->continue_blocks.push_back(step_block);
 
 		// push the end block for break statements
-		this->loop_break_blocks.push_back(end_block);
+		this->break_blocks.push_back(end_block);
 
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->for_body.get()) == nullptr)
@@ -988,10 +988,10 @@ namespace builder
 		llvm_ir_builder->CreateBr(step_block);
 
 		// pop the step block for continue statements
-		this->loop_continue_blocks.pop_back();
+		this->continue_blocks.pop_back();
 
 		// pop the condition block for break statements
-		this->loop_break_blocks.pop_back();
+		this->break_blocks.pop_back();
 
 		// start insertion into the step block
 		llvm_ir_builder->SetInsertPoint(step_block);
@@ -1062,10 +1062,10 @@ namespace builder
 		llvm_ir_builder->SetInsertPoint(loop_body_block);
 
 		// push the condition block for continue statements
-		this->loop_continue_blocks.push_back(condition_block);
+		this->continue_blocks.push_back(condition_block);
 
 		// push the loop end block for break statements
-		this->loop_break_blocks.push_back(loop_end_block);
+		this->break_blocks.push_back(loop_end_block);
 
 		// emit the body of the loop
 		if (generate_code_dispatch(expr->while_body.get()) == nullptr)
@@ -1078,10 +1078,10 @@ namespace builder
 		llvm_ir_builder->CreateBr(condition_block);
 
 		// pop the condition block for continue statements
-		this->loop_continue_blocks.pop_back();
+		this->continue_blocks.pop_back();
 
 		// pop the condition block for break statements
-		this->loop_break_blocks.pop_back();
+		this->break_blocks.pop_back();
 
 		// set insertion into the condition block
 		llvm_ir_builder->SetInsertPoint(condition_block);
@@ -1139,7 +1139,7 @@ namespace builder
 	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::ContinueExpr>(ast::ContinueExpr* expr)
 	{
-		llvm_ir_builder->CreateBr(this->loop_continue_blocks.back());
+		llvm_ir_builder->CreateBr(this->continue_blocks.back());
 
 		return llvm::ConstantTokenNone::get(*llvm_context);
 	}
@@ -1147,7 +1147,7 @@ namespace builder
 	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::BreakExpr>(ast::BreakExpr* expr)
 	{
-		llvm_ir_builder->CreateBr(this->loop_break_blocks.back());
+		llvm_ir_builder->CreateBr(this->break_blocks.back());
 
 		return llvm::ConstantTokenNone::get(*llvm_context);
 	}
@@ -1315,6 +1315,124 @@ namespace builder
 		return nullptr;
 	}
 
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::SwitchExpr>(ast::SwitchExpr* expr)
+	{
+		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
+
+		// create the condition block
+		llvm::BasicBlock* switch_end_block = llvm::BasicBlock::Create(*llvm_context, "switch.end");
+
+		// get the switch value
+		llvm::Value* switch_value = generate_code_dispatch(expr->value_expr.get());
+		if (switch_value == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		// create the switch instruction
+		llvm::SwitchInst* switch_instruction = llvm_ir_builder->CreateSwitch(switch_value, switch_end_block, static_cast<unsigned int>(expr->cases.size()));
+
+		std::vector<llvm::BasicBlock*> case_blocks;
+
+		for (auto& case_expr : expr->cases)
+		{
+			llvm::BasicBlock* case_block = llvm::BasicBlock::Create(*llvm_context, "switch.case", func);
+			case_blocks.push_back(case_block);
+
+			llvm::ConstantInt* case_value = nullptr;
+
+			if (case_expr->default_case)
+			{
+				case_block->setName("case.default");
+			}
+			else
+			{
+				llvm::Value* value = generate_code_dispatch(case_expr->case_expr.get());
+				if (value == nullptr)
+				{
+					null_end;
+					return nullptr;
+				}
+
+				case_value = llvm::dyn_cast<llvm::ConstantInt>(value);
+				if (case_value == nullptr)
+				{
+					null_end;
+					return nullptr;
+				}
+			}
+
+			if (case_expr->default_case)
+			{
+				switch_instruction->setDefaultDest(case_block);
+			}
+			else
+			{
+				switch_instruction->addCase(case_value, case_block);
+			}
+		}
+
+		this->break_blocks.push_back(switch_end_block);
+
+		for (size_t i = 0; i < case_blocks.size(); i++)
+		{
+			llvm_ir_builder->SetInsertPoint(case_blocks[i]);
+
+			llvm::Value* case_body = generate_code_dispatch(expr->cases[i]->case_body.get());
+			if (case_body == nullptr)
+			{
+				null_end;
+				return nullptr;
+			}
+
+			// skip adding of default br instruction, if last expression in case body is a break
+			ast::BodyExpr* body = dynamic_cast<ast::BodyExpr*>(expr->cases[i]->case_body.get());
+			if (body != nullptr && body->expressions.size() > 0)
+			{
+				ast::BreakExpr* break_expr = dynamic_cast<ast::BreakExpr*>(body->expressions.back().get());
+				if (break_expr != nullptr)
+				{
+					continue;
+				}
+			}
+
+			// add branch to next case or end
+			if (i == case_blocks.size() - 1)
+			{
+				llvm_ir_builder->CreateBr(switch_end_block);
+			}
+			else
+			{
+				// TODO: do something about case fallthrough
+				llvm_ir_builder->CreateBr(case_blocks[i + 1]);
+			}
+		}
+
+		this->break_blocks.pop_back();
+
+		// insert the end block
+		func->insert(func->end(), switch_end_block);
+
+		// set insert to switch end
+		llvm_ir_builder->SetInsertPoint(switch_end_block);
+
+		return llvm::ConstantTokenNone::get(*llvm_context);
+	}
+
+	template<>
+	llvm::Value* LLVMBuilder::generate_code<ast::CaseExpr>(ast::CaseExpr* expr)
+	{
+		if (generate_code_dispatch(expr->case_body.get()) == nullptr)
+		{
+			null_end;
+			return nullptr;
+		}
+
+		return llvm::ConstantTokenNone::get(*llvm_context);
+	}
+
 	llvm::Value* LLVMBuilder::generate_code_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -1378,6 +1496,14 @@ namespace builder
 			case ast::AstExprType::CastExpr:
 			{
 				return generate_code(dynamic_cast<ast::CastExpr*>(expr));
+			}
+			case ast::AstExprType::SwitchExpr:
+			{
+				return generate_code(dynamic_cast<ast::SwitchExpr*>(expr));
+			}
+			case ast::AstExprType::CaseExpr:
+			{
+				return generate_code(dynamic_cast<ast::CaseExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

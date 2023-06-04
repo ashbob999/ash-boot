@@ -127,6 +127,26 @@ namespace ast
 				expr->expr->set_body(new_body);
 				break;
 			}
+			case AstExprType::SwitchExpr:
+			{
+				SwitchExpr* expr = dynamic_cast<SwitchExpr*>(this);
+
+				for (auto& c : expr->cases)
+				{
+					c->set_body(new_body);
+				}
+
+				break;
+			}
+			case AstExprType::CaseExpr:
+			{
+				CaseExpr* expr = dynamic_cast<CaseExpr*>(this);
+
+				expr->case_expr->set_body(new_body);
+				expr->case_body->set_body(new_body);
+
+				break;
+			}
 			default:
 			{
 				assert(false && "missing type specialisation");
@@ -846,7 +866,7 @@ namespace ast
 
 		while (body->body_type != BodyType::Function)
 		{
-			if (body->body_type == BodyType::Loop)
+			if (body->body_type == BodyType::Loop || body->body_type == BodyType::Case)
 			{
 				return true;
 			}
@@ -925,6 +945,103 @@ namespace ast
 	bool CastExpr::check_types()
 	{
 		return true;
+	}
+
+	SwitchExpr::SwitchExpr(BodyExpr* body, ptr_type<BaseExpr> value_expr, std::vector<ptr_type<CaseExpr>>& cases)
+		: BaseExpr(AstExprType::SwitchExpr, body), value_expr(std::move(value_expr))
+	{
+		for (auto& case_expr : cases)
+		{
+			case_expr->set_parent_data(this, this->cases.size());
+			this->cases.push_back(std::move(case_expr));
+		}
+	}
+
+	std::string SwitchExpr::to_string(int depth)
+	{
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "Switch Statement: {" << '\n';
+
+		for (auto& case_expr : this->cases)
+		{
+			str << case_expr->to_string(depth + 1);
+		}
+
+		str << tabs << "}, " << '\n';
+
+		return str.str();
+	}
+
+	types::Type SwitchExpr::get_result_type()
+	{
+		if (this->result_type.type_enum == types::TypeEnum::None)
+		{
+			this->result_type = types::TypeEnum::Void;
+		}
+		return this->result_type;
+	}
+
+	bool SwitchExpr::check_types()
+	{
+		if (this->value_expr->get_result_type().type_enum == types::TypeEnum::Int)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	CaseExpr::CaseExpr(BodyExpr* body, ptr_type<BaseExpr> case_expr, ptr_type<BaseExpr> case_body, bool default_case)
+		: BaseExpr(AstExprType::CaseExpr, body), case_expr(std::move(case_expr)), case_body(std::move(case_body)), default_case(default_case)
+	{}
+
+	std::string CaseExpr::to_string(int depth)
+	{
+		std::string tabs(depth, '\t');
+
+		std::stringstream str;
+
+		str << tabs << "Case Statement: {" << '\n';
+
+		if (this->default_case)
+		{
+			str << tabs << '\t' << "Value: " << "Default Case" << "," << '\n';
+		}
+		else
+		{
+			str << tabs << '\t' << "Value: {" << '\n';
+			str << this->case_expr->to_string(depth + 2);
+			str << tabs << '\t' << "}," << '\n';
+		}
+
+		str << tabs << '\t' << "Case Body: {" << '\n';
+		str << this->case_body->to_string(depth + 2);
+		str << tabs << '\t' << "}," << '\n';
+
+		str << tabs << "}, " << '\n';
+
+		return str.str();
+	}
+
+	types::Type CaseExpr::get_result_type()
+	{
+		if (this->result_type.type_enum == types::TypeEnum::None)
+		{
+			this->result_type = types::TypeEnum::Void;
+		}
+		return this->result_type;
+	}
+
+	bool CaseExpr::check_types()
+	{
+		// TODO: maybe check for constant expressions
+		if (this->case_expr->get_result_type() == types::TypeEnum::Int)
+		{
+			return true;
+		}
+		return false;
 	}
 
 	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)

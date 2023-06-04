@@ -28,6 +28,9 @@ namespace parser
 		ReturnStatement,
 		ContinueStatement,
 		BreakStatement,
+		SwitchStatement,
+		CaseStatement,
+		DefaultStatement,
 		ModuleStatement,
 		UsingStatement,
 		BodyStart,
@@ -68,7 +71,7 @@ namespace parser
 		Token get_next_token();
 		ptr_type<ast::BodyExpr> parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets);
 		ptr_type<ast::FunctionDefinition> parse_top_level();
-		ptr_type<ast::BaseExpr> parse_expression(bool for_call, bool for_if_cond);
+		ptr_type<ast::BaseExpr> parse_expression(bool for_call, bool middle_expression);
 		ptr_type<ast::BaseExpr> parse_primary();
 		ptr_type<ast::BaseExpr> parse_binop_rhs(int precedence, ptr_type<ast::BaseExpr> lhs);
 		ptr_type<ast::BaseExpr> parse_unary();
@@ -87,6 +90,7 @@ namespace parser
 		ptr_type<ast::BaseExpr> parse_continue();
 		ptr_type<ast::BaseExpr> parse_break();
 		ptr_type<ast::BaseExpr> parse_cast(ptr_type<ast::BaseExpr> expr);
+		ptr_type<ast::BaseExpr> parse_switch_case();
 		bool parse_module();
 		bool parse_using();
 		int get_token_precedence();

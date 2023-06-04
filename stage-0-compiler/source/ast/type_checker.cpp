@@ -640,7 +640,7 @@ namespace type_checker
 		// check break
 		if (!expr->check_types())
 		{
-			return log_error(expr, "Break statement is only allowed in loops");
+			return log_error(expr, "Break statement is not allowed in current expression");
 		}
 
 		return true;
@@ -723,6 +723,97 @@ namespace type_checker
 		return true;
 	}
 
+	template<>
+	bool TypeChecker::check_expression<ast::SwitchExpr>(ast::SwitchExpr* expr)
+	{
+		// check expression
+		if (!check_expression_dispatch(expr->value_expr.get()))
+		{
+			return false;
+		}
+
+		// check value
+		if (!expr->check_types())
+		{
+			std::string type = types::to_string(expr->value_expr->get_result_type());
+			return log_error(expr, "Switch value must have type integer, but got type: " + type);
+		}
+
+		types::Type value_type = expr->value_expr->get_result_type();
+
+		// make sure all types are identical
+		for (auto& case_expr : expr->cases)
+		{
+			if (case_expr->default_case)
+			{
+				continue;
+			}
+
+			if (case_expr->case_expr->get_result_type() != value_type)
+			{
+				std::string type1 = types::to_string(value_type);
+				std::string type2 = types::to_string(case_expr->case_expr->get_result_type());
+				return log_error(case_expr.get(), "Case has invalid type, expected: " + type1 + " , but got: " + type2 + " instead");
+			}
+		}
+
+		// make sure there are no duplicate values
+		std::vector<types::IntType> case_values;
+
+		for (auto& case_expr : expr->cases)
+		{
+			if (case_expr->default_case)
+			{
+				continue;
+			}
+
+			// TODO: make checks cleaner/simpler
+			ast::LiteralExpr* literal_expr = dynamic_cast<ast::LiteralExpr*>(case_expr->case_expr.get());
+			if (literal_expr == nullptr)
+			{
+				return log_error(case_expr.get(), "Case value not literal expression");
+			}
+
+			types::IntType* type = dynamic_cast<types::IntType*>(literal_expr->value_type.get());
+			if (type == nullptr)
+			{
+				return log_error(case_expr.get(), "Case value must be an integer");
+			}
+
+			auto it = std::find(case_values.begin(), case_values.end(), *type);
+			if (it != case_values.end())
+			{
+				std::string value = type->to_string();
+				return log_error(case_expr.get(), "Switch already has a case value of: " + value);
+			}
+
+			case_values.push_back(*type);
+		}
+
+		// check case
+		for (auto& expr : expr->cases)
+		{
+			if (!this->check_expression_dispatch(expr.get()))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	template<>
+	bool TypeChecker::check_expression<ast::CaseExpr>(ast::CaseExpr* expr)
+	{
+		// check case body
+		if (!this->check_expression_dispatch(expr->case_body.get()))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
 	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
 	{
 		switch (expr->get_type())
@@ -786,6 +877,14 @@ namespace type_checker
 			case ast::AstExprType::CastExpr:
 			{
 				return check_expression(dynamic_cast<ast::CastExpr*>(expr));
+			}
+			case ast::AstExprType::SwitchExpr:
+			{
+				return check_expression(dynamic_cast<ast::SwitchExpr*>(expr));
+			}
+			case ast::AstExprType::CaseExpr:
+			{
+				return check_expression(dynamic_cast<ast::CaseExpr*>(expr));
 			}
 		}
 		assert(false && "Missing Type Specialisation");

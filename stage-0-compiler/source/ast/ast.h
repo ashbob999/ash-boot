@@ -31,6 +31,8 @@ namespace ast
 		BreakExpr,
 		UnaryExpr,
 		CastExpr,
+		SwitchExpr,
+		CaseExpr,
 	};
 
 	struct ExpressionLineInfo
@@ -66,6 +68,8 @@ namespace ast
 	class BreakExpr;
 	class UnaryExpr;
 	class CastExpr;
+	class SwitchExpr;
+	class CaseExpr;
 
 	class FunctionPrototype;
 	class FunctionDefinition;
@@ -82,6 +86,7 @@ namespace ast
 		//     ForExpr: location is 0 for start,  1 for end, 2 for step, and 3 for body
 		//     WhileExpr: location is 0 for end, and 1 for body
 		//     UnaryExpr: location is 0 for expresion
+		//     SwitchExpr: location is index of the case expression
 		int location = 0;
 	};
 
@@ -134,6 +139,7 @@ namespace ast
 		Function,
 		Conditional,
 		Loop,
+		Case,
 	};
 
 	// A collection of multiple BaseExpr
@@ -326,6 +332,33 @@ namespace ast
 		int target_type_id;
 		types::Type target_type;
 		ptr_type<BaseExpr> expr;
+	};
+
+	class SwitchExpr : public BaseExpr
+	{
+	public:
+		SwitchExpr(BodyExpr* body, ptr_type<BaseExpr> value_expr, std::vector<ptr_type<CaseExpr>>& cases);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		bool should_return_value = false; // should the switch return a value after being evaluated
+		ptr_type<BaseExpr> value_expr;
+		std::vector<ptr_type<CaseExpr>> cases;
+	};
+
+	class CaseExpr : public BaseExpr
+	{
+	public:
+		CaseExpr(BodyExpr* body, ptr_type<BaseExpr> case_expr, ptr_type<BaseExpr> case_body, bool default_case);
+		std::string to_string(int depth) override;
+		types::Type get_result_type() override;
+		bool check_types() override;
+
+		// bool should_return_value = false; // should the switch return a value after being evaluated
+		ptr_type<BaseExpr> case_expr;
+		ptr_type<BaseExpr> case_body;
+		bool default_case = false;
 	};
 
 	// The prototype for a function (i.e. the definition)

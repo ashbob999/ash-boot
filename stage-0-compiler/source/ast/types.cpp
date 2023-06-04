@@ -11,7 +11,7 @@ namespace types
 	Type::Type(TypeEnum type_enum) : type_enum(type_enum), data(0)
 	{}
 
-	bool Type::operator==(const Type& other)
+	bool Type::operator==(const Type& other) const
 	{
 		if (this->type_enum == other.type_enum && this->data == other.data)
 		{
@@ -20,7 +20,7 @@ namespace types
 		return false;
 	}
 
-	bool Type::operator!=(const Type& other)
+	bool Type::operator!=(const Type& other) const
 	{
 		return !(*this == other);
 	}
@@ -477,6 +477,15 @@ namespace types
 	void IntType::negate_value()
 	{
 		this->data = -data;
+	}
+
+	bool IntType::operator==(const IntType& other) const
+	{
+		if (this->type == other.type && this->data == other.data)
+		{
+			return true;
+		}
+		return false;
 	}
 
 	bool IntType::check_range(std::string& str)

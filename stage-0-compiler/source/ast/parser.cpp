@@ -223,6 +223,21 @@ namespace parser
 				curr_token = Token::UsingStatement;
 				return curr_token;
 			}
+			else if (this->identifier_string == "switch")
+			{
+				this->curr_token = Token::SwitchStatement;
+				return this->curr_token;
+			}
+			else if (this->identifier_string == "case")
+			{
+				this->curr_token = Token::CaseStatement;
+				return this->curr_token;
+			}
+			else if (this->identifier_string == "default")
+			{
+				this->curr_token = Token::DefaultStatement;
+				return this->curr_token;
+			}
 			else
 			{
 				// check if identifier is a bool
@@ -505,6 +520,24 @@ namespace parser
 
 					break;
 				}
+				case Token::SwitchStatement:
+				{
+					if (is_top_level)
+					{
+						return log_error_body("Switch statements are not allowed in top level code");
+					}
+
+					ptr_type<ast::BaseExpr> base = parse_switch_case();
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
+
+					body->add_base(std::move(base));
+
+					break;
+				}
 				case Token::ForStatement:
 				{
 					if (is_top_level)
@@ -696,7 +729,7 @@ namespace parser
 
 	/// expression
 	///   ::= primary binop_rhs
-	ptr_type<ast::BaseExpr> Parser::parse_expression(bool for_call, bool for_if_cond)
+	ptr_type<ast::BaseExpr> Parser::parse_expression(bool for_call, bool middle_expression)
 	{
 		ptr_type<ast::BaseExpr> lhs = parse_unary();
 		if (lhs == nullptr)
@@ -727,7 +760,7 @@ namespace parser
 			}
 		}
 
-		if (for_if_cond)
+		if (middle_expression)
 		{
 			return lhs;
 		}
@@ -1005,7 +1038,7 @@ namespace parser
 	{
 		get_next_token();
 
-		ptr_type<ast::BaseExpr> expr = parse_expression(false, false);
+		ptr_type<ast::BaseExpr> expr = parse_expression(false, true);
 
 		if (curr_token != Token::ParenEnd)
 		{
@@ -1402,6 +1435,95 @@ namespace parser
 		// next token will be eaten in parse_primary
 
 		return make_ptr<ast::CastExpr>(bodies.back(), type_id, std::move(expr));
+	}
+
+	/// switchexpr ::= 'switch' '{' ('case:' body)* ('default:' body)? '}'
+	ptr_type<ast::BaseExpr> Parser::parse_switch_case()
+	{
+		get_next_token();
+
+		ptr_type<ast::BaseExpr> value_expr = parse_expression(false, true);
+
+		if (value_expr == nullptr)
+		{
+			return log_error("Expected Switch value expression");
+		}
+
+		if (this->curr_token != Token::BodyStart)
+		{
+			return log_error("Expected switch body start");
+		}
+
+		get_next_token();
+
+		std::vector<ptr_type<ast::CaseExpr>> cases;
+
+		bool has_default_case = false;
+
+		while (this->curr_token != Token::BodyEnd)
+		{
+			if (this->curr_token != Token::CaseStatement && this->curr_token != Token::DefaultStatement)
+			{
+				return log_error("Expected case or default");
+			}
+
+			ptr_type<ast::BaseExpr> value_expr = nullptr;
+
+			bool is_default_case = this->curr_token == Token::DefaultStatement;
+
+			if (is_default_case)
+			{
+				if (has_default_case)
+				{
+					return log_error("Switch cannot have multiple default cases");
+				}
+
+				has_default_case = true;
+
+				// TODO: temp use empty Expression
+				value_expr = make_ptr<ast::CommentExpr>(bodies.back());
+
+				get_next_token();
+			}
+			else
+			{
+				get_next_token();
+
+				value_expr = parse_expression(false, true);
+
+				if (value_expr == nullptr)
+				{
+					return log_error("Expected case value expression");
+				}
+
+				// TODO: move into type_checker to allow for constant expressions
+				if (value_expr->get_type() != ast::AstExprType::LiteralExpr)
+				{
+					return log_error("Case values must be literal expressions");
+				}
+			}
+
+			ptr_type<ast::BaseExpr> body_expr = parse_body(ast::BodyType::Case, false, true);
+
+			if (body_expr == nullptr)
+			{
+				return log_error("Expected case body");
+			}
+
+			get_next_token(); // needed?
+
+			// TODO: check if bodies.back() is correct for this use case
+			cases.push_back(make_ptr<ast::CaseExpr>(bodies.back(), std::move(value_expr), std::move(body_expr), is_default_case));
+		}
+
+		if (this->curr_token != Token::BodyEnd)
+		{
+			return log_error("Expected switch body end");
+		}
+
+		get_next_token();
+
+		return make_ptr<ast::SwitchExpr>(bodies.back(), std::move(value_expr), cases);
 	}
 
 	/// moduleexpr ::= 'module' identifier

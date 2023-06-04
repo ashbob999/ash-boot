@@ -54,6 +54,16 @@ function int main() {
 	var i64 c2 = c1<i64>;
 	var f32 c3 = c1<i32><f32>;
 	
+	# switch
+	switch (i) {
+		case (0) {}
+		case (1) {}
+		case (2) {
+			break;
+		}
+		default {}
+	}
+	
 	# return value
 	0;
 }

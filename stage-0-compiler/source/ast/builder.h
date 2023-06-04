@@ -38,7 +38,7 @@ namespace builder
 		llvm::TargetMachine* target_machine = nullptr;
 
 	private:
-		std::vector<llvm::BasicBlock*> loop_continue_blocks;
-		std::vector<llvm::BasicBlock*> loop_break_blocks;
+		std::vector<llvm::BasicBlock*> continue_blocks;
+		std::vector<llvm::BasicBlock*> break_blocks;
 	};
 }
