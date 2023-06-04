@@ -1,4 +1,5 @@
 #include <iostream>
+#include <optional>
 
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/DiagnosticPrinter.h"
@@ -78,7 +79,7 @@ namespace builder
 		const char* features = "";
 
 		llvm::TargetOptions opt;
-		llvm::Optional<llvm::Reloc::Model> rec = llvm::Optional<llvm::Reloc::Model>();
+		std::optional<llvm::Reloc::Model> rec = std::optional<llvm::Reloc::Model>();
 
 		target_machine = target->createTargetMachine(target_triple, cpu, features, opt, rec);
 
@@ -612,14 +613,14 @@ namespace builder
 				// create fallthrough to lhs end block
 				llvm_ir_builder->CreateBr(lhs_end_block);
 
-				func->getBasicBlockList().push_back(lhs_end_block);
+				func->insert(func->end(), lhs_end_block);
 				// set insertion point to lhs end block
 				llvm_ir_builder->SetInsertPoint(lhs_end_block);
 
 				// create branch to rhs
 				llvm_ir_builder->CreateCondBr(lhs, rhs_block, end_block);
 
-				func->getBasicBlockList().push_back(rhs_block);
+				func->insert(func->end(), rhs_block);
 				// set insertion point to rhs block
 				llvm_ir_builder->SetInsertPoint(rhs_block);
 
@@ -635,14 +636,14 @@ namespace builder
 				// create fallthrough to rhs end block
 				llvm_ir_builder->CreateBr(rhs_end_block);
 
-				func->getBasicBlockList().push_back(rhs_end_block);
+				func->insert(func->end(), rhs_end_block);
 				// set insertion point to rhs end block
 				llvm_ir_builder->SetInsertPoint(rhs_end_block);
 
 				// create fallthrough to end block
 				llvm_ir_builder->CreateBr(end_block);
 
-				func->getBasicBlockList().push_back(end_block);
+				func->insert(func->end(), end_block);
 				// set insertion point to end block
 				llvm_ir_builder->SetInsertPoint(end_block);
 
@@ -689,14 +690,14 @@ namespace builder
 				// create fallthrough to lhs end block
 				llvm_ir_builder->CreateBr(lhs_end_block);
 
-				func->getBasicBlockList().push_back(lhs_end_block);
+				func->insert(func->end(), lhs_end_block);
 				// set insertion point to lhs end block
 				llvm_ir_builder->SetInsertPoint(lhs_end_block);
 
 				// create branch to rhs
 				llvm_ir_builder->CreateCondBr(lhs, end_block, rhs_block);
 
-				func->getBasicBlockList().push_back(rhs_block);
+				func->insert(func->end(), rhs_block);
 				// set insertion point to rhs block
 				llvm_ir_builder->SetInsertPoint(rhs_block);
 
@@ -712,14 +713,14 @@ namespace builder
 				// create fallthrough to rhs end block
 				llvm_ir_builder->CreateBr(rhs_end_block);
 
-				func->getBasicBlockList().push_back(rhs_end_block);
+				func->insert(func->end(), rhs_end_block);
 				// set insertion point to rhs end block
 				llvm_ir_builder->SetInsertPoint(rhs_end_block);
 
 				// create fallthrough to end block
 				llvm_ir_builder->CreateBr(end_block);
 
-				func->getBasicBlockList().push_back(end_block);
+				func->insert(func->end(), end_block);
 				// set insertion point to end block
 				llvm_ir_builder->SetInsertPoint(end_block);
 
@@ -898,7 +899,7 @@ namespace builder
 		if_block = llvm_ir_builder->GetInsertBlock();
 
 		// emit the else block
-		func->getBasicBlockList().push_back(else_block);
+		func->insert(func->end(), else_block);
 		llvm_ir_builder->SetInsertPoint(else_block);
 
 		llvm::Value* else_value = generate_code_dispatch(expr->else_body.get());
@@ -913,7 +914,7 @@ namespace builder
 		else_block = llvm_ir_builder->GetInsertBlock();
 
 		// emit merge block
-		func->getBasicBlockList().push_back(merge_block);
+		func->insert(func->end(), merge_block);
 		llvm_ir_builder->SetInsertPoint(merge_block);
 
 		if (expr->should_return_value)
@@ -1032,7 +1033,7 @@ namespace builder
 		llvm_ir_builder->CreateCondBr(end_condition, loop_body_block, end_block);
 
 		// insert the end loop block
-		func->getBasicBlockList().push_back(end_block);
+		func->insert(func->end(), end_block);
 
 		// any new code will be inserted in the end block
 		llvm_ir_builder->SetInsertPoint(end_block);
@@ -1098,7 +1099,7 @@ namespace builder
 		llvm_ir_builder->CreateCondBr(end_condition, loop_body_block, loop_end_block);
 
 		// insert the end loop block
-		func->getBasicBlockList().push_back(loop_end_block);
+		func->insert(func->end(), loop_end_block);
 
 		// set insert to loop end
 		llvm_ir_builder->SetInsertPoint(loop_end_block);

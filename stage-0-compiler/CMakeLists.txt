@@ -11,7 +11,12 @@ endif()
 
 if (MSVC) # windwos msvc
 	set(LLVM_DIR ./../llvm-project/build-msvc/lib/cmake/llvm)
-	add_compile_options(/MT)
+
+	if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+		add_compile_options(/MDd)
+	else()
+		add_compile_options(/MD)
+	endif()
 endif()
 
 find_package(LLVM REQUIRED CONFIG)

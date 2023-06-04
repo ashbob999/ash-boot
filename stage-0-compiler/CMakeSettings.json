@@ -13,7 +13,7 @@
 			"variables": [
 				{
 					"name": "CMAKE_CXX_FLAGS_DEBUG",
-					"value": "/Zi /Ob0 /Od /RTC1 /W4",
+					"value": "/Zi /Ob0 /Od /RTC1 /W4 /MDd",
 					"type": "STRING"
 				}
 			],
@@ -32,11 +32,55 @@
 			"variables": [
 				{
 					"name": "CMAKE_CXX_FLAGS_RELEASE",
-					"value": "/O2 /Ob2 /GL /Ob3 /W4",
+					"value": "/O2 /Ob2 /GL /Ob3 /W4 /MD",
 					"type": "STRING"
 				}
 			],
 			"intelliSenseMode": "windows-msvc-x64"
+		},
+		{
+			"name": "WSL-GCC-Debug",
+			"generator": "Unix Makefiles",
+			"configurationType": "Debug",
+			"buildRoot": "${projectDir}\\wsl\\build\\${name}",
+			"installRoot": "${projectDir}\\wsl\\install\\${name}",
+			"cmakeExecutable": "cmake",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "linux_x64" ],
+			"wslPath": "${defaultWSLPath}",
+			"addressSanitizerRuntimeFlags": "detect_leaks=0",
+			"variables": [
+				{
+					"name": "CMAKE_CXX_FLAGS_DEBUG",
+					"value": "-Wall -m64 -march=native -ggdb",
+					"type": "STRING"
+				}
+			],
+			"intelliSenseMode": "linux-gcc-x64"
+		},
+		{
+			"name": "WSL-GCC-Release",
+			"generator": "Unix Makefiles",
+			"configurationType": "Release",
+			"buildRoot": "${projectDir}\\wsl\\build\\${name}",
+			"installRoot": "${projectDir}\\wsl\\install\\${name}",
+			"cmakeExecutable": "cmake",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "linux_x64" ],
+			"wslPath": "${defaultWSLPath}",
+			"addressSanitizerRuntimeFlags": "detect_leaks=0",
+			"variables": [
+				{
+					"name": "CMAKE_CXX_FLAGS_RELEASE",
+					"value": "-O3 -Wall -m64 -march=native",
+					"type": "STRING"
+				}
+			],
+			"intelliSenseMode": "linux-gcc-x64"
 		}
 	]
 }

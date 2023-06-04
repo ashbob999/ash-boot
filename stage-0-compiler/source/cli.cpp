@@ -185,7 +185,7 @@ namespace cli
 			}
 
 			// parse the file
-			parser::Parser parser{ file_stream , file.string() };
+			parser::Parser parser{ file_stream, file.string() };
 			ptr_type<ast::BodyExpr> body_ast = std::move(parser.parse_file_as_body());
 			current_module = parser.get_module();
 
@@ -369,6 +369,7 @@ namespace cli
 		pass.run(*llvm_builder.llvm_module);
 
 		// close file stream
+		output_file_stream.flush();
 		output_file_stream.close();
 
 		std::cout << "Object Code Was Successfully Written To File" << std::endl;
