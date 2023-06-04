@@ -348,7 +348,7 @@ namespace cli
 		std::error_code error_code;
 
 		// create the raw fd stream
-		llvm::raw_fd_ostream output_file_stream(output_file.string(), error_code, llvm::sys::fs::CreationDisposition::CD_CreateAlways, llvm::sys::fs::FileAccess::FA_Write, llvm::sys::fs::OpenFlags::OF_TextWithCRLF);
+		llvm::raw_fd_ostream output_file_stream(output_file.string(), error_code, llvm::sys::fs::CreationDisposition::CD_CreateAlways, llvm::sys::fs::FileAccess::FA_Write, llvm::sys::fs::OpenFlags::OF_Text);
 
 		if (error_code)
 		{
