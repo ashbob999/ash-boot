@@ -1,6 +1,6 @@
-### Features
+# Features
 
-##### Current Features
+## Current Features
 - functions
 - simple types (int, float, bool, char)
 - binary operations (=, +, -, *, /, %)
@@ -25,7 +25,7 @@
 - casts (int, float, bool, char)
 - switch statement (case, default)
 
-##### Features Required for Bootstrapping
+## Features Required for Bootstrapping
 - [ ] Classes
 - [ ] Virtual Inheritance
 - [ ] Vectors
@@ -39,14 +39,14 @@
 - [ ] Compile Time Platform Checks
 - [ ] Program Arguments
 
-##### Future Features
+## Future Features
 - class & inheritance
 - custom types
 - const variables
 - auto type deduction
 - compile time code
 
-#### Compiler Features
+## Compiler Features
 - [ ] Optimisations
 - [ ] Debug Info
 - [ ] Generate Executable
