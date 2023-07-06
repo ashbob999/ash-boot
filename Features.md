@@ -51,6 +51,6 @@
 - [ ] Debug Info
 - [ ] Generate Executable
 - [ ] Incremental Building/Linking
-- [ ] Better Buld Information
+- [ ] Better Build Information
 	- [ ] Warnings (with levels)
 	- [ ] More Detailed Error Messages
