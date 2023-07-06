@@ -42,4 +42,15 @@
 ##### Future Features
 - class & inheritance
 - custom types
+- const variables
+- auto type deduction
+- compile time code
 
+#### Compiler Features
+- [ ] Optimisations
+- [ ] Debug Info
+- [ ] Generate Executable
+- [ ] Incremental Building/Linking
+- [ ] Better Buld Information
+	- [ ] Warnings (with levels)
+	- [ ] More Detailed Error Messages
