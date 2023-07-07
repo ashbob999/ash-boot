@@ -535,12 +535,15 @@ namespace ast
 		return true;
 	}
 
-	IfExpr::IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr> else_body)
-		: BaseExpr(AstExprType::IfExpr, body), condition(std::move(condition)), if_body(std::move(if_body)), else_body(std::move(else_body))
+	IfExpr::IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr> else_body, bool should_return_value)
+		: BaseExpr(AstExprType::IfExpr, body), condition(std::move(condition)), if_body(std::move(if_body)), else_body(std::move(else_body)), should_return_value(should_return_value)
 	{
 		this->condition->set_parent_data(this, 0);
 		this->if_body->set_parent_data(this, 1);
-		this->else_body->set_parent_data(this, 2);
+		if (this->else_body != nullptr)
+		{
+			this->else_body->set_parent_data(this, 2);
+		}
 	}
 
 	std::string IfExpr::to_string(int depth)
@@ -559,9 +562,12 @@ namespace ast
 		str << this->if_body->to_string(depth + 2);
 		str << tabs << '\t' << "}," << '\n';
 
-		str << tabs << '\t' << "Else Body: {" << '\n';
-		str << this->else_body->to_string(depth + 2);
-		str << tabs << '\t' << "}" << '\n';
+		if (this->else_body != nullptr)
+		{
+			str << tabs << '\t' << "Else Body: {" << '\n';
+			str << this->else_body->to_string(depth + 2);
+			str << tabs << '\t' << "}" << '\n';
+		}
 
 		str << tabs << "}, " << '\n';
 

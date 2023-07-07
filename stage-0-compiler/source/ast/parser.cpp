@@ -796,7 +796,18 @@ namespace parser
 			}
 			case Token::IfStatement:
 			{
-				return parse_if_else();
+				ptr_type<ast::BaseExpr> expr = parse_if_else();
+
+				if (expr != nullptr)
+				{
+					ast::IfExpr* if_expr = dynamic_cast<ast::IfExpr*>(expr.get());
+					if (if_expr != nullptr && if_expr->should_return_value == false)
+					{
+						return log_error("If expression must have an else statement");
+					}
+				}
+
+				return expr;
 			}
 			default:
 			{
@@ -1223,7 +1234,7 @@ namespace parser
 
 		if (curr_token != Token::ElseStatement)
 		{
-			return log_error("Expected else");
+			return make_ptr<ast::IfExpr>(bodies.back(), std::move(cond), std::move(if_body), nullptr, false);
 		}
 
 		get_next_token();
@@ -1237,7 +1248,7 @@ namespace parser
 
 		get_next_token();
 
-		return make_ptr<ast::IfExpr>(bodies.back(), std::move(cond), std::move(if_body), std::move(else_body));
+		return make_ptr<ast::IfExpr>(bodies.back(), std::move(cond), std::move(if_body), std::move(else_body), true);
 	}
 
 	/// forexpr ::= 'for' 'type' identifier '=' expr ';' expr (';' expr)? '{' expression* '}'

@@ -232,7 +232,7 @@ namespace ast
 	class IfExpr : public BaseExpr
 	{
 	public:
-		IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr>else_body);
+		IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr>else_body, bool should_return_value);
 		std::string to_string(int depth) override;
 		types::Type get_result_type() override;
 		bool check_types() override;

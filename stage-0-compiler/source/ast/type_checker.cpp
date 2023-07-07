@@ -489,7 +489,7 @@ namespace type_checker
 		}
 
 		// check else body
-		if (!check_expression_dispatch(expr->else_body.get()))
+		if (expr->else_body != nullptr && !check_expression_dispatch(expr->else_body.get()))
 		{
 			return false;
 		}

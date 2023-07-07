@@ -862,6 +862,9 @@ namespace builder
 	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::IfExpr>(ast::IfExpr* expr)
 	{
+		const bool has_else_body = expr->else_body != nullptr;
+		// TODO: neaten up code for handling if with/without else body
+
 		llvm::Value* cond_value = generate_code_dispatch(expr->condition.get());
 
 		if (cond_value == nullptr)
@@ -878,10 +881,23 @@ namespace builder
 
 		// create a block for the if and else cases
 		llvm::BasicBlock* if_block = llvm::BasicBlock::Create(*llvm_context, "if.body", func);
-		llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*llvm_context, "else.body");
+
+		llvm::BasicBlock* else_block = nullptr;
+		if (has_else_body)
+		{
+			else_block = llvm::BasicBlock::Create(*llvm_context, "else.body");
+		}
+
 		llvm::BasicBlock* merge_block = llvm::BasicBlock::Create(*llvm_context, "if.end");
 
-		llvm_ir_builder->CreateCondBr(cond_value, if_block, else_block);
+		if (has_else_body)
+		{
+			llvm_ir_builder->CreateCondBr(cond_value, if_block, else_block);
+		}
+		else
+		{
+			llvm_ir_builder->CreateCondBr(cond_value, if_block, merge_block);
+		}
 
 		// emit the if body value
 		llvm_ir_builder->SetInsertPoint(if_block);
@@ -899,19 +915,23 @@ namespace builder
 		if_block = llvm_ir_builder->GetInsertBlock();
 
 		// emit the else block
-		func->insert(func->end(), else_block);
-		llvm_ir_builder->SetInsertPoint(else_block);
-
-		llvm::Value* else_value = generate_code_dispatch(expr->else_body.get());
-
-		if (else_value == nullptr)
+		llvm::Value* else_value = nullptr;
+		if (has_else_body)
 		{
-			null_end;
-			return nullptr;
-		}
+			func->insert(func->end(), else_block);
+			llvm_ir_builder->SetInsertPoint(else_block);
 
-		llvm_ir_builder->CreateBr(merge_block);
-		else_block = llvm_ir_builder->GetInsertBlock();
+			else_value = generate_code_dispatch(expr->else_body.get());
+
+			if (else_value == nullptr)
+			{
+				null_end;
+				return nullptr;
+			}
+
+			llvm_ir_builder->CreateBr(merge_block);
+			else_block = llvm_ir_builder->GetInsertBlock();
+		}
 
 		// emit merge block
 		func->insert(func->end(), merge_block);
