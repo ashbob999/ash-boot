@@ -865,6 +865,7 @@ namespace builder
 		const bool has_else_body = expr->else_body != nullptr;
 		// TODO: neaten up code for handling if with/without else body
 
+		// the condition to branch on, should always be a bool
 		llvm::Value* cond_value = generate_code_dispatch(expr->condition.get());
 
 		if (cond_value == nullptr)
@@ -872,10 +873,6 @@ namespace builder
 			null_end;
 			return nullptr;
 		}
-
-		// convert condition to a bool, by comparing it to zero
-		// TODO: fix
-		cond_value = llvm_ir_builder->CreateICmpEQ(cond_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(types::TypeEnum::Bool)), 1, false), "ifcond");
 
 		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
