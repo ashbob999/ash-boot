@@ -12,7 +12,7 @@
 - basic scope
 - extern functions
 - nested functions (temp disabled)
-- if/else statements
+- if, else if, else statements
 - for loops
 - while loops
 - loop control (continue, break)

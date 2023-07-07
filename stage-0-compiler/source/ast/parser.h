@@ -82,7 +82,7 @@ namespace parser
 		ast::FunctionPrototype* parse_function_prototype();
 		ast::FunctionPrototype* parse_extern();
 		ptr_type<ast::FunctionDefinition> parse_function_definition();
-		ptr_type<ast::BaseExpr> parse_if_else();
+		ptr_type<ast::BaseExpr> parse_if_else(bool should_return_value);
 		ptr_type<ast::BaseExpr> parse_for_loop();
 		ptr_type<ast::BaseExpr> parse_while_loop();
 		ptr_type<ast::BaseExpr> parse_comment();

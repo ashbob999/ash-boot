@@ -506,7 +506,7 @@ namespace parser
 						return log_error_body("If statements are not allowed in top level code");
 					}
 
-					ptr_type<ast::BaseExpr> base = parse_if_else();
+					ptr_type<ast::BaseExpr> base = parse_if_else(false);
 
 					if (base == nullptr)
 					{
@@ -796,7 +796,7 @@ namespace parser
 			}
 			case Token::IfStatement:
 			{
-				ptr_type<ast::BaseExpr> expr = parse_if_else();
+				ptr_type<ast::BaseExpr> expr = parse_if_else(true);
 
 				if (expr != nullptr)
 				{
@@ -1212,13 +1212,14 @@ namespace parser
 		return make_ptr<ast::FunctionDefinition>(proto, std::move(body));
 	}
 
-	ptr_type<ast::BaseExpr> Parser::parse_if_else()
+	// ifexpr ::= 'if' '(' condition ')' '{' expression* '}' ('else' 'if' '(' condition ')' '{' expression* '}')* (else '{' expression* '}')?
+	ptr_type<ast::BaseExpr> Parser::parse_if_else(bool should_return_value)
 	{
 		get_next_token();
 
-		ptr_type<ast::BaseExpr> cond = parse_expression(false, true);
+		ptr_type<ast::BaseExpr> if_cond = parse_expression(false, true);
 
-		if (cond == nullptr)
+		if (if_cond == nullptr)
 		{
 			return log_error("Expected if condition");
 		}
@@ -1232,23 +1233,76 @@ namespace parser
 
 		get_next_token();
 
-		if (curr_token != Token::ElseStatement)
+		std::vector<ptr_type<ast::BaseExpr>> if_conditions;
+		std::vector<ptr_type<ast::BaseExpr>> if_bodies;
+
+		if_conditions.push_back(std::move(if_cond));
+		if_bodies.push_back(std::move(if_body));
+
+		ptr_type<ast::BaseExpr> else_body = nullptr;
+
+		while (this->curr_token == Token::ElseStatement)
 		{
-			return make_ptr<ast::IfExpr>(bodies.back(), std::move(cond), std::move(if_body), nullptr, false);
+			get_next_token();
+
+			if (this->curr_token != Token::IfStatement)
+			{
+				if (this->curr_token == Token::BodyStart)
+				{
+					else_body = parse_body(ast::BodyType::Conditional, false, true);
+				}
+
+				if (else_body == nullptr)
+				{
+					return log_error("Expected else body");
+				}
+
+				get_next_token();
+
+				break;
+			}
+
+			get_next_token();
+
+			ptr_type<ast::BaseExpr> else_if_cond = parse_expression(false, true);
+
+			if (else_if_cond == nullptr)
+			{
+				return log_error("Expected if condition");
+			}
+
+			ptr_type<ast::BodyExpr> else_if_body = parse_body(ast::BodyType::Conditional, false, true);
+
+			if (else_if_body == nullptr)
+			{
+				return log_error("Expected if body");
+			}
+
+			get_next_token();
+
+			if_conditions.push_back(std::move(else_if_cond));
+			if_bodies.push_back(std::move(else_if_body));
 		}
-
-		get_next_token();
-
-		ptr_type<ast::BodyExpr> else_body = parse_body(ast::BodyType::Conditional, false, true);
 
 		if (else_body == nullptr)
 		{
-			return log_error("Expected else body");
+			should_return_value = false;
 		}
 
-		get_next_token();
+		ptr_type<ast::BaseExpr> previous_if_expr = nullptr;
+		for (int i = if_conditions.size() - 1; i >= 0; i--)
+		{
+			if (previous_if_expr != nullptr)
+			{
+				previous_if_expr = make_ptr<ast::IfExpr>(bodies.back(), std::move(if_conditions[i]), std::move(if_bodies[i]), std::move(previous_if_expr), should_return_value);
+			}
+			else
+			{
+				previous_if_expr = make_ptr<ast::IfExpr>(bodies.back(), std::move(if_conditions[i]), std::move(if_bodies[i]), std::move(else_body), should_return_value);
+			}
+		}
 
-		return make_ptr<ast::IfExpr>(bodies.back(), std::move(cond), std::move(if_body), std::move(else_body), true);
+		return previous_if_expr;
 	}
 
 	/// forexpr ::= 'for' 'type' identifier '=' expr ';' expr (';' expr)? '{' expression* '}'

@@ -29,6 +29,18 @@ function int main() {
 	} else {
 		r = r / 2;
 	}
+	
+	# else statement is optional
+	if (r > 0) {
+		r = 10;
+	}
+	
+	# else if statement
+	if (r == 0) {
+		r = r + 1;
+	} else if (r == 1) {
+		r = r + 2;
+	}
 
 	# inline if
 	var int bv = if b {1;} else {2;};
