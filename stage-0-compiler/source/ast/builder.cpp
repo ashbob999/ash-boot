@@ -429,7 +429,14 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
-						return llvm_ir_builder->CreateSDiv(lhs, rhs, "sdiv");
+						if (expr->lhs->get_result_type().is_signed())
+						{
+							return llvm_ir_builder->CreateSDiv(lhs, rhs, "sdiv");
+						}
+						else
+						{
+							return llvm_ir_builder->CreateUDiv(lhs, rhs, "udiv");
+						}
 					}
 					case types::TypeEnum::Float:
 					{
@@ -448,7 +455,14 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
-						return llvm_ir_builder->CreateSRem(lhs, rhs, "srem");
+						if (expr->lhs->get_result_type().is_signed())
+						{
+							return llvm_ir_builder->CreateSRem(lhs, rhs, "srem");
+						}
+						else
+						{
+							return llvm_ir_builder->CreateURem(lhs, rhs, "urem");
+						}
 					}
 					case types::TypeEnum::Float:
 					{
@@ -467,7 +481,14 @@ namespace builder
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
 					{
-						return llvm_ir_builder->CreateICmpSLT(lhs, rhs, "lt");
+						if (expr->lhs->get_result_type().is_signed())
+						{
+							return llvm_ir_builder->CreateICmpSLT(lhs, rhs, "slt");
+						}
+						else
+						{
+							return llvm_ir_builder->CreateICmpULT(lhs, rhs, "ult");
+						}
 					}
 					case types::TypeEnum::Float:
 					{
@@ -486,7 +507,14 @@ namespace builder
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
 					{
-						return llvm_ir_builder->CreateICmpSLE(lhs, rhs, "lte");
+						if (expr->lhs->get_result_type().is_signed())
+						{
+							return llvm_ir_builder->CreateICmpSLE(lhs, rhs, "slte");
+						}
+						else
+						{
+							return llvm_ir_builder->CreateICmpULE(lhs, rhs, "ulte");
+						}
 					}
 					case types::TypeEnum::Float:
 					{
@@ -505,7 +533,14 @@ namespace builder
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
 					{
-						return llvm_ir_builder->CreateICmpSGT(lhs, rhs, "gt");
+						if (expr->lhs->get_result_type().is_signed())
+						{
+							return llvm_ir_builder->CreateICmpSGT(lhs, rhs, "sgt");
+						}
+						else
+						{
+							return llvm_ir_builder->CreateICmpUGT(lhs, rhs, "ugt");
+						}
 					}
 					case types::TypeEnum::Float:
 					{
@@ -524,7 +559,14 @@ namespace builder
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
 					{
-						return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "gte");
+						if (expr->lhs->get_result_type().is_signed())
+						{
+							return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "sgte");
+						}
+						else
+						{
+							return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "ugte");
+						}
 					}
 					case types::TypeEnum::Float:
 					{
@@ -792,7 +834,14 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
-						return llvm_ir_builder->CreateAShr(lhs, rhs, "shift_right");
+						if (expr->lhs->get_result_type().is_signed())
+						{
+							return llvm_ir_builder->CreateAShr(lhs, rhs, "s_shift_right");
+						}
+						else
+						{
+							return llvm_ir_builder->CreateLShr(lhs, rhs, "u_shift_right");
+						}
 					}
 					default:
 					{
