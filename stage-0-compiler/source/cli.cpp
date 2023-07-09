@@ -9,6 +9,7 @@
 #include "config.h"
 #include "ast/parser.h"
 #include "ast/type_checker.h"
+#include "ast/constant_checker.h"
 
 namespace cli
 {
@@ -140,6 +141,11 @@ namespace cli
 			return false;
 		}
 
+		if (!this->extra_checks())
+		{
+			return false;
+		}
+
 		if (!build_ast())
 		{
 			return false;
@@ -261,6 +267,21 @@ namespace cli
 		}
 
 		std::cout << "File Passed Type Checks" << std::endl;
+
+		return true;
+	}
+
+	bool CLI::extra_checks()
+	{
+		for (auto& f : build_files_order)
+		{
+			ast::BaseExpr* body_ast = module::ModuleManager::get_ast(f);
+
+			// do constant checking
+			constant_checker::check_expression_dispatch(body_ast);
+		}
+
+		std::cout << "File Passed Extra Checks" << std::endl;
 
 		return true;
 	}

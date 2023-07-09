@@ -26,6 +26,7 @@ namespace cli
 		bool parse_file();
 		bool check_modules();
 		bool check_ast();
+		bool extra_checks();
 		bool build_ast();
 		bool output_llvm_ir();
 		bool output_object_file();

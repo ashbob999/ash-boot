@@ -391,7 +391,7 @@ namespace builder
 		llvm::Value* rhs = nullptr;
 
 		// don't pre generate the code for the lhs & rhs if the binop is a boolean operator, or a module scope binop
-		if (!operators::is_boolean_operator(expr->binop) && expr->binop != operators::BinaryOp::ModuleScope)
+		if ((!operators::is_boolean_operator(expr->binop) && expr->binop != operators::BinaryOp::ModuleScope) || expr->is_constant())
 		{
 			lhs = generate_code_dispatch(expr->lhs.get());
 			rhs = generate_code_dispatch(expr->rhs.get());
@@ -400,6 +400,26 @@ namespace builder
 			{
 				null_end;
 				return nullptr;
+			}
+		}
+
+		llvm::Constant* lhs_constant = nullptr;
+		llvm::Constant* rhs_constant = nullptr;
+
+		// constant check
+		if (expr->is_constant())
+		{
+			if (!llvm::isa<llvm::Constant>(lhs) || !llvm::isa<llvm::Constant>(rhs))
+			{
+				return log_error_value("BinaryExpr (Constant): lhs or rhs is not constant");
+			}
+
+			lhs_constant = llvm::dyn_cast<llvm::Constant>(lhs);
+			rhs_constant = llvm::dyn_cast<llvm::Constant>(rhs);
+
+			if (lhs_constant == nullptr || rhs_constant == nullptr)
+			{
+				return log_error_value("BinaryExpr (Constant): lhs or rhs could not be cast to a constant");
 			}
 		}
 
@@ -412,15 +432,81 @@ namespace builder
 			}
 			case operators::BinaryOp::Addition:
 			{
-				return llvm_ir_builder->CreateAdd(lhs, rhs, "add");
+				switch (expr->get_result_type().type_enum)
+				{
+					case types::TypeEnum::Int:
+					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getAdd(lhs_constant, rhs_constant);
+						}
+						return llvm_ir_builder->CreateAdd(lhs, rhs, "add");
+					}
+					case types::TypeEnum::Float:
+					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::get(llvm::BinaryOperator::FAdd, lhs_constant, rhs_constant);
+						}
+						return llvm_ir_builder->CreateFAdd(lhs, rhs, "add");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
 			}
 			case operators::BinaryOp::Subtraction:
 			{
-				return llvm_ir_builder->CreateSub(lhs, rhs, "sub");
+				switch (expr->get_result_type().type_enum)
+				{
+					case types::TypeEnum::Int:
+					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getSub(lhs_constant, rhs_constant);
+						}
+						return llvm_ir_builder->CreateSub(lhs, rhs, "sub");
+					}
+					case types::TypeEnum::Float:
+					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::get(llvm::BinaryOperator::FSub, lhs_constant, rhs_constant);
+						}
+						return llvm_ir_builder->CreateFSub(lhs, rhs, "sub");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
 			}
 			case operators::BinaryOp::Multiplication:
 			{
-				return llvm_ir_builder->CreateMul(lhs, rhs, "mul");
+				switch (expr->get_result_type().type_enum)
+				{
+					case types::TypeEnum::Int:
+					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getMul(lhs_constant, rhs_constant);
+						}
+						return llvm_ir_builder->CreateMul(lhs, rhs, "mul");
+					}
+					case types::TypeEnum::Float:
+					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::get(llvm::BinaryOperator::FMul, lhs_constant, rhs_constant);
+						}
+						return llvm_ir_builder->CreateFMul(lhs, rhs, "mul");
+					}
+					default:
+					{
+						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+					}
+				}
 			}
 			case operators::BinaryOp::Division:
 			{
@@ -431,15 +517,27 @@ namespace builder
 					{
 						if (expr->lhs->get_result_type().is_signed())
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::get(llvm::BinaryOperator::SDiv, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateSDiv(lhs, rhs, "sdiv");
 						}
 						else
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::get(llvm::BinaryOperator::UDiv, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateUDiv(lhs, rhs, "udiv");
 						}
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::get(llvm::BinaryOperator::FDiv, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFDiv(lhs, rhs, "fdiv");
 					}
 					default:
@@ -457,15 +555,27 @@ namespace builder
 					{
 						if (expr->lhs->get_result_type().is_signed())
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::get(llvm::BinaryOperator::SRem, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateSRem(lhs, rhs, "srem");
 						}
 						else
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::get(llvm::BinaryOperator::URem, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateURem(lhs, rhs, "urem");
 						}
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::get(llvm::BinaryOperator::FRem, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFRem(lhs, rhs, "frem");
 					}
 					default:
@@ -483,15 +593,27 @@ namespace builder
 					{
 						if (expr->lhs->get_result_type().is_signed())
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_SLT, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpSLT(lhs, rhs, "slt");
 						}
 						else
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_ULT, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpULT(lhs, rhs, "ult");
 						}
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getFCmp(llvm::CmpInst::FCMP_OLT, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFCmpOLT(lhs, rhs, "lt");
 					}
 					default:
@@ -509,15 +631,27 @@ namespace builder
 					{
 						if (expr->lhs->get_result_type().is_signed())
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_SLE, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpSLE(lhs, rhs, "slte");
 						}
 						else
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_ULE, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpULE(lhs, rhs, "ulte");
 						}
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getFCmp(llvm::CmpInst::FCMP_OLE, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFCmpOLE(lhs, rhs, "lte");
 					}
 					default:
@@ -535,15 +669,27 @@ namespace builder
 					{
 						if (expr->lhs->get_result_type().is_signed())
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_SGT, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpSGT(lhs, rhs, "sgt");
 						}
 						else
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_UGT, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpUGT(lhs, rhs, "ugt");
 						}
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getFCmp(llvm::CmpInst::FCMP_OGT, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFCmpOGT(lhs, rhs, "gt");
 					}
 					default:
@@ -561,15 +707,27 @@ namespace builder
 					{
 						if (expr->lhs->get_result_type().is_signed())
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_SGE, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "sgte");
 						}
 						else
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_UGE, lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateICmpSGE(lhs, rhs, "ugte");
 						}
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getFCmp(llvm::CmpInst::FCMP_OGE, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFCmpOGE(lhs, rhs, "gte");
 					}
 					default:
@@ -586,10 +744,18 @@ namespace builder
 					case types::TypeEnum::Bool:
 					case types::TypeEnum::Char:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_EQ, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateICmpEQ(lhs, rhs, "eq");
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getFCmp(llvm::CmpInst::FCMP_OEQ, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFCmpOEQ(lhs, rhs, "eq");
 					}
 					default:
@@ -606,10 +772,18 @@ namespace builder
 					case types::TypeEnum::Bool:
 					case types::TypeEnum::Char:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_NE, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateICmpNE(lhs, rhs, "ne");
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getFCmp(llvm::CmpInst::FCMP_ONE, lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateFCmpONE(lhs, rhs, "ne");
 					}
 					default:
@@ -620,6 +794,13 @@ namespace builder
 			}
 			case operators::BinaryOp::BooleanAnd:
 			{
+				if (expr->is_constant())
+				{
+					// using bitwise 'and' only works is bool size == 1bit
+					// using bool true == 1
+					return llvm::ConstantExpr::getAnd(lhs_constant, rhs_constant);
+				}
+
 				llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
 				// create the lhs entry block
@@ -697,6 +878,13 @@ namespace builder
 			}
 			case operators::BinaryOp::BooleanOr:
 			{
+				if (expr->is_constant())
+				{
+					// using bitwise 'or' only works is bool size == 1bit
+					// using bool true == 1
+					return llvm::ConstantExpr::getOr(lhs_constant, rhs_constant);
+				}
+
 				llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
 				// create the lhs entry block
@@ -778,6 +966,10 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getAnd(lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateAnd(lhs, rhs, "bitwise_and");
 					}
 					default:
@@ -792,6 +984,10 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getOr(lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateOr(lhs, rhs, "bitwise_or");
 					}
 					default:
@@ -806,6 +1002,10 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getXor(lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateXor(lhs, rhs, "bitwise_xor");
 					}
 					default:
@@ -820,6 +1020,10 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getShl(lhs_constant, rhs_constant);
+						}
 						return llvm_ir_builder->CreateShl(lhs, rhs, "shift_left");
 					}
 					default:
@@ -836,10 +1040,18 @@ namespace builder
 					{
 						if (expr->lhs->get_result_type().is_signed())
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getAShr(lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateAShr(lhs, rhs, "s_shift_right");
 						}
 						else
 						{
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getLShr(lhs_constant, rhs_constant);
+							}
 							return llvm_ir_builder->CreateLShr(lhs, rhs, "u_shift_right");
 						}
 					}
@@ -1223,6 +1435,24 @@ namespace builder
 	{
 		llvm::Value* expr_value = generate_code_dispatch(expr->expr.get());
 
+		llvm::Constant* constant_value = nullptr;
+
+		// constant check
+		if (expr->is_constant())
+		{
+			if (!llvm::isa<llvm::Constant>(expr_value))
+			{
+				return log_error_value("UnaryExpr (Constant): expr is not constant");
+			}
+
+			constant_value = llvm::dyn_cast<llvm::Constant>(expr_value);
+
+			if (constant_value == nullptr)
+			{
+				return log_error_value("UnaryExpr (Constant): expr could not be cast to a constant");
+			}
+		}
+
 		switch (expr->unop)
 		{
 			case operators::UnaryOp::Plus:
@@ -1235,10 +1465,18 @@ namespace builder
 				{
 					case types::TypeEnum::Int:
 					{
-						return llvm_ir_builder->CreateSub(types::get_default_value(*llvm_context, types::get_default_type(types::TypeEnum::Int)), expr_value, "neg");
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getNeg(constant_value);
+						}
+						return llvm_ir_builder->CreateNeg(expr_value, "neg");
 					}
 					case types::TypeEnum::Float:
 					{
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getSub(llvm::ConstantFP::get(constant_value->getType(), 0), constant_value);
+						}
 						return llvm_ir_builder->CreateFNeg(expr_value, "fneg");
 					}
 					default:
@@ -1249,10 +1487,19 @@ namespace builder
 			}
 			case operators::UnaryOp::BooleanNot:
 			{
+				// using bitwise 'not' only works while bool size == 1bit
+				if (expr->is_constant())
+				{
+					return llvm::ConstantExpr::getNot(constant_value);
+				}
 				return llvm_ir_builder->CreateNot(expr_value, "boolean_not");
 			}
 			case operators::UnaryOp::BitwiseNot:
 			{
+				if (expr->is_constant())
+				{
+					return llvm::ConstantExpr::getNot(constant_value);
+				}
 				return llvm_ir_builder->CreateNot(expr_value, "bitwise_not");
 			}
 			default:
@@ -1273,6 +1520,26 @@ namespace builder
 		if (from_type == target_type)
 		{
 			return expr_value;
+		}
+
+		llvm::Type* llvm_target_type = types::get_llvm_type(*llvm_context, target_type);
+
+		llvm::Constant* constant_value = nullptr;
+
+		// constant check
+		if (expr->is_constant())
+		{
+			if (!llvm::isa<llvm::Constant>(expr_value))
+			{
+				return log_error_value("CastExpr (Constant): expr is not constant");
+			}
+
+			constant_value = llvm::dyn_cast<llvm::Constant>(expr_value);
+
+			if (constant_value == nullptr)
+			{
+				return log_error_value("CastExpr (Constant): expr could not be cast to a constant");
+			}
 		}
 
 		switch (from_type.type_enum)
@@ -1302,34 +1569,59 @@ namespace builder
 						{
 							if (from_type.get_size() > target_type.get_size()) // truncate
 							{
-								return llvm_ir_builder->CreateTrunc(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_int_trunc");
+								if (expr->is_constant())
+								{
+									return llvm::ConstantExpr::getTrunc(constant_value, llvm_target_type);
+								}
+								return llvm_ir_builder->CreateTrunc(expr_value, llvm_target_type, "cast_int_trunc");
 							}
 							else // extend
 							{
 								if (from_type.is_signed()) // signed
 								{
-									return llvm_ir_builder->CreateSExt(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_si_ext");
+									if (expr->is_constant())
+									{
+										return llvm::ConstantExpr::getSExt(constant_value, llvm_target_type);
+									}
+									return llvm_ir_builder->CreateSExt(expr_value, llvm_target_type, "cast_si_ext");
 								}
 								else // unsigned
 								{
-									return llvm_ir_builder->CreateZExt(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_ui_ext");
+									if (expr->is_constant())
+									{
+										return llvm::ConstantExpr::getZExt(constant_value, llvm_target_type);
+									}
+									return llvm_ir_builder->CreateZExt(expr_value, llvm_target_type, "cast_ui_ext");
 								}
 							}
 						}
 					}
 					case types::TypeEnum::Bool:
 					{
-						return llvm_ir_builder->CreateICmpNE(expr_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(from_type.type_enum)), 0, false), "convert_to_bool");
+						if (expr->is_constant())
+						{
+							return llvm::ConstantExpr::getTrunc(constant_value, llvm_target_type);
+							return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_NE, constant_value, llvm::ConstantInt::get(constant_value->getType(), 0, from_type.is_signed()));
+						}
+						return llvm_ir_builder->CreateICmpNE(expr_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(from_type.type_enum)), 0, from_type.is_signed()), "convert_to_bool");
 					}
 					case types::TypeEnum::Float:
 					{
 						if (from_type.is_signed()) // signed
 						{
-							return llvm_ir_builder->CreateSIToFP(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_si_fp");
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getSIToFP(constant_value, llvm_target_type);
+							}
+							return llvm_ir_builder->CreateSIToFP(expr_value, llvm_target_type, "cast_si_fp");
 						}
 						else // unsigned
 						{
-							return llvm_ir_builder->CreateUIToFP(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_ui_fp");
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getUIToFP(constant_value, llvm_target_type);
+							}
+							return llvm_ir_builder->CreateUIToFP(expr_value, llvm_target_type, "cast_ui_fp");
 						}
 					}
 					default:
@@ -1348,22 +1640,38 @@ namespace builder
 						// TODO: deal with numbers out of int range (use saturation intrinsics)
 						if (target_type.is_signed()) // signed
 						{
-							return llvm_ir_builder->CreateFPToSI(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_si");
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getFPToSI(constant_value, llvm_target_type);
+							}
+							return llvm_ir_builder->CreateFPToSI(expr_value, llvm_target_type, "cast_fp_si");
 						}
 						else // unsigned
 						{
-							return llvm_ir_builder->CreateFPToUI(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_ui");
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getFPToUI(constant_value, llvm_target_type);
+							}
+							return llvm_ir_builder->CreateFPToUI(expr_value, llvm_target_type, "cast_fp_ui");
 						}
 					}
 					case types::TypeEnum::Float:
 					{
 						if (from_type.get_size() > target_type.get_size()) // truncate
 						{
-							return llvm_ir_builder->CreateFPTrunc(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_trunc");
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getFPTrunc(constant_value, llvm_target_type);
+							}
+							return llvm_ir_builder->CreateFPTrunc(expr_value, llvm_target_type, "cast_fp_trunc");
 						}
 						else // extend
 						{
-							return llvm_ir_builder->CreateFPExt(expr_value, types::get_llvm_type(*llvm_context, target_type), "cast_fp_ext");
+							if (expr->is_constant())
+							{
+								return llvm::ConstantExpr::getFPExtend(constant_value, llvm_target_type);
+							}
+							return llvm_ir_builder->CreateFPExt(expr_value, llvm_target_type, "cast_fp_ext");
 						}
 					}
 					default:

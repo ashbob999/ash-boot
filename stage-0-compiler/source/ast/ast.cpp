@@ -185,6 +185,11 @@ namespace ast
 		return this->parent;
 	}
 
+	bool BaseExpr::is_constant() const
+	{
+		return this->constant_status == ConstantStatus::Constant;
+	}
+
 	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string& str)
 		: BaseExpr(AstExprType::LiteralExpr, body), curr_type(curr_type)
 	{

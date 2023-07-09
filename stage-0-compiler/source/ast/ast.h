@@ -50,6 +50,13 @@ namespace ast
 		Function,
 	};
 
+	enum class ConstantStatus
+	{
+		Unknown,
+		Constant,
+		Variable,
+	};
+
 	// TODO: delete all copy/move construcotrs or use smart pointers
 
 	class BaseExpr;
@@ -93,14 +100,6 @@ namespace ast
 	// The expr ast class
 	class BaseExpr
 	{
-	protected:
-		AstExprType ast_type = AstExprType::BaseExpr;
-		BodyExpr* body;
-		types::Type result_type = types::TypeEnum::None;
-		ExpressionLineInfo line_info;
-		bool is_name_mangled = false;
-		parent_data parent;
-
 	public:
 		BaseExpr(AstExprType ast_type, BodyExpr* body);
 		virtual ~BaseExpr() = default;
@@ -108,6 +107,7 @@ namespace ast
 		virtual types::Type get_result_type() = 0;
 		virtual bool check_types() = 0;
 
+		// TODO: maybe remove virtual on final methods
 		virtual AstExprType get_type() final;
 		virtual BodyExpr* get_body() final;
 		virtual void set_body(BodyExpr* body) final;
@@ -117,6 +117,17 @@ namespace ast
 		virtual bool is_mangled() final;
 		virtual void set_parent_data(BaseExpr* parent, int location) final;
 		virtual parent_data get_parent_data() final;
+		virtual bool is_constant()const final;
+
+		ConstantStatus constant_status = ConstantStatus::Unknown;
+
+	protected:
+		AstExprType ast_type = AstExprType::BaseExpr;
+		BodyExpr* body;
+		types::Type result_type = types::TypeEnum::None;
+		ExpressionLineInfo line_info;
+		bool is_name_mangled = false;
+		parent_data parent;
 	};
 
 	// Any literal value
