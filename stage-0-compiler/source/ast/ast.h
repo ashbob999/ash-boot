@@ -50,12 +50,28 @@ namespace ast
 		Function,
 	};
 
-	enum class ConstantStatus
+	// Values must be defind with most constant at 0 & least constant at INT_MAX
+	enum class ConstantStatus : int
 	{
 		Unknown,
 		Constant,
+		CanBeConstant,
 		Variable,
 	};
+
+	inline constexpr ConstantStatus operator|(const ConstantStatus& left, const ConstantStatus& right)
+	{
+		int left_int = static_cast<int>(left);
+		int right_int = static_cast<int>(right);
+
+		return static_cast<ConstantStatus>(std::max(left_int, right_int));
+	}
+
+	inline constexpr ConstantStatus& operator|=(ConstantStatus& left, const ConstantStatus& right)
+	{
+		left = left | right;
+		return left;
+	}
 
 	// TODO: delete all copy/move construcotrs or use smart pointers
 

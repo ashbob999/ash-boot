@@ -28,33 +28,17 @@ namespace constant_checker
 		for (auto& f : expr->functions)
 		{
 			check_expression_dispatch(f->body.get());
+			expr->constant_status |= f->body->constant_status;
 		}
 
 		// check each expression
 		for (auto& e : expr->expressions)
 		{
 			check_expression_dispatch(e.get());
+			expr->constant_status |= e->constant_status;
 		}
 
-		for (auto& f : expr->functions)
-		{
-			if (!f->body->is_constant())
-			{
-				expr->constant_status = ConstantStatus::Variable;
-				return;
-			}
-		}
-
-		for (auto& e : expr->expressions)
-		{
-			if (!e->is_constant())
-			{
-				expr->constant_status = ConstantStatus::Variable;
-				return;
-			}
-		}
-
-		expr->constant_status = ConstantStatus::Constant;
+		expr->constant_status |= ConstantStatus::CanBeConstant;
 	}
 
 	template<>
@@ -66,15 +50,7 @@ namespace constant_checker
 		}
 
 		check_expression_dispatch(expr->expr.get());
-
-		if (expr->is_constant())
-		{
-			expr->constant_status = ConstantStatus::Constant;
-		}
-		else
-		{
-			expr->constant_status = ConstantStatus::Variable;
-		}
+		expr->constant_status = expr->expr->constant_status;
 	}
 
 	template<>
@@ -102,27 +78,11 @@ namespace constant_checker
 
 		if (expr->binop == operators::BinaryOp::ModuleScope)
 		{
-			// TEMP
-
-			if (expr->rhs->is_constant())
-			{
-				expr->constant_status = ConstantStatus::Constant;
-			}
-			else
-			{
-				expr->constant_status = ConstantStatus::Variable;
-			}
+			expr->constant_status = expr->rhs->constant_status;
 		}
 		else
 		{
-			if (expr->lhs->is_constant() && expr->rhs->is_constant())
-			{
-				expr->constant_status = ConstantStatus::Constant;
-			}
-			else
-			{
-				expr->constant_status = ConstantStatus::Variable;
-			}
+			expr->constant_status = expr->lhs->constant_status | expr->rhs->constant_status;
 		}
 	}
 
@@ -137,7 +97,10 @@ namespace constant_checker
 		for (auto& e : expr->args)
 		{
 			check_expression_dispatch(e.get());
+			expr->constant_status |= e->constant_status;
 		}
+
+		expr->constant_status |= ConstantStatus::CanBeConstant;
 
 		// TEMP: no way to get function
 		expr->constant_status = ConstantStatus::Variable;
@@ -152,27 +115,18 @@ namespace constant_checker
 		}
 
 		check_expression_dispatch(expr->condition.get());
+		expr->constant_status |= expr->condition->constant_status;
+
 		check_expression_dispatch(expr->if_body.get());
+		expr->constant_status |= expr->if_body->constant_status;
+
 		if (expr->else_body != nullptr)
 		{
 			check_expression_dispatch(expr->else_body.get());
+			expr->constant_status |= expr->else_body->constant_status;
 		}
 
-		if (expr->condition->constant_status == ConstantStatus::Constant)
-		{
-			if (expr->if_body->is_constant() && (expr->else_body == nullptr || expr->else_body->is_constant()))
-			{
-				expr->constant_status = ConstantStatus::Constant;
-			}
-			else
-			{
-				expr->constant_status = ConstantStatus::Variable;
-			}
-		}
-		else
-		{
-			expr->constant_status = ConstantStatus::Variable;
-		}
+		expr->constant_status |= ConstantStatus::CanBeConstant;
 	}
 
 	template<>
@@ -184,15 +138,21 @@ namespace constant_checker
 		}
 
 		check_expression_dispatch(expr->start_expr.get());
+		expr->constant_status |= expr->start_expr->constant_status;
+
 		check_expression_dispatch(expr->end_expr.get());
+		expr->constant_status |= expr->end_expr->constant_status;
+
 		if (expr->step_expr != nullptr)
 		{
 			check_expression_dispatch(expr->step_expr.get());
+			expr->constant_status |= expr->step_expr->constant_status;
 		}
-		check_expression_dispatch(expr->for_body.get());
 
-		// TEMP: CHECK
-		expr->constant_status = ConstantStatus::Variable;
+		check_expression_dispatch(expr->for_body.get());
+		expr->constant_status |= expr->for_body->constant_status;
+
+		expr->constant_status |= ConstantStatus::CanBeConstant;
 	}
 
 	template<>
@@ -204,10 +164,12 @@ namespace constant_checker
 		}
 
 		check_expression_dispatch(expr->end_expr.get());
-		check_expression_dispatch(expr->while_body.get());
+		expr->constant_status |= expr->end_expr->constant_status;
 
-		// TEMP: CHECK
-		expr->constant_status = ConstantStatus::Variable;
+		check_expression_dispatch(expr->while_body.get());
+		expr->constant_status |= expr->while_body->constant_status;
+
+		expr->constant_status |= ConstantStatus::CanBeConstant;
 	}
 
 	template<>
@@ -232,15 +194,7 @@ namespace constant_checker
 		if (expr->ret_expr != nullptr)
 		{
 			check_expression_dispatch(expr->ret_expr.get());
-
-			if (expr->ret_expr->is_constant())
-			{
-				expr->constant_status = ConstantStatus::Constant;
-			}
-			else
-			{
-				expr->constant_status = ConstantStatus::Variable;
-			}
+			expr->constant_status = expr->ret_expr->constant_status;
 		}
 		else
 		{
@@ -279,15 +233,7 @@ namespace constant_checker
 		}
 
 		check_expression_dispatch(expr->expr.get());
-
-		if (expr->expr->is_constant())
-		{
-			expr->constant_status = ConstantStatus::Constant;
-		}
-		else
-		{
-			expr->constant_status = ConstantStatus::Variable;
-		}
+		expr->constant_status = expr->expr->constant_status;
 	}
 
 	template<>
@@ -299,15 +245,7 @@ namespace constant_checker
 		}
 
 		check_expression_dispatch(expr->expr.get());
-
-		if (expr->expr->is_constant())
-		{
-			expr->constant_status = ConstantStatus::Constant;
-		}
-		else
-		{
-			expr->constant_status = ConstantStatus::Variable;
-		}
+		expr->constant_status = expr->expr->constant_status;
 	}
 
 	template<>
@@ -319,27 +257,15 @@ namespace constant_checker
 		}
 
 		check_expression_dispatch(expr->value_expr.get());
+		expr->constant_status |= expr->value_expr->constant_status;
+
 		for (auto& e : expr->cases)
 		{
 			check_expression_dispatch(e.get());
+			expr->constant_status |= e->constant_status;
 		}
 
-		if (!expr->value_expr->is_constant())
-		{
-			expr->constant_status = ConstantStatus::Variable;
-			return;
-		}
-
-		for (auto& e : expr->cases)
-		{
-			if (!e->is_constant())
-			{
-				expr->constant_status = ConstantStatus::Variable;
-				return;
-			}
-		}
-
-		expr->constant_status = ConstantStatus::Constant;
+		expr->constant_status |= ConstantStatus::CanBeConstant;
 	}
 
 	template<>
@@ -353,17 +279,11 @@ namespace constant_checker
 		if (expr->case_expr != nullptr)
 		{
 			check_expression_dispatch(expr->case_expr.get());
+			expr->constant_status |= expr->case_expr->constant_status;
 		}
-		check_expression_dispatch(expr->case_body.get());
 
-		if ((expr->case_expr == nullptr || expr->case_expr->is_constant()) && expr->case_body->is_constant())
-		{
-			expr->constant_status = ConstantStatus::Constant;
-		}
-		else
-		{
-			expr->constant_status = ConstantStatus::Variable;
-		}
+		check_expression_dispatch(expr->case_body.get());
+		expr->constant_status |= expr->case_body->constant_status;
 	}
 
 	void check_expression_dispatch(ast::BaseExpr* expr)

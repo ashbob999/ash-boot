@@ -187,7 +187,7 @@ namespace ast
 
 	bool BaseExpr::is_constant() const
 	{
-		return this->constant_status == ConstantStatus::Constant;
+		return this->constant_status == ConstantStatus::Constant || this->constant_status == ConstantStatus::CanBeConstant;
 	}
 
 	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string& str)
