@@ -74,7 +74,7 @@ namespace types
 		}
 		else if (str == "void")
 		{
-			return TypeEnum::Void;
+			return Type(TypeEnum::Void);
 		}
 		else if (str == "bool")
 		{
@@ -84,7 +84,7 @@ namespace types
 		{
 			return { TypeEnum::Char, 8, true };
 		}
-		return TypeEnum::None;
+		return Type(TypeEnum::None);
 	}
 
 	std::pair<int, bool> get_literal_data(std::string& str, TypeEnum type)
@@ -306,7 +306,7 @@ namespace types
 			}
 			default:
 			{
-				return type_enum;
+				return Type(type_enum);
 			}
 		}
 	}

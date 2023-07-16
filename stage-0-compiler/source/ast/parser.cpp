@@ -723,7 +723,7 @@ namespace parser
 		std::vector<types::Type> types;
 		std::vector<int> arg_ids;
 
-		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::TypeEnum::Void, types, arg_ids);
+		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::get_default_type(types::TypeEnum::Void), types, arg_ids);
 		return make_ptr<ast::FunctionDefinition>(proto, std::move(expr));
 	}
 

@@ -354,7 +354,7 @@ namespace ast
 		{
 			if (is_binary_comparision(this->binop))
 			{
-				result_type = types::TypeEnum::Bool;
+				result_type = types::get_default_type(types::TypeEnum::Bool);
 			}
 			else if (this->binop == operators::BinaryOp::ModuleScope)
 			{
@@ -589,7 +589,7 @@ namespace ast
 			}
 			else
 			{
-				result_type = types::TypeEnum::Void;
+				result_type = types::get_default_type(types::TypeEnum::Void);
 			}
 		}
 		return result_type;
@@ -668,7 +668,7 @@ namespace ast
 	{
 		if (result_type.type_enum == types::TypeEnum::None)
 		{
-			result_type = types::TypeEnum::Void;
+			result_type = types::get_default_type(types::TypeEnum::Void);
 		}
 		return result_type;
 	}
@@ -712,7 +712,7 @@ namespace ast
 	{
 		if (result_type.type_enum == types::TypeEnum::None)
 		{
-			result_type = types::TypeEnum::Void;
+			result_type = types::get_default_type(types::TypeEnum::Void);
 		}
 		return result_type;
 	}
@@ -737,7 +737,7 @@ namespace ast
 
 	types::Type CommentExpr::get_result_type()
 	{
-		return types::TypeEnum::None;
+		return types::Type(types::TypeEnum::None);
 	}
 
 	bool CommentExpr::check_types()
@@ -779,7 +779,7 @@ namespace ast
 		{
 			if (ret_expr == nullptr)
 			{
-				result_type = types::TypeEnum::Void;
+				result_type = types::get_default_type(types::TypeEnum::Void);
 			}
 			else
 			{
@@ -825,7 +825,7 @@ namespace ast
 	{
 		if (result_type.type_enum == types::TypeEnum::None)
 		{
-			result_type = types::TypeEnum::Void;
+			result_type = types::get_default_type(types::TypeEnum::Void);
 		}
 		return result_type;
 	}
@@ -866,7 +866,7 @@ namespace ast
 	{
 		if (result_type.type_enum == types::TypeEnum::None)
 		{
-			result_type = types::TypeEnum::Void;
+			result_type = types::get_default_type(types::TypeEnum::Void);
 		}
 		return result_type;
 	}
@@ -990,7 +990,7 @@ namespace ast
 	{
 		if (this->result_type.type_enum == types::TypeEnum::None)
 		{
-			this->result_type = types::TypeEnum::Void;
+			this->result_type = types::get_default_type(types::TypeEnum::Void);
 		}
 		return this->result_type;
 	}
@@ -1040,7 +1040,7 @@ namespace ast
 	{
 		if (this->result_type.type_enum == types::TypeEnum::None)
 		{
-			this->result_type = types::TypeEnum::Void;
+			this->result_type = types::get_default_type(types::TypeEnum::Void);
 		}
 		return this->result_type;
 	}
@@ -1048,7 +1048,7 @@ namespace ast
 	bool CaseExpr::check_types()
 	{
 		// TODO: maybe check for constant expressions
-		if (this->case_expr->get_result_type() == types::TypeEnum::Int)
+		if (this->case_expr->get_result_type().type_enum == types::TypeEnum::Int)
 		{
 			return true;
 		}
@@ -1112,7 +1112,7 @@ namespace ast
 
 	bool FunctionDefinition::check_return_type()
 	{
-		if (this->prototype->return_type == types::TypeEnum::Void)
+		if (this->prototype->return_type.type_enum == types::TypeEnum::Void)
 		{
 			return true;
 		}

@@ -27,7 +27,7 @@ namespace types
 		int data;
 
 		Type();
-		Type(TypeEnum type_enum);
+		explicit Type(TypeEnum type_enum);
 		Type(TypeEnum type_enum, int size, bool is_signed);
 		bool operator==(const Type& other) const;
 		bool operator!=(const Type& other) const;

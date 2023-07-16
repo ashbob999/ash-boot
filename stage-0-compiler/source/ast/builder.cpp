@@ -217,7 +217,7 @@ namespace builder
 			else
 			{
 				// check for void return type
-				if (function_definition->prototype->return_type == types::TypeEnum::Void)
+				if (function_definition->prototype->return_type.type_enum == types::TypeEnum::Void)
 				{
 					llvm_ir_builder->CreateRetVoid();
 				}
@@ -1110,7 +1110,7 @@ namespace builder
 		}
 
 		// void return types cannot have a name
-		if (expr->get_result_type() == types::TypeEnum::Void)
+		if (expr->get_result_type().type_enum == types::TypeEnum::Void)
 		{
 			return llvm_ir_builder->CreateCall(callee_func, args);
 		}
