@@ -897,10 +897,20 @@ namespace type_checker
 
 		operators::BinaryOp op = operators::extract_compound_assignment_operator(expr->binop);
 
-		ptr_type<ast::BinaryExpr> op_expr = make_ptr<ast::BinaryExpr>(expr->get_body(), op, std::move(expr->lhs), std::move(expr->rhs));
+		ast::VariableReferenceExpr* lhs = dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get());
+		if (lhs == nullptr)
+		{
+			// NOTE: this should never be reached
+			std::cout << "expand compound lhs is not var ref";
+			std::abort();
+		}
+
+		// copy the variable reference expr
+		ptr_type<ast::VariableReferenceExpr> var_ref_expr = make_ptr<ast::VariableReferenceExpr>(expr->get_body(), lhs->name_id);
+
+		ptr_type<ast::BinaryExpr> op_expr = make_ptr<ast::BinaryExpr>(expr->get_body(), op, std::move(var_ref_expr), std::move(expr->rhs));
 
 		expr->binop = operators::BinaryOp::Assignment;
 		expr->rhs = std::move(op_expr);
 	}
-
 }
