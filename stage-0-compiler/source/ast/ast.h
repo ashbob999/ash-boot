@@ -252,6 +252,7 @@ namespace ast
 		bool check_types() override;
 
 		int callee_id;
+		int unmangled_callee_id;
 		std::vector<ptr_type<BaseExpr>> args;
 		bool is_extern = false;
 	};
@@ -397,6 +398,7 @@ namespace ast
 		FunctionPrototype(const FunctionPrototype&) = delete;
 
 		int name_id;
+		int unmangled_name_id;
 		types::Type return_type;
 		std::vector<types::Type> types;
 		std::vector<int> args;

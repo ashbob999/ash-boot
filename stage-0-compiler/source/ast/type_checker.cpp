@@ -4,6 +4,8 @@
 #include "../config.h"
 #include "type_checker.h"
 #include "scope_checker.h"
+#include "constant_checker.h"
+#include "mangler.h"
 
 namespace type_checker
 {
@@ -34,7 +36,7 @@ namespace type_checker
 					}
 				}
 
-				int id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
+				int id = mangler::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
 
 				int func_id = module::ModuleManager::find_function(this->current_file_id, id, true);
 				if (func_id != -1)
@@ -163,7 +165,7 @@ namespace type_checker
 					continue;
 				}
 			}
-			int id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
+			int id = mangler::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
 			function_prototypes.insert({ id, proto });
 			proto->name_id = id;
 		}
@@ -182,7 +184,8 @@ namespace type_checker
 			body->in_scope_vars.push_back({ p.first, ast::ReferenceType::Function });
 			if (p.second->is_extern)
 			{
-				body->extern_functions.push_back(p.first);
+				// add unmangled function name to extern list
+				body->extern_functions.push_back(p.second->unmangled_name_id);
 			}
 		}
 
@@ -314,11 +317,11 @@ namespace type_checker
 			int module_id = -1;
 			if (expr->lhs->get_type() == ast::AstExprType::BinaryExpr)
 			{
-				module_id = module::Mangler::get_module(dynamic_cast<ast::BinaryExpr*>(expr->lhs.get()));
+				module_id = mangler::Mangler::add_mangled_name(-1, mangler::Mangler::mangle_using(dynamic_cast<ast::BinaryExpr*>(expr->lhs.get())));
 			}
 			else
 			{
-				module_id = dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get())->name_id;
+				module_id = mangler::Mangler::add_module(-1, dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get())->name_id);
 			}
 
 			if (!module::ModuleManager::is_module_available(this->current_file_id, module_id))
@@ -331,19 +334,8 @@ namespace type_checker
 			if (expr->rhs->get_type() == ast::AstExprType::CallExpr)
 			{
 				ast::CallExpr* call_expr = dynamic_cast<ast::CallExpr*>(expr->rhs.get());
-
-				std::vector<types::Type> types;
-				for (auto& e : call_expr->args)
-				{
-					types.push_back(e->get_result_type());
-				}
-
-				std::string mangled_name = module::Mangler::mangle_function(call_expr->callee_id, types);
-				rhs_mangled_id = module::StringManager::get_id(mangled_name);
+				rhs_mangled_id = mangler::Mangler::mangle(module_id, call_expr);
 			}
-
-			// partially mangle rhs
-			int rhs_final_id = module::Mangler::add_module(module_id, rhs_mangled_id, true);
 
 			// set rhs as mangled
 			expr->rhs->set_mangled(true);
@@ -351,7 +343,7 @@ namespace type_checker
 			// set rhs mangled name id
 			if (expr->rhs->get_type() == ast::AstExprType::CallExpr)
 			{
-				dynamic_cast<ast::CallExpr*>(expr->rhs.get())->callee_id = rhs_final_id;
+				dynamic_cast<ast::CallExpr*>(expr->rhs.get())->callee_id = rhs_mangled_id;
 			}
 
 			// check rhs
@@ -413,8 +405,10 @@ namespace type_checker
 			}
 		}
 
-		int id;
-		int no_module_id;
+		int id = -1;
+		int no_module_id = -1;
+
+		// expr will be mangled if it is the rhs of a module scope operator
 		if (expr->is_mangled())
 		{
 			id = expr->callee_id;
@@ -422,8 +416,8 @@ namespace type_checker
 		}
 		else
 		{
-			id = module::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), expr);
-			no_module_id = module::Mangler::mangle(expr);
+			id = mangler::Mangler::mangle(module::ModuleManager::get_module(this->current_file_id), expr);
+			no_module_id = mangler::Mangler::mangle(expr);
 		}
 
 		// check function has been defined in current scope
@@ -442,7 +436,7 @@ namespace type_checker
 		}
 
 		// see if it is a extern function call
-		if (scope::find_extern_function(expr, id))
+		if (scope::find_extern_function(expr, expr->unmangled_callee_id))
 		{
 			expr->is_extern = true;
 		}

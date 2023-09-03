@@ -116,9 +116,7 @@ namespace builder
 
 		if (prototype->is_extern)
 		{
-			module::mangled_data data = module::Mangler::demangle(prototype->name_id);
-
-			proto_name = data.function_name;
+			proto_name = module::StringManager::get_string(prototype->unmangled_name_id);
 
 			llvm::Function* the_function = llvm_module->getFunction(proto_name);
 			if (the_function != nullptr)
@@ -1078,8 +1076,7 @@ namespace builder
 		std::string name;
 		if (expr->is_extern)
 		{
-			module::mangled_data data = module::Mangler::demangle(expr->callee_id);
-			name = data.function_name;
+			name = module::StringManager::get_string(expr->unmangled_callee_id);
 		}
 		else
 		{

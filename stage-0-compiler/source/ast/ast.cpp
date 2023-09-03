@@ -6,6 +6,30 @@
 
 namespace ast
 {
+	std::string constant_to_string(const BaseExpr* expr)
+	{
+		switch (expr->constant_status)
+		{
+			case ConstantStatus::Unknown:
+			{
+				return " (Unknown) ";
+			}
+			case ConstantStatus::Constant:
+			{
+				return " (Constant) ";
+			}
+			case ConstantStatus::CanBeConstant:
+			{
+				return " (Can Be Constant) ";
+			}
+			case ConstantStatus::Variable:
+			{
+				return " (Variable) ";
+			}
+		}
+		return "";
+	}
+
 	BaseExpr::BaseExpr(AstExprType ast_type, BodyExpr* body)
 		: ast_type(ast_type), body(body)
 	{}
@@ -205,7 +229,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Literal Value : {" << '\n';
+		str << tabs << "Literal Value : {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "Type: " << types::to_string(this->curr_type) << '\n';
 		str << tabs << '\t' << "Value: " << this->value_type->to_string() << '\n';
 		str << tabs << "}," << '\n';
@@ -250,7 +274,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Variable Declaration: {" << '\n';
+		str << tabs << "Variable Declaration: {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
 		str << tabs << '\t' << "Type: " << types::to_string(this->curr_type) << '\n';
 		str << tabs << '\t' << "Value: {" << '\n';
@@ -297,7 +321,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Variable Reference: {" << '\n';
+		str << tabs << "Variable Reference: {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
 		str << tabs << "}," << '\n';
 
@@ -335,7 +359,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Binary Operation: {" << '\n';
+		str << tabs << "Binary Operation: {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "LHS: {" << '\n';
 		str << this->lhs->to_string(depth + 2);
 		str << tabs << '\t' << "}," << '\n';
@@ -404,7 +428,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Body: {" << '\n';
+		str << tabs << "Body: {" << constant_to_string(this) << '\n';
 
 		for (auto& p : this->function_prototypes)
 		{
@@ -472,7 +496,7 @@ namespace ast
 	}
 
 	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args)
-		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), args(args.size())
+		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), unmangled_callee_id(callee_id), args(args.size())
 	{
 		for (int i = 0; i < this->args.size(); i++)
 		{
@@ -490,7 +514,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Function Call: {" << '\n';
+		str << tabs << "Function Call: {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->callee_id) << '\n';
 		str << tabs << '\t' << "Args: {" << '\n';
 		for (auto& a : this->args)
@@ -557,7 +581,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "If Statement: {" << '\n';
+		str << tabs << "If Statement: {" << constant_to_string(this) << '\n';
 
 		str << tabs << '\t' << "Condition: {" << '\n';
 		str << this->condition->to_string(depth + 2);
@@ -632,7 +656,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "For Loop: {" << '\n';
+		str << tabs << "For Loop: {" << constant_to_string(this) << '\n';
 
 		str << tabs << '\t' << "Start Value: {" << '\n';
 		str << tabs << '\t' << '\t' << "Type: " << types::to_string(this->var_type) << "," << '\n';
@@ -695,7 +719,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "While Loop: {" << '\n';
+		str << tabs << "While Loop: {" << constant_to_string(this) << '\n';
 
 		str << tabs << '\t' << "End Condition: {" << '\n';
 		str << this->end_expr->to_string(depth + 2);
@@ -755,7 +779,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Return Statement: {" << '\n';
+		str << tabs << "Return Statement: {" << constant_to_string(this) << '\n';
 
 		str << tabs << '\t' << "Value: {" << '\n';
 		if (this->ret_expr != nullptr)
@@ -857,7 +881,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Break Statement: {}" << '\n';
+		str << tabs << "Break Statement: {}" << constant_to_string(this) << '\n';
 
 		return str.str();
 	}
@@ -900,7 +924,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Unary Operation: {" << '\n';
+		str << tabs << "Unary Operation: {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "Operator: " << operators::to_string(this->unop) << '\n';
 		str << tabs << '\t' << "Expression: {" << '\n';
 		str << this->expr->to_string(depth + 2);
@@ -934,7 +958,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Cast Operation: {" << '\n';
+		str << tabs << "Cast Operation: {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "Target Type: " << types::to_string(target_type) << '\n';
 		str << tabs << '\t' << "Expression: {" << '\n';
 		str << this->expr->to_string(depth + 2);
@@ -974,7 +998,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Switch Statement: {" << '\n';
+		str << tabs << "Switch Statement: {" << constant_to_string(this) << '\n';
 
 		for (auto& case_expr : this->cases)
 		{
@@ -1014,7 +1038,7 @@ namespace ast
 
 		std::stringstream str;
 
-		str << tabs << "Case Statement: {" << '\n';
+		str << tabs << "Case Statement: {" << constant_to_string(this) << '\n';
 
 		if (this->default_case)
 		{
@@ -1056,7 +1080,7 @@ namespace ast
 	}
 
 	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)
-		: name_id(module::StringManager::get_id(name)), return_type(return_type), types(types), args(args)
+		: name_id(module::StringManager::get_id(name)), unmangled_name_id(name_id), return_type(return_type), types(types), args(args)
 	{}
 
 	std::string FunctionPrototype::to_string(int depth)

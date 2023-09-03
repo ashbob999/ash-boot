@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "parser.h"
+#include "mangler.h"
 
 namespace parser
 {
@@ -1614,11 +1615,11 @@ namespace parser
 
 		if (this->current_module == -1)
 		{
-			this->current_module = module_id;
+			this->current_module = mangler::Mangler::add_module(-1, module_id);
 		}
 		else
 		{
-			this->current_module = module::Mangler::add_module(this->current_module, module_id, false);
+			this->current_module = mangler::Mangler::add_module(this->current_module, module_id);
 		}
 
 		return true;
@@ -1697,11 +1698,11 @@ namespace parser
 		int module_id = -1;
 		if (base_expr->get_type() == ast::AstExprType::BinaryExpr)
 		{
-			module_id = module::Mangler::get_module(dynamic_cast<ast::BinaryExpr*>(base_expr.get()));
+			module_id = mangler::Mangler::add_mangled_name(-1, mangler::Mangler::mangle_using(dynamic_cast<ast::BinaryExpr*>(base_expr.get())));
 		}
 		else
 		{
-			module_id = dynamic_cast<ast::VariableReferenceExpr*>(base_expr.get())->name_id;
+			module_id = mangler::Mangler::add_module(-1, dynamic_cast<ast::VariableReferenceExpr*>(base_expr.get())->name_id);
 		}
 
 		using_modules.insert(module_id);
@@ -1739,7 +1740,12 @@ namespace parser
 
 		if (current_module == -1)
 		{
-			current_module = filename_id;
+			// use filename as first module
+			// name = file<hash of filename>
+			std::string name = "file";
+			std::string filename = module::StringManager::get_string(this->filename_id);
+			name += std::to_string(std::hash<std::string>{}(filename));
+			current_module = mangler::Mangler::add_module(-1, module::StringManager::get_id(name));
 		}
 
 		module::ModuleManager::add_module(filename_id, current_module, using_modules);

@@ -2,10 +2,11 @@
 #include <iostream>
 
 #include "module.h"
+#include "mangler.h"
 
 namespace module
 {
-	int StringManager::store_string(std::string& str)
+	int StringManager::store_string(const std::string& str)
 	{
 		if (str == "")
 		{
@@ -23,7 +24,7 @@ namespace module
 		return id;
 	}
 
-	int StringManager::get_id(std::string& str)
+	int StringManager::get_id(const std::string& str)
 	{
 		std::string_view sv{ str };
 
@@ -60,248 +61,6 @@ namespace module
 
 	std::unordered_map<std::string_view, int> StringManager::string_to_id;
 	std::list<std::string> StringManager::id_to_string;
-
-	std::string Mangler::mangle_function(int function_id, std::vector<types::Type>& types)
-	{
-		std::string name;
-
-		// add function name
-		name += StringManager::get_string(function_id);
-
-		name += "__";
-
-		// add function args
-		if (types.size() > 0)
-		{
-			for (int i = 0; i < types.size() - 1; i++)
-			{
-				name += types::to_string(types[i]);
-				name += '_';
-			}
-
-			name += types::to_string(types.back());
-		}
-
-		return name;
-	}
-
-	int Mangler::mangle(int module_id, ast::FunctionPrototype* proto)
-	{
-		std::string name;
-
-		// add module name
-		name += StringManager::get_string(module_id);
-
-		name += "__";
-
-		name += mangle_function(proto->name_id, proto->types);
-
-		int id = StringManager::get_id(name);
-		Mangler::mangled_map[proto->name_id].push_back(id);
-
-		return id;
-	}
-
-	int Mangler::mangle(int module_id, ast::CallExpr* expr)
-	{
-		std::string name;
-
-		// add module name
-		name += StringManager::get_string(module_id);
-
-		name += "__";
-
-		std::vector<types::Type> types;
-		for (auto& e : expr->args)
-		{
-			types.push_back(e->get_result_type());
-		}
-
-		name += mangle_function(expr->callee_id, types);
-
-		int id = StringManager::get_id(name);
-		Mangler::mangled_map[expr->callee_id].push_back(id);
-
-		return id;
-	}
-
-	int Mangler::mangle(ast::CallExpr* expr)
-	{
-		std::string name;
-
-		std::vector<types::Type> types;
-		for (auto& e : expr->args)
-		{
-			types.push_back(e->get_result_type());
-		}
-
-		name += mangle_function(expr->callee_id, types);
-
-		int id = StringManager::get_id(name);
-		Mangler::mangled_map[expr->callee_id].push_back(id);
-
-		return id;
-	}
-
-	int Mangler::mangle(int module_id, int function_id, std::vector<types::Type> function_args)
-	{
-		std::string name;
-
-		// add module name
-		name += StringManager::get_string(module_id);
-
-		name += "__";
-
-		name += mangle_function(function_id, function_args);
-
-		int id = StringManager::get_id(name);
-		Mangler::mangled_map[function_id].push_back(id);
-
-		return id;
-	}
-
-	int Mangler::add_module(int module_id, int other_id, bool is_first_module)
-	{
-		std::string name;
-
-		name += StringManager::get_string(module_id);
-		name += '_';
-
-		if (is_first_module)
-		{
-			name += '_';
-		}
-
-		name += StringManager::get_string(other_id);
-
-		return StringManager::get_id(name);
-	}
-
-	int Mangler::get_module(ast::BinaryExpr* scope_expr)
-	{
-		if (scope_expr->binop != operators::BinaryOp::ModuleScope)
-		{
-			assert(false && "Mangler::get_module, Scope Expression has invalid binop.");
-		}
-
-		std::string modules;
-
-		// add lhs
-		if (scope_expr->lhs->get_type() == ast::AstExprType::BinaryExpr)
-		{
-			modules += StringManager::get_string(get_module(dynamic_cast<ast::BinaryExpr*>(scope_expr->lhs.get())));
-		}
-		else
-		{
-			modules += StringManager::get_string(dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->lhs.get())->name_id);
-		}
-
-		modules += '_';
-
-		// add rhs
-		modules += StringManager::get_string(dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->rhs.get())->name_id);
-
-		return StringManager::get_id(modules);
-	}
-
-	mangled_data Mangler::demangle(int name_id)
-	{
-		std::string& name = StringManager::get_string(name_id);
-
-		mangled_data data;
-
-		int i = 0;
-		for (; i < name.length() - 1; i++)
-		{
-			if (name[i] == '_' && name[i + 1] == '_')
-			{
-				i += 2;
-				break;
-			}
-			else
-			{
-				data.module_name += name[i];
-			}
-		}
-
-		for (; i < name.length() - 1; i++)
-		{
-			if (name[i] == '_' && name[i + 1] == '_')
-			{
-				i += 2;
-				break;
-			}
-			else
-			{
-				data.function_name += name[i];
-			}
-		}
-
-		std::string type;
-
-		for (; i < name.length() - 1; i++)
-		{
-			if (name[i] == '_')
-			{
-				i++;
-				data.type_names.push_back(type);
-				type = "";
-				break;
-			}
-			else
-			{
-				type += name[i];
-			}
-		}
-
-		data.type_names.push_back(type);
-
-		return data;
-	}
-
-	std::string Mangler::remove_dots(std::string& str)
-	{
-		std::string s;
-
-		for (auto& c : str)
-		{
-			if (c == '.')
-			{
-				break;
-			}
-			s += c;
-		}
-
-		return s;
-	}
-
-	std::vector<int> Mangler::get_mangled_functions(int function_id)
-	{
-		return Mangler::mangled_map[function_id];
-	}
-
-	int Mangler::extract_module(int function_id)
-	{
-		std::string module_name;
-
-		std::string& name = StringManager::get_string(function_id);
-
-		for (int i = 0; i < name.length(); i++)
-		{
-			if (name[i] == '_' && i < name.length() - 1 && name[i + 1] == '_')
-			{
-				break;
-			}
-			else
-			{
-				module_name += name[i];
-			}
-		}
-
-		return StringManager::get_id(module_name);
-	}
-
-	std::unordered_map<int, std::vector<int>> Mangler::mangled_map;
 
 	void ModuleManager::add_ast(int filename, ptr_type<ast::BodyExpr> ast_body)
 	{
@@ -387,12 +146,6 @@ namespace module
 			// check current module
 			for (auto& f : exported_functions)
 			{
-				//int id = Mangler::add_module(using_id, name_id, false);
-
-				/*if (find(exported_functions.begin(), exported_functions.end(), name) != exported_functions.end())
-				{
-					return id;
-				}*/
 				if (f == name_id)
 				{
 					return f;
@@ -407,8 +160,6 @@ namespace module
 				// check module funtions
 				for (auto& f : funcs)
 				{
-					//int id = Mangler::add_module(using_id, name_id, false);
-
 					if (f == name_id)
 					{
 						return f;
@@ -418,14 +169,32 @@ namespace module
 		}
 		else
 		{
-			// check current module
-			for (auto& f : exported_functions)
 			{
-				int id = Mangler::add_module(module_id, name_id, true);
-
-				if (f == id)
+				// check current module
+				int mangled_id = mangler::Mangler::add_mangled_name(module_id, name_id);
+				for (auto& f : exported_functions)
 				{
-					return id;
+					if (f == mangled_id)
+					{
+						return f;
+					}
+				}
+			}
+
+			// check using modules
+			for (auto& m : ModuleManager::file_usings.at(filename))
+			{
+				std::unordered_set<int>& funcs = ModuleManager::exported_functions.at(m);
+
+				int mangled_id = mangler::Mangler::add_mangled_name(m, name_id);
+
+				// check module funtions
+				for (auto& f : funcs)
+				{
+					if (f == mangled_id)
+					{
+						return f;
+					}
 				}
 			}
 		}
@@ -604,7 +373,7 @@ namespace module
 
 	ast::BodyExpr* ModuleManager::find_body(int function_id)
 	{
-		int module_name = Mangler::extract_module(function_id);
+		int module_name = mangler::Mangler::extract_module(function_id);
 
 		for (auto& file : ModuleManager::module_contents.at(module_name))
 		{
