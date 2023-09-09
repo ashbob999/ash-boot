@@ -73,8 +73,6 @@ namespace ast
 		return left;
 	}
 
-	// TODO: delete all copy/move construcotrs or use smart pointers
-
 	class BaseExpr;
 	class LiteralExpr;
 	class BodyExpr;

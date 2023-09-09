@@ -29,6 +29,7 @@ namespace types
 		Type();
 		explicit Type(TypeEnum type_enum);
 		Type(TypeEnum type_enum, int size, bool is_signed);
+		Type(const std::string& literal, TypeEnum type_enum);
 		bool operator==(const Type& other) const;
 		bool operator!=(const Type& other) const;
 		int get_size();
@@ -36,8 +37,6 @@ namespace types
 	};
 
 	Type is_valid_type(std::string& str);
-
-	std::pair<int, bool> get_literal_data(std::string& str, TypeEnum type);
 
 	Type get_default_type(TypeEnum type_enum);
 

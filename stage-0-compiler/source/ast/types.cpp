@@ -36,6 +36,44 @@ namespace types
 		}
 	}
 
+	Type::Type(const std::string& literal, TypeEnum type) : type_enum{ type }, data{ 0 }
+	{
+		char c1 = '\0';
+		char c2 = '\0';
+		if (type_enum == TypeEnum::Float)
+		{
+			c1 = 'f';
+			c2 = c1;
+		}
+		else if (type_enum == TypeEnum::Int)
+		{
+			c1 = 'i';
+			c2 = 'u';
+		}
+		else
+		{
+			Type t = get_default_type(type_enum);
+			this->data = t.data;
+			return;
+		}
+
+		int i = literal.length() - 1;
+		while (i > 0 && literal[i] != c1 && literal[i] != c2)
+		{
+			i--;
+		}
+
+		if (i == 0 || i == literal.length() - 1)
+		{
+			Type t = get_default_type(type_enum);
+			this->data = data;
+			return;
+		}
+
+		Type t{ type_enum, std::stoi(std::string{ literal.begin() + i + 1, literal.end() }), literal[i] != 'u' };
+		this->data = t.data;
+	}
+
 	int Type::get_size()
 	{
 		return data >> 1;
@@ -87,41 +125,6 @@ namespace types
 		return Type(TypeEnum::None);
 	}
 
-	std::pair<int, bool> get_literal_data(std::string& str, TypeEnum type)
-	{
-		char c1 = '\0';
-		char c2 = '\0';
-		if (type == TypeEnum::Float)
-		{
-			c1 = 'f';
-			c2 = c1;
-		}
-		else if (type == TypeEnum::Int)
-		{
-			c1 = 'i';
-			c2 = 'u';
-		}
-		else
-		{
-			Type t = get_default_type(type);
-			return { t.get_size(), t.is_signed() };
-		}
-
-		int i = str.length() - 1;
-		while (i > 0 && str[i] != c1 && str[i] != c2)
-		{
-			i--;
-		}
-
-		if (i == 0 || i == str.length() - 1)
-		{
-			Type t = get_default_type(type);
-			return { t.get_size(), t.is_signed() };
-		}
-
-		return { std::stoi(std::string{ str.begin() + i + 1, str.end() }), str[i] != 'u' };
-	}
-
 	std::pair<bool, Type> check_type_string(std::string& str)
 	{
 		// type formats
@@ -138,13 +141,11 @@ namespace types
 
 		if (std::regex_match(str, match, int_regex))
 		{
-			std::pair<int, bool> data = get_literal_data(str, TypeEnum::Int);
-			return { true, {TypeEnum::Int, data.first, data.second} };
+			return { true, {str, TypeEnum::Int} };
 		}
 		else if (std::regex_match(str, match, float_regex))
 		{
-			std::pair<int, bool> data = get_literal_data(str, TypeEnum::Float);
-			return { true, {TypeEnum::Float, data.first, true} };
+			return { true, {str, TypeEnum::Float} };
 		}
 		else if (std::regex_match(str, match, bool_regex))
 		{
@@ -490,7 +491,7 @@ namespace types
 
 	bool IntType::check_range(std::string& str)
 	{
-		std::pair<int, bool> data = get_literal_data(str, TypeEnum::Int);
+		Type type{ str, TypeEnum::Int };
 
 		std::string int_min;
 		std::string int_max;
@@ -498,11 +499,11 @@ namespace types
 
 		// TODO: issue with signed range, eg. for i8: 128 represents -128
 
-		switch (data.first)
+		switch (type.get_size())
 		{
 			case 8:
 			{
-				if (data.second) // signed
+				if (type.is_signed()) // signed
 				{
 					int_min = "000";
 					int_max = "128";
@@ -517,7 +518,7 @@ namespace types
 			}
 			case 16:
 			{
-				if (data.second) // signed
+				if (type.is_signed()) // signed
 				{
 					int_min = "00000";
 					int_max = "32768";
@@ -532,7 +533,7 @@ namespace types
 			}
 			case 32:
 			{
-				if (data.second) // signed
+				if (type.is_signed()) // signed
 				{
 					int_min = "0000000000";
 					int_max = "2147483648";
@@ -547,7 +548,7 @@ namespace types
 			}
 			case 64:
 			{
-				if (data.second) // signed
+				if (type.is_signed()) // signed
 				{
 					int_min = "0000000000000000000";
 					int_max = "9223372036854775808";
