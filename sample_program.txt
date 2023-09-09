@@ -76,6 +76,11 @@ function int main() {
 		default {}
 	}
 	
+	# scope blocks
+	{
+		var int a = 0;
+	}
+	
 	# return value
 	0;
 }

@@ -24,6 +24,7 @@
 - more types (f32, f64, i8, i16, i32, i64, u8, u16, u32, u64)
 - casts (int, float, bool, char)
 - switch statement (case, default)
+- scope blocks
 
 ## Features Required for Bootstrapping
 - [ ] Classes

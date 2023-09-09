@@ -672,6 +672,28 @@ namespace parser
 
 					break;
 				}
+				case Token::BodyStart:
+				{
+					// Body expressions used to create scope
+					if (is_top_level)
+					{
+						return log_error_body("Scope blocks are not allowed in top level code");
+					}
+
+					ptr_type<ast::BaseExpr> base = parse_body(ast::BodyType::ScopeBlock, false, true);
+
+					if (base == nullptr)
+					{
+						return nullptr;
+					}
+
+					body->add_base(std::move(base));
+
+					// TODO: why is this really needed, should parse_body consume it?
+					get_next_token();
+
+					break;
+				}
 				case Token::BodyEnd:
 				{
 					bodies.pop_back();
