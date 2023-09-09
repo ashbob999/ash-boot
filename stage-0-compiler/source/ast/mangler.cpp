@@ -309,6 +309,64 @@ namespace mangler
 		return module::StringManager::get_id(module_string);
 	}
 
+	std::string ManglerV2::pretty_modules(int module_id)
+	{
+		if (module_id == -1)
+		{
+			return "";
+		}
+
+		std::string module_string = ManglerV2::remove_start_string(module::StringManager::get_string(module_id));
+
+		std::string pretty_string;
+
+		size_t i = 0;
+
+		while (i < module_string.size())
+		{
+			if (module_string[i] != 'M')
+			{
+				break;
+			}
+
+			i++;
+
+			std::string count_str;
+			count_str = module_string[i];
+			i++;
+
+			while (module_string[i] >= '0' && module_string[i] <= '9')
+			{
+				count_str += module_string[i];
+				i++;
+
+				if (i >= module_string.size())
+				{
+					assert("ManglerV2::pretty_modules out of range (getting count )" && false);
+				}
+			}
+
+			int count = std::stoi(count_str);
+
+			if (i + count > module_string.size())
+			{
+				assert("ManglerV2::pretty_modules out of range (getting chars)" && false);
+			}
+
+			pretty_string += module_string.substr(i, count);
+
+			i += count;
+
+			if (i < module_string.size() && module_string[i] == 'M')
+			{
+				pretty_string += "::";
+			}
+
+		}
+
+		return pretty_string;
+	}
+
 	std::string ManglerV2::remove_start_string(const std::string& string)
 	{
 		std::string start{ ManglerV2::StartString };

@@ -408,6 +408,8 @@ namespace type_checker
 		int id = -1;
 		int no_module_id = -1;
 
+		bool function_is_in_same_file = true;
+
 		// expr will be mangled if it is the rhs of a module scope operator
 		if (expr->is_mangled())
 		{
@@ -433,12 +435,42 @@ namespace type_checker
 			{
 				id = full_function_id;
 			}
+
+			function_is_in_same_file = false;
 		}
 
 		// see if it is a extern function call
 		if (scope::find_extern_function(expr, expr->unmangled_callee_id))
 		{
 			expr->is_extern = true;
+		}
+		else
+		{
+			if (!expr->is_mangled())
+			{
+				auto modules_function_is_in = module::ModuleManager::get_matching_function_locations(this->current_file_id, no_module_id);
+
+				if (modules_function_is_in.size() > 1 || (function_is_in_same_file && modules_function_is_in.size() > 0))
+				{
+					std::string error_message = "Function call for: " + module::StringManager::get_string(expr->unmangled_callee_id) + ", is ambiguous (defined in multiple places)";
+
+					if (function_is_in_same_file)
+					{
+						error_message += '\n';
+						error_message += '\t';
+						error_message += "Function defined in file: " + module::StringManager::get_string(this->current_file_id);
+					}
+
+					for (auto& module_id : modules_function_is_in)
+					{
+						error_message += '\n';
+						error_message += '\t';
+						error_message += "Function defined in module: " + mangler::Mangler::pretty_modules(module_id);
+					}
+
+					return log_error(expr, error_message);
+				}
+			}
 		}
 
 		// mangle the call id

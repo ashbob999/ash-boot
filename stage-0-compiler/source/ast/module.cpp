@@ -202,6 +202,31 @@ namespace module
 		return -1;
 	}
 
+	std::vector<int> ModuleManager::get_matching_function_locations(int filename, int name_id)
+	{
+		std::vector<int> modules;
+
+		// check using modules
+		for (auto& m : ModuleManager::file_usings.at(filename))
+		{
+			std::unordered_set<int>& funcs = ModuleManager::exported_functions.at(m);
+
+			int mangled_id = mangler::Mangler::add_mangled_name(m, name_id);
+
+			// check module funtions
+			for (auto& f : funcs)
+			{
+				if (f == mangled_id)
+				{
+					modules.push_back(m);
+					break;
+				}
+			}
+		}
+
+		return modules;
+	}
+
 	std::unordered_set<int>& ModuleManager::get_exported_functions(int filename)
 	{
 		int module_id = ModuleManager::file_modules.at(filename);

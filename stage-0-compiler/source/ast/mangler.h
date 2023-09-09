@@ -14,7 +14,7 @@ namespace mangler
 		std::vector<std::string> type_names;
 	};
 
-	class ManglerV1
+	class [[deprecated("ManglerV1 is deprecated, and won't work with newer language constructs. Use ManglerV2 instead.")]] ManglerV1
 	{
 	public:
 		static int mangle(int module_id, ast::FunctionPrototype* proto);
@@ -42,6 +42,8 @@ namespace mangler
 		static int add_mangled_name(int current_module_id, int mangled_name_id);
 		static int mangle_using(ast::BinaryExpr* scope_expr);
 		static int extract_module(int function_id);
+
+		static std::string pretty_modules(int module_id);
 
 	private:
 	public:

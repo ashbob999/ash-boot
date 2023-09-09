@@ -35,6 +35,7 @@ namespace module
 		static bool check_modules();
 		static bool is_module_available(int filename, int module_id);
 		static int find_function(int filename, int name_id, bool is_mangled);
+		static std::vector<int> get_matching_function_locations(int filename, int name_id);
 		static std::unordered_set<int>& get_exported_functions(int filename);
 		static int get_module(int filename);
 		static ast::BodyExpr* get_ast(int filename);
