@@ -37,7 +37,7 @@ namespace parser
 		{operators::BinaryOp::ModuleScope,              200},
 	};
 
-	Parser::Parser(std::ifstream& input_file, std::string file_name) : input_file(input_file), file_name(file_name)
+	Parser::Parser(std::ifstream& input_file, const std::string& file_name) : input_file(input_file), file_name(file_name)
 	{
 		filename_id = module::ModuleManager::get_file_as_module(file_name);
 	}
@@ -1773,31 +1773,31 @@ namespace parser
 		module::ModuleManager::add_module(filename_id, current_module, using_modules);
 	}
 
-	ptr_type<ast::BaseExpr> Parser::log_error(std::string error_message)
+	ptr_type<ast::BaseExpr> Parser::log_error(const std::string& error_message) const
 	{
 		log_error_empty(error_message);
 		return nullptr;
 	}
 
-	ptr_type<ast::BodyExpr> Parser::log_error_body(std::string error_message)
+	ptr_type<ast::BodyExpr> Parser::log_error_body(const std::string& error_message) const
 	{
 		log_error_empty(error_message);
 		return nullptr;
 	}
 
-	ptr_type<ast::FunctionPrototype> Parser::log_error_prototype(std::string error_message)
+	ptr_type<ast::FunctionPrototype> Parser::log_error_prototype(const std::string& error_message) const
 	{
 		log_error_empty(error_message);
 		return nullptr;
 	}
 
-	void Parser::log_error_empty(std::string error_message)
+	void Parser::log_error_empty(const std::string& error_message) const
 	{
 		std::cout << error_message << std::endl;
 		log_line_info();
 	}
 
-	void Parser::log_line_info()
+	void Parser::log_line_info() const
 	{
 		std::cout << '\t' << "File: " << module::StringManager::get_string(this->filename_id) << std::endl;
 		std::cout << '\t' << "Current Character: " << last_char << std::endl;

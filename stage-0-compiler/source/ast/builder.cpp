@@ -89,7 +89,7 @@ namespace builder
 		return true;
 	}
 
-	llvm::Value* LLVMBuilder::log_error_value(std::string str)
+	llvm::Value* LLVMBuilder::log_error_value(const std::string& str)
 	{
 		std::cout << str << std::endl;
 		return nullptr;

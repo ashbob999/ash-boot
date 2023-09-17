@@ -88,7 +88,7 @@ namespace operators
 		return false;
 	}
 
-	BinaryOp is_binary_op(std::string& str)
+	BinaryOp is_binary_op(const std::string& str)
 	{
 		if (str.length() == 1)
 		{
@@ -561,7 +561,7 @@ namespace operators
 		}
 	}
 
-	bool is_type_supported(BinaryOp binop, types::Type type)
+	bool is_type_supported(BinaryOp binop, const types::Type& type)
 	{
 		if (binop == BinaryOp::ModuleScope)
 		{
@@ -620,7 +620,7 @@ namespace operators
 		}
 	}
 
-	bool is_type_supported(UnaryOp unop, types::Type type)
+	bool is_type_supported(UnaryOp unop, const types::Type& type)
 	{
 		switch (type.get_type_enum())
 		{

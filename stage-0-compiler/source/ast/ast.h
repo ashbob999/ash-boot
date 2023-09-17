@@ -117,21 +117,21 @@ namespace ast
 	public:
 		BaseExpr(AstExprType ast_type, BodyExpr* body);
 		virtual ~BaseExpr() = default;
-		virtual std::string to_string(int depth) = 0;
+		virtual std::string to_string(int depth) const = 0;
 		virtual types::Type get_result_type() = 0;
 		virtual bool check_types() = 0;
 
 		// TODO: maybe remove virtual on final methods
-		virtual AstExprType get_type() final;
-		virtual BodyExpr* get_body() final;
+		virtual AstExprType get_type() const final;
+		virtual BodyExpr* get_body() const final;
 		virtual void set_body(BodyExpr* body) final;
-		virtual void set_line_info(ExpressionLineInfo line_info) final;
-		virtual ExpressionLineInfo& get_line_info() final;
+		virtual void set_line_info(const ExpressionLineInfo& line_info) final;
+		virtual ExpressionLineInfo get_line_info() const final;
 		virtual void set_mangled(bool mangled) final;
-		virtual bool is_mangled() final;
+		virtual bool is_mangled() const final;
 		virtual void set_parent_data(BaseExpr* parent, int location) final;
-		virtual parent_data get_parent_data() final;
-		virtual bool is_constant()const final;
+		virtual parent_data get_parent_data() const final;
+		virtual bool is_constant() const final;
 
 		ConstantStatus constant_status = ConstantStatus::Unknown;
 
@@ -148,9 +148,9 @@ namespace ast
 	class LiteralExpr : public BaseExpr
 	{
 	public:
-		LiteralExpr(BodyExpr* body, types::Type curr_type, std::string& str);
+		LiteralExpr(BodyExpr* body, const types::Type& curr_type, const std::string& str);
 		~LiteralExpr() override;
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -174,7 +174,7 @@ namespace ast
 	public:
 		BodyExpr(BodyExpr* body, BodyType body_type);
 		~BodyExpr() override;
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -205,7 +205,7 @@ namespace ast
 	public:
 		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, ptr_type<BaseExpr> expr);
 		~VariableDeclarationExpr() override;
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -219,7 +219,7 @@ namespace ast
 	{
 	public:
 		VariableReferenceExpr(BodyExpr* body, int name_id);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -232,7 +232,7 @@ namespace ast
 	public:
 		BinaryExpr(BodyExpr* body, operators::BinaryOp binop, ptr_type<BaseExpr> lhs, ptr_type<BaseExpr> rhs);
 		~BinaryExpr() override;
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -246,7 +246,7 @@ namespace ast
 	public:
 		CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args);
 		~CallExpr() override;
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -260,7 +260,7 @@ namespace ast
 	{
 	public:
 		IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr>else_body, bool should_return_value);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -274,7 +274,7 @@ namespace ast
 	{
 	public:
 		ForExpr(BodyExpr* body, types::Type var_type, int name_id, ptr_type<BaseExpr> start_expr, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> step_expr, ptr_type<BodyExpr> for_body);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -290,7 +290,7 @@ namespace ast
 	{
 	public:
 		WhileExpr(BodyExpr* body, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> while_body);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -302,7 +302,7 @@ namespace ast
 	{
 	public:
 		CommentExpr(BodyExpr* body);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 	};
@@ -311,7 +311,7 @@ namespace ast
 	{
 	public:
 		ReturnExpr(BodyExpr* body, ptr_type<BaseExpr> ret_expr);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -322,7 +322,7 @@ namespace ast
 	{
 	public:
 		ContinueExpr(BodyExpr* body);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 	};
@@ -331,7 +331,7 @@ namespace ast
 	{
 	public:
 		BreakExpr(BodyExpr* body);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 	};
@@ -340,7 +340,7 @@ namespace ast
 	{
 	public:
 		UnaryExpr(BodyExpr* body, operators::UnaryOp unop, ptr_type<BaseExpr> expr);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -352,7 +352,7 @@ namespace ast
 	{
 	public:
 		CastExpr(BodyExpr* body, int target_type_id, ptr_type<BaseExpr> expr);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -365,7 +365,7 @@ namespace ast
 	{
 	public:
 		SwitchExpr(BodyExpr* body, ptr_type<BaseExpr> value_expr, std::vector<ptr_type<CaseExpr>>& cases);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -378,7 +378,7 @@ namespace ast
 	{
 	public:
 		CaseExpr(BodyExpr* body, ptr_type<BaseExpr> case_expr, ptr_type<BaseExpr> case_body, bool default_case);
-		std::string to_string(int depth) override;
+		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -392,8 +392,8 @@ namespace ast
 	class FunctionPrototype
 	{
 	public:
-		FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args);
-		std::string to_string(int depth);
+		FunctionPrototype(const std::string& name, const types::Type& return_type, const std::vector<types::Type>& types, const std::vector<int>& args);
+		std::string to_string(int depth) const;
 		FunctionPrototype(const FunctionPrototype&) = delete;
 
 		int name_id;
@@ -410,8 +410,8 @@ namespace ast
 	public:
 		FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body);
 		~FunctionDefinition();
-		std::string to_string(int depth);
-		bool check_return_type();
+		std::string to_string(int depth) const;
+		bool check_return_type() const;
 
 		FunctionPrototype* prototype;
 		ptr_type<BodyExpr> body;

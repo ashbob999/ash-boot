@@ -51,7 +51,7 @@ namespace operators
 
 	bool is_first_char_valid(char c);
 	bool is_second_char_valid(char c);
-	BinaryOp is_binary_op(std::string& str);
+	BinaryOp is_binary_op(const std::string& str);
 	UnaryOp is_unary_op(char c);
 	bool is_binary_comparision(BinaryOp op);
 	bool is_boolean_operator(BinaryOp op);
@@ -65,6 +65,6 @@ namespace operators
 	std::string to_string(BinaryOp binop);
 	std::string to_string(UnaryOp unop);
 
-	bool is_type_supported(BinaryOp binop, types::Type type);
-	bool is_type_supported(UnaryOp unop, types::Type type);
+	bool is_type_supported(BinaryOp binop, const types::Type& type);
+	bool is_type_supported(UnaryOp unop, const types::Type& type);
 }

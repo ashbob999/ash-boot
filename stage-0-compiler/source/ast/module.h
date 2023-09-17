@@ -18,7 +18,7 @@ namespace module
 	public:
 		static int get_id(const std::string& str);
 		static bool is_valid_id(int id);
-		static std::string& get_string(int id);
+		static const std::string& get_string(int id);
 	private:
 		static int store_string(const std::string& str);
 	private:
@@ -30,7 +30,7 @@ namespace module
 	{
 	public:
 		static void add_ast(int filename, ptr_type<ast::BodyExpr> ast_body);
-		static int get_file_as_module(std::string& file_name);
+		static int get_file_as_module(const std::string& file_name);
 		static void add_module(int filename, int module_id, std::unordered_set<int>& usings);
 		static bool check_modules();
 		static bool is_module_available(int filename, int module_id);
@@ -46,7 +46,7 @@ namespace module
 		static std::list<int> get_module_order();
 		static std::vector<std::pair<int, int>> get_circular_dependencies();
 		static void handle_circular_dependencies(std::unordered_set<int> circular_dependencies);
-		static void log_error(std::string str);
+		static void log_error(const std::string& str);
 
 	private:
 		// filename -> module name

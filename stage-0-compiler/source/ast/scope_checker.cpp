@@ -5,7 +5,7 @@
 
 namespace scope
 {
-	ast::BodyExpr* get_scope(ast::CallExpr* call_expr)
+	ast::BodyExpr* get_scope(const ast::CallExpr* call_expr)
 	{
 		// checks current function, and then all the parents
 		ast::BodyExpr* body = call_expr->get_body();
@@ -31,7 +31,7 @@ namespace scope
 		return module::ModuleManager::find_body(call_expr->callee_id);
 	}
 
-	ast::BodyExpr* get_scope(ast::VariableReferenceExpr* var_ref)
+	ast::BodyExpr* get_scope(const ast::VariableReferenceExpr* var_ref)
 	{
 		ast::BodyExpr* body = var_ref->get_body();
 
@@ -49,15 +49,15 @@ namespace scope
 		return body;
 	}
 
-	bool is_variable_defined(ast::BaseExpr* expr, int name_id, ast::ReferenceType type)
+	bool is_variable_defined(const ast::BaseExpr* expr, int name_id, ast::ReferenceType type)
 	{
 		// TODO: handle generic functions and overloading
 
-		ast::BodyExpr* body = nullptr;
+		const ast::BodyExpr* body = nullptr;
 
 		if (expr->get_type() == ast::AstExprType::BodyExpr)
 		{
-			body = dynamic_cast<ast::BodyExpr*>(expr);
+			body = dynamic_cast<const ast::BodyExpr*>(expr);
 		}
 		else
 		{
@@ -95,13 +95,13 @@ namespace scope
 		return true;
 	}
 
-	bool find_extern_function(ast::BaseExpr* expr, int name_id)
+	bool find_extern_function(const ast::BaseExpr* expr, int name_id)
 	{
-		ast::BodyExpr* body = nullptr;
+		const ast::BodyExpr* body = nullptr;
 
 		if (expr->get_type() == ast::AstExprType::BodyExpr)
 		{
-			body = dynamic_cast<ast::BodyExpr*>(expr);
+			body = dynamic_cast<const ast::BodyExpr*>(expr);
 		}
 		else
 		{
@@ -137,7 +137,7 @@ namespace scope
 		return true;
 	}
 
-	void scope_error(std::string str)
+	void scope_error(const std::string& str)
 	{
 		std::cout << str << std::endl;
 	}

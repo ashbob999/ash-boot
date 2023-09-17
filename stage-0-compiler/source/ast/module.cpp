@@ -46,7 +46,7 @@ namespace module
 		return true;
 	}
 
-	std::string& StringManager::get_string(int id)
+	const std::string& StringManager::get_string(int id)
 	{
 		if (!is_valid_id(id))
 		{
@@ -67,7 +67,7 @@ namespace module
 		ModuleManager::ast_files[filename] = std::move(ast_body);
 	}
 
-	int ModuleManager::get_file_as_module(std::string& file_name)
+	int ModuleManager::get_file_as_module(const std::string& file_name)
 	{
 		return StringManager::get_id(file_name);
 	}
@@ -413,7 +413,7 @@ namespace module
 		return nullptr;
 	}
 
-	void ModuleManager::log_error(std::string str)
+	void ModuleManager::log_error(const std::string& str)
 	{
 		std::cout << str << std::endl;
 	}

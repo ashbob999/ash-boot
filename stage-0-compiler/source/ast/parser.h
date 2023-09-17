@@ -56,7 +56,7 @@ namespace parser
 	class Parser
 	{
 	public:
-		Parser(std::ifstream& input_file, std::string file_name);
+		Parser(std::ifstream& input_file, const std::string& file_name);
 
 		ptr_type<ast::BaseExpr> parse_file();
 		ptr_type<ast::FunctionDefinition> parse_file_as_func();
@@ -95,17 +95,17 @@ namespace parser
 		bool parse_using();
 		int get_token_precedence();
 		void update_current_module();
-		ptr_type<ast::BaseExpr> log_error(std::string error_message);
-		ptr_type<ast::BodyExpr> log_error_body(std::string error_message);
-		ptr_type<ast::FunctionPrototype> log_error_prototype(std::string error_message);
-		void log_error_empty(std::string error_message);
-		void log_line_info();
+		ptr_type<ast::BaseExpr> log_error(const std::string& error_message) const;
+		ptr_type<ast::BodyExpr> log_error_body(const std::string& error_message) const;
+		ptr_type<ast::FunctionPrototype> log_error_prototype(const std::string& error_message) const;
+		void log_error_empty(const std::string& error_message) const;
+		void log_line_info() const;
 	private:
 		std::ifstream& input_file;
 		std::string identifier_string;
 		char last_char = '\0';
 		Token curr_token = Token::None;
-		types::Type curr_type{types::TypeEnum::None};
+		types::Type curr_type{ types::TypeEnum::None };
 		std::vector<ast::BodyExpr*> bodies;
 		LineInfo line_info;
 		std::string file_name;

@@ -34,12 +34,12 @@ namespace ast
 		: ast_type(ast_type), body(body)
 	{}
 
-	AstExprType BaseExpr::get_type()
+	AstExprType BaseExpr::get_type() const
 	{
 		return this->ast_type;
 	}
 
-	BodyExpr* BaseExpr::get_body()
+	BodyExpr* BaseExpr::get_body() const
 	{
 		return this->body;
 	}
@@ -178,12 +178,12 @@ namespace ast
 		}
 	}
 
-	void BaseExpr::set_line_info(ExpressionLineInfo line_info)
+	void BaseExpr::set_line_info(const ExpressionLineInfo& line_info)
 	{
 		this->line_info = line_info;
 	}
 
-	ExpressionLineInfo& BaseExpr::get_line_info()
+	ExpressionLineInfo BaseExpr::get_line_info() const
 	{
 		return this->line_info;
 	}
@@ -193,7 +193,7 @@ namespace ast
 		this->is_name_mangled = mangled;
 	}
 
-	bool BaseExpr::is_mangled()
+	bool BaseExpr::is_mangled() const
 	{
 		return this->is_name_mangled;
 	}
@@ -204,7 +204,7 @@ namespace ast
 		this->parent.location = location;
 	}
 
-	parent_data BaseExpr::get_parent_data()
+	parent_data BaseExpr::get_parent_data() const
 	{
 		return this->parent;
 	}
@@ -214,7 +214,7 @@ namespace ast
 		return this->constant_status == ConstantStatus::Constant || this->constant_status == ConstantStatus::CanBeConstant;
 	}
 
-	LiteralExpr::LiteralExpr(BodyExpr* body, types::Type curr_type, std::string& str)
+	LiteralExpr::LiteralExpr(BodyExpr* body, const types::Type& curr_type, const std::string& str)
 		: BaseExpr(AstExprType::LiteralExpr, body), curr_type(curr_type)
 	{
 		value_type = types::BaseType::create_type(curr_type, str);
@@ -223,7 +223,7 @@ namespace ast
 	LiteralExpr::~LiteralExpr()
 	{}
 
-	std::string LiteralExpr::to_string(int depth)
+	std::string LiteralExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -268,7 +268,7 @@ namespace ast
 	VariableDeclarationExpr::~VariableDeclarationExpr()
 	{}
 
-	std::string VariableDeclarationExpr::to_string(int depth)
+	std::string VariableDeclarationExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -315,7 +315,7 @@ namespace ast
 		: BaseExpr(AstExprType::VariableReferenceExpr, body), name_id(name_id)
 	{}
 
-	std::string VariableReferenceExpr::to_string(int depth)
+	std::string VariableReferenceExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -353,7 +353,7 @@ namespace ast
 	BinaryExpr::~BinaryExpr()
 	{}
 
-	std::string BinaryExpr::to_string(int depth)
+	std::string BinaryExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -421,7 +421,7 @@ namespace ast
 		}
 	}
 
-	std::string BodyExpr::to_string(int depth)
+	std::string BodyExpr::to_string(int depth) const
 	{
 		// TODO: show nested functions
 		std::string tabs(depth, '\t');
@@ -508,7 +508,7 @@ namespace ast
 	CallExpr::~CallExpr()
 	{}
 
-	std::string CallExpr::to_string(int depth)
+	std::string CallExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -575,7 +575,7 @@ namespace ast
 		}
 	}
 
-	std::string IfExpr::to_string(int depth)
+	std::string IfExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -650,7 +650,7 @@ namespace ast
 		this->for_body->set_parent_data(this, 3);
 	}
 
-	std::string ForExpr::to_string(int depth)
+	std::string ForExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -713,7 +713,7 @@ namespace ast
 		this->while_body->set_parent_data(this, 1);
 	}
 
-	std::string WhileExpr::to_string(int depth)
+	std::string WhileExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -754,7 +754,7 @@ namespace ast
 		: BaseExpr(AstExprType::CommentExpr, body)
 	{}
 
-	std::string CommentExpr::to_string(int depth)
+	std::string CommentExpr::to_string(int depth) const
 	{
 		return std::string();
 	}
@@ -773,7 +773,7 @@ namespace ast
 		: BaseExpr(AstExprType::ReturnExpr, body), ret_expr(std::move(ret_expr))
 	{}
 
-	std::string ReturnExpr::to_string(int depth)
+	std::string ReturnExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -834,7 +834,7 @@ namespace ast
 		: BaseExpr(AstExprType::ContinueExpr, body)
 	{}
 
-	std::string ContinueExpr::to_string(int depth)
+	std::string ContinueExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -875,7 +875,7 @@ namespace ast
 		: BaseExpr(AstExprType::BreakExpr, body)
 	{}
 
-	std::string BreakExpr::to_string(int depth)
+	std::string BreakExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -918,7 +918,7 @@ namespace ast
 		this->expr->set_parent_data(this, 0);
 	}
 
-	std::string UnaryExpr::to_string(int depth)
+	std::string UnaryExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -952,7 +952,7 @@ namespace ast
 		: BaseExpr(AstExprType::CastExpr, body), target_type_id(target_type_id), expr(std::move(expr))
 	{}
 
-	std::string CastExpr::to_string(int depth)
+	std::string CastExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -992,7 +992,7 @@ namespace ast
 		}
 	}
 
-	std::string SwitchExpr::to_string(int depth)
+	std::string SwitchExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -1032,7 +1032,7 @@ namespace ast
 		: BaseExpr(AstExprType::CaseExpr, body), case_expr(std::move(case_expr)), case_body(std::move(case_body)), default_case(default_case)
 	{}
 
-	std::string CaseExpr::to_string(int depth)
+	std::string CaseExpr::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -1079,11 +1079,11 @@ namespace ast
 		return false;
 	}
 
-	FunctionPrototype::FunctionPrototype(std::string& name, types::Type return_type, std::vector<types::Type>& types, std::vector<int>& args)
+	FunctionPrototype::FunctionPrototype(const std::string& name, const types::Type& return_type, const std::vector<types::Type>& types, const std::vector<int>& args)
 		: name_id(module::StringManager::get_id(name)), unmangled_name_id(name_id), return_type(return_type), types(types), args(args)
 	{}
 
-	std::string FunctionPrototype::to_string(int depth)
+	std::string FunctionPrototype::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -1112,7 +1112,7 @@ namespace ast
 	FunctionDefinition::~FunctionDefinition()
 	{}
 
-	std::string FunctionDefinition::to_string(int depth)
+	std::string FunctionDefinition::to_string(int depth) const
 	{
 		std::string tabs(depth, '\t');
 
@@ -1134,7 +1134,7 @@ namespace ast
 		return str.str();
 	}
 
-	bool FunctionDefinition::check_return_type()
+	bool FunctionDefinition::check_return_type() const
 	{
 		if (this->prototype->return_type.get_type_enum() == types::TypeEnum::Void)
 		{

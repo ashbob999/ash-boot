@@ -20,7 +20,7 @@ namespace builder
 		bool set_target();
 		llvm::Function* generate_function_definition(ast::FunctionDefinition* function);
 		llvm::Function* generate_function_prototype(ast::FunctionPrototype* prototype);
-		llvm::Value* log_error_value(std::string str);
+		llvm::Value* log_error_value(const std::string& str);
 
 	private:
 		static llvm::AllocaInst* create_entry_block_alloca(llvm::Function* the_function, llvm::Type* type, llvm::StringRef name);

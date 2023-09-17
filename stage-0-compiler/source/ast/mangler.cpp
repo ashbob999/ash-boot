@@ -3,7 +3,7 @@
 
 namespace mangler
 {
-	int ManglerV1::mangle(int module_id, ast::FunctionPrototype* proto)
+	int ManglerV1::mangle(int module_id, const ast::FunctionPrototype* proto)
 	{
 		std::string name;
 
@@ -19,7 +19,7 @@ namespace mangler
 		return id;
 	}
 
-	int ManglerV1::mangle(int module_id, ast::CallExpr* expr)
+	int ManglerV1::mangle(int module_id, const ast::CallExpr* expr)
 	{
 		std::string name;
 
@@ -35,7 +35,7 @@ namespace mangler
 		return id;
 	}
 
-	int ManglerV1::mangle(ast::CallExpr* expr)
+	int ManglerV1::mangle(const ast::CallExpr* expr)
 	{
 		std::string name = mangle_call(expr);
 
@@ -44,7 +44,7 @@ namespace mangler
 		return id;
 	}
 
-	int ManglerV1::mangle(int module_id, int function_id, std::vector<types::Type> function_args)
+	int ManglerV1::mangle(int module_id, int function_id, const std::vector<types::Type>& function_args)
 	{
 		std::string name;
 
@@ -90,7 +90,7 @@ namespace mangler
 		return module::StringManager::get_id(name);
 	}
 
-	int ManglerV1::mangle_using(ast::BinaryExpr* scope_expr)
+	int ManglerV1::mangle_using(const ast::BinaryExpr* scope_expr)
 	{
 		if (scope_expr->binop != operators::BinaryOp::ModuleScope)
 		{
@@ -121,7 +121,7 @@ namespace mangler
 	{
 		std::string module_name;
 
-		std::string& name = module::StringManager::get_string(function_id);
+		const std::string& name = module::StringManager::get_string(function_id);
 
 		for (int i = 0; i < name.length(); i++)
 		{
@@ -138,7 +138,7 @@ namespace mangler
 		return module::StringManager::get_id(module_name);
 	}
 
-	std::string ManglerV1::mangle_function(int function_id, std::vector<types::Type>& types)
+	std::string ManglerV1::mangle_function(int function_id, const std::vector<types::Type>& types)
 	{
 		std::string name;
 
@@ -162,7 +162,7 @@ namespace mangler
 		return name;
 	}
 
-	std::string ManglerV1::mangle_call(ast::CallExpr* expr)
+	std::string ManglerV1::mangle_call(const ast::CallExpr* expr)
 	{
 		std::vector<types::Type> types;
 		for (auto& e : expr->args)
@@ -173,7 +173,7 @@ namespace mangler
 		return mangle_function(expr->callee_id, types);
 	}
 
-	int ManglerV2::mangle(int current_module_id, ast::FunctionPrototype* proto)
+	int ManglerV2::mangle(int current_module_id, const ast::FunctionPrototype* proto)
 	{
 		std::string name = ManglerV2::get_name_or_start(current_module_id);
 
@@ -182,7 +182,7 @@ namespace mangler
 		return module::StringManager::get_id(name);
 	}
 
-	int ManglerV2::mangle(int current_module_id, ast::CallExpr* expr)
+	int ManglerV2::mangle(int current_module_id, const ast::CallExpr* expr)
 	{
 		std::string name = ManglerV2::get_name_or_start(current_module_id);
 
@@ -191,13 +191,13 @@ namespace mangler
 		return module::StringManager::get_id(name);
 	}
 
-	int ManglerV2::mangle(ast::CallExpr* expr)
+	int ManglerV2::mangle(const ast::CallExpr* expr)
 	{
 		std::string name = ManglerV2::mangle_call(expr);
 		return module::StringManager::get_id(name);
 	}
 
-	int ManglerV2::mangle(int current_module_id, int function_id, std::vector<types::Type> function_args)
+	int ManglerV2::mangle(int current_module_id, int function_id, const std::vector<types::Type>& function_args)
 	{
 		std::string name = ManglerV2::get_name_or_start(current_module_id);
 
@@ -227,7 +227,7 @@ namespace mangler
 		return module::StringManager::get_id(name);
 	}
 
-	int ManglerV2::mangle_using(ast::BinaryExpr* scope_expr)
+	int ManglerV2::mangle_using(const ast::BinaryExpr* scope_expr)
 	{
 		if (scope_expr->binop != operators::BinaryOp::ModuleScope)
 		{
@@ -393,7 +393,7 @@ namespace mangler
 		}
 	}
 
-	std::string ManglerV2::mangle_function(int function_id, std::vector<types::Type>& types)
+	std::string ManglerV2::mangle_function(int function_id, const std::vector<types::Type>& types)
 	{
 		// function = F<char length><name>P<param count><types>*
 
@@ -418,7 +418,7 @@ namespace mangler
 		return name;
 	}
 
-	std::string ManglerV2::mangle_type(types::Type& type)
+	std::string ManglerV2::mangle_type(const types::Type& type)
 	{
 		// type (primitive) = V<char length><name>
 		//	or
@@ -435,7 +435,7 @@ namespace mangler
 		return name;
 	}
 
-	std::string ManglerV2::mangle_call(ast::CallExpr* expr)
+	std::string ManglerV2::mangle_call(const ast::CallExpr* expr)
 	{
 		std::vector<types::Type> types;
 		for (auto& e : expr->args)

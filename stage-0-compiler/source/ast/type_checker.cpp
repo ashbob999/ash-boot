@@ -12,12 +12,12 @@ namespace type_checker
 	TypeChecker::TypeChecker()
 	{}
 
-	bool TypeChecker::check_types(ast::BaseExpr* body)
+	bool TypeChecker::check_types(ast::BaseExpr* body) const
 	{
 		return check_expression_dispatch(body);
 	}
 
-	bool TypeChecker::check_prototypes(ast::BodyExpr* body)
+	bool TypeChecker::check_prototypes(ast::BodyExpr* body) const
 	{
 		// check and add exported functions
 		if (body->get_body() == nullptr)
@@ -57,7 +57,7 @@ namespace type_checker
 		this->current_file_id = file_id;
 	}
 
-	bool TypeChecker::log_error(ast::BaseExpr* expr, std::string str)
+	bool TypeChecker::log_error(const ast::BaseExpr* expr, const std::string& str) const
 	{
 		std::cout << str << std::endl;
 		std::cout << '\t' << "In File: " << module::StringManager::get_string(this->current_file_id) << std::endl;
@@ -103,7 +103,7 @@ namespace type_checker
 
 	}
 
-	bool TypeChecker::check_function(ast::FunctionDefinition* func)
+	bool TypeChecker::check_function(ast::FunctionDefinition* func) const
 	{
 		// add args to scope
 		for (auto& arg : func->prototype->args)
@@ -134,7 +134,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::LiteralExpr>(ast::LiteralExpr* expr)
+	bool TypeChecker::check_expression<ast::LiteralExpr>(ast::LiteralExpr* expr) const
 	{
 		// check the literal type
 		if (!expr->check_types())
@@ -146,7 +146,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::BodyExpr>(ast::BodyExpr* body)
+	bool TypeChecker::check_expression<ast::BodyExpr>(ast::BodyExpr* body) const
 	{
 		// mangle all of the function prototypes
 		std::map<int, ast::FunctionPrototype*> function_prototypes;
@@ -211,7 +211,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::VariableDeclarationExpr>(ast::VariableDeclarationExpr* expr)
+	bool TypeChecker::check_expression<ast::VariableDeclarationExpr>(ast::VariableDeclarationExpr* expr) const
 	{
 		// check to see if we are redefining the variable, but only in the current scope
 		for (auto& p : expr->get_body()->in_scope_vars)
@@ -245,7 +245,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::VariableReferenceExpr>(ast::VariableReferenceExpr* expr)
+	bool TypeChecker::check_expression<ast::VariableReferenceExpr>(ast::VariableReferenceExpr* expr) const
 	{
 		// check variable has already been defined
 		if (!scope::is_variable_defined(expr, expr->name_id, ast::ReferenceType::Variable))
@@ -269,7 +269,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::BinaryExpr>(ast::BinaryExpr* expr)
+	bool TypeChecker::check_expression<ast::BinaryExpr>(ast::BinaryExpr* expr) const
 	{
 		if (expr->binop == operators::BinaryOp::ModuleScope)
 		{
@@ -395,7 +395,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::CallExpr>(ast::CallExpr* expr)
+	bool TypeChecker::check_expression<ast::CallExpr>(ast::CallExpr* expr) const
 	{
 		for (auto& e : expr->args)
 		{
@@ -493,7 +493,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::IfExpr>(ast::IfExpr* expr)
+	bool TypeChecker::check_expression<ast::IfExpr>(ast::IfExpr* expr) const
 	{
 
 		// check the condition
@@ -532,7 +532,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::ForExpr>(ast::ForExpr* expr)
+	bool TypeChecker::check_expression<ast::ForExpr>(ast::ForExpr* expr) const
 	{
 		// add variable to for body scope
 		expr->for_body->in_scope_vars.push_back({ expr->name_id, ast::ReferenceType::Variable });
@@ -585,7 +585,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::WhileExpr>(ast::WhileExpr* expr)
+	bool TypeChecker::check_expression<ast::WhileExpr>(ast::WhileExpr* expr) const
 	{
 		// check the end condition
 		if (!check_expression_dispatch(expr->end_expr.get()))
@@ -615,13 +615,13 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::CommentExpr>(ast::CommentExpr* expr)
+	bool TypeChecker::check_expression<ast::CommentExpr>(ast::CommentExpr* expr) const
 	{
 		return true;
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::ReturnExpr>(ast::ReturnExpr* expr)
+	bool TypeChecker::check_expression<ast::ReturnExpr>(ast::ReturnExpr* expr) const
 	{
 		// check return expression
 		if (expr->ret_expr != nullptr && !check_expression_dispatch(expr->ret_expr.get()))
@@ -649,7 +649,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::ContinueExpr>(ast::ContinueExpr* expr)
+	bool TypeChecker::check_expression<ast::ContinueExpr>(ast::ContinueExpr* expr) const
 	{
 		// check continue
 		if (!expr->check_types())
@@ -661,7 +661,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::BreakExpr>(ast::BreakExpr* expr)
+	bool TypeChecker::check_expression<ast::BreakExpr>(ast::BreakExpr* expr) const
 	{
 		// check break
 		if (!expr->check_types())
@@ -673,7 +673,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::UnaryExpr>(ast::UnaryExpr* expr)
+	bool TypeChecker::check_expression<ast::UnaryExpr>(ast::UnaryExpr* expr) const
 	{
 		// check expression
 		if (!check_expression_dispatch(expr->expr.get()))
@@ -719,7 +719,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::CastExpr>(ast::CastExpr* expr)
+	bool TypeChecker::check_expression<ast::CastExpr>(ast::CastExpr* expr) const
 	{
 		// check expression
 		if (!check_expression_dispatch(expr->expr.get()))
@@ -750,7 +750,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::SwitchExpr>(ast::SwitchExpr* expr)
+	bool TypeChecker::check_expression<ast::SwitchExpr>(ast::SwitchExpr* expr) const
 	{
 		// check expression
 		if (!check_expression_dispatch(expr->value_expr.get()))
@@ -829,7 +829,7 @@ namespace type_checker
 	}
 
 	template<>
-	bool TypeChecker::check_expression<ast::CaseExpr>(ast::CaseExpr* expr)
+	bool TypeChecker::check_expression<ast::CaseExpr>(ast::CaseExpr* expr) const
 	{
 		// check case body
 		if (!this->check_expression_dispatch(expr->case_body.get()))
@@ -840,7 +840,7 @@ namespace type_checker
 		return true;
 	}
 
-	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr)
+	bool TypeChecker::check_expression_dispatch(ast::BaseExpr* expr) const
 	{
 		switch (expr->get_type())
 		{
@@ -917,7 +917,7 @@ namespace type_checker
 		return false;
 	}
 
-	void TypeChecker::expand_compound_assignment(ast::BinaryExpr* expr)
+	void TypeChecker::expand_compound_assignment(ast::BinaryExpr* expr) const
 	{
 		// turn a op= b into a = a op b
 

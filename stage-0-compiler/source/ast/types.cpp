@@ -125,7 +125,7 @@ namespace types
 		*this = Type{ type_enum, std::stoi(std::string{ literal.begin() + i + 1, literal.end() }), literal[i] != 'u' };
 	}
 
-	Type is_valid_type(std::string& str)
+	Type is_valid_type(const std::string& str)
 	{
 		if (str == "int")
 		{
@@ -166,7 +166,7 @@ namespace types
 		return Type(TypeEnum::None);
 	}
 
-	std::pair<bool, Type> check_type_string(std::string& str)
+	std::pair<bool, Type> check_type_string(const std::string& str)
 	{
 		// type formats
 		// int: [0-9][0-9]*(i(8|16|32|64)?)?
@@ -200,7 +200,7 @@ namespace types
 		return { false, Type{ TypeEnum::None } };
 	}
 
-	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, Type type)
+	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, const Type& type)
 	{
 		switch (type.get_type_enum())
 		{
@@ -234,7 +234,7 @@ namespace types
 		return nullptr;
 	}
 
-	llvm::Value* get_default_value(llvm::LLVMContext& llvm_context, Type type)
+	llvm::Value* get_default_value(llvm::LLVMContext& llvm_context, const Type& type)
 	{
 		switch (type.get_type_enum())
 		{
@@ -263,7 +263,7 @@ namespace types
 		}
 	}
 
-	bool check_range(std::string& literal_string, Type type)
+	bool check_range(const std::string& literal_string, const Type& type)
 	{
 		switch (type.get_type_enum())
 		{
@@ -288,7 +288,7 @@ namespace types
 		return false;
 	}
 
-	bool is_cast_valid(Type from, Type target)
+	bool is_cast_valid(const Type& from, const Type& target)
 	{
 		switch (from.get_type_enum())
 		{
@@ -375,12 +375,12 @@ namespace types
 		assert(false && "Negation not supported");
 	}
 
-	void BaseType::set_type(Type& type)
+	void BaseType::set_type(const Type& type)
 	{
 		this->type = type;
 	}
 
-	ptr_type<BaseType> BaseType::create_type(Type curr_type, std::string& str)
+	ptr_type<BaseType> BaseType::create_type(const Type& curr_type, const std::string& str)
 	{
 		ptr_type<BaseType> type = nullptr;
 
@@ -423,7 +423,7 @@ namespace types
 		this->data = 0;
 	}
 
-	IntType::IntType(std::string& str)
+	IntType::IntType(const std::string& str)
 	{
 		int i = 0;
 
@@ -440,13 +440,13 @@ namespace types
 		data = value;
 	}
 
-	llvm::ConstantData* IntType::get_value(llvm::LLVMContext* llvm_context)
+	llvm::ConstantData* IntType::get_value(llvm::LLVMContext* llvm_context) const
 	{
 		// create 32 bit signed int type
 		return llvm::ConstantInt::get(*llvm_context, llvm::APInt(type.get_size(), data, type.is_signed()));
 	}
 
-	std::string IntType::to_string()
+	std::string IntType::to_string() const
 	{
 		return std::to_string((int64_t) this->data);
 	}
@@ -465,7 +465,7 @@ namespace types
 		return false;
 	}
 
-	bool IntType::check_range(std::string& str)
+	bool IntType::check_range(const std::string& str)
 	{
 		Type type{ str, TypeEnum::Int };
 
@@ -587,7 +587,7 @@ namespace types
 		this->data = 0.0f;
 	}
 
-	FloatType::FloatType(std::string& str)
+	FloatType::FloatType(const std::string& str)
 	{
 		int whole = 0;
 		int fraction = 0;
@@ -629,7 +629,7 @@ namespace types
 		data = value;
 	}
 
-	llvm::ConstantData* FloatType::get_value(llvm::LLVMContext* llvm_context)
+	llvm::ConstantData* FloatType::get_value(llvm::LLVMContext* llvm_context) const
 	{
 		if (this->type.get_size() == 32)
 		{
@@ -643,7 +643,7 @@ namespace types
 		}
 	}
 
-	std::string FloatType::to_string()
+	std::string FloatType::to_string() const
 	{
 		return std::to_string(this->data);
 	}
@@ -658,7 +658,7 @@ namespace types
 		this->data = false;
 	}
 
-	BoolType::BoolType(std::string& str)
+	BoolType::BoolType(const std::string& str)
 	{
 		bool value = false;
 
@@ -674,7 +674,7 @@ namespace types
 		data = value;
 	}
 
-	llvm::ConstantData* BoolType::get_value(llvm::LLVMContext* llvm_context)
+	llvm::ConstantData* BoolType::get_value(llvm::LLVMContext* llvm_context) const
 	{
 		if (data)
 		{
@@ -686,7 +686,7 @@ namespace types
 		}
 	}
 
-	std::string BoolType::to_string()
+	std::string BoolType::to_string() const
 	{
 		if (data)
 		{
@@ -703,7 +703,7 @@ namespace types
 		this->data = '\0';
 	}
 
-	CharType::CharType(std::string& str)
+	CharType::CharType(const std::string& str)
 	{
 		char value;
 
@@ -766,12 +766,12 @@ namespace types
 		data = value;
 	}
 
-	llvm::ConstantData* CharType::get_value(llvm::LLVMContext* llvm_context)
+	llvm::ConstantData* CharType::get_value(llvm::LLVMContext* llvm_context) const
 	{
 		return llvm::ConstantInt::get(*llvm_context, llvm::APInt(8, data, true));
 	}
 
-	std::string CharType::to_string()
+	std::string CharType::to_string() const
 	{
 		return std::string{ data };
 	}

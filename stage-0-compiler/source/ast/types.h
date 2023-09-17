@@ -42,17 +42,17 @@ namespace types
 		bool signed_value = false;
 	};
 
-	Type is_valid_type(std::string& str);
+	Type is_valid_type(const std::string& str);
 
-	std::pair<bool, Type> check_type_string(std::string& str);
+	std::pair<bool, Type> check_type_string(const std::string& str);
 
-	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, Type type);
+	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, const Type& type);
 
-	llvm::Value* get_default_value(llvm::LLVMContext& llvm_context, Type type);
+	llvm::Value* get_default_value(llvm::LLVMContext& llvm_context, const Type& type);
 
-	bool check_range(std::string& literal_string, Type type);
+	bool check_range(const std::string& literal_string, const Type& type);
 
-	bool is_cast_valid(Type from, Type target);
+	bool is_cast_valid(const Type& from, const Type& target);
 
 	bool is_numeric(TypeEnum type);
 
@@ -62,16 +62,16 @@ namespace types
 		Type type;
 
 	public:
-		virtual llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) = 0;
+		virtual llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) const = 0;
 		virtual ~BaseType() = default;
-		virtual std::string to_string() = 0;
+		virtual std::string to_string() const = 0;
 		virtual void negate_value();
 
 	private:
-		virtual void set_type(Type& type) final;
+		virtual void set_type(const Type& type) final;
 
 	public:
-		static ptr_type<BaseType> create_type(Type curr_type, std::string& str);
+		static ptr_type<BaseType> create_type(const Type& curr_type, const std::string& str);
 		static bool is_digit(char c);
 	};
 
@@ -79,14 +79,14 @@ namespace types
 	{
 	public:
 		IntType();
-		IntType(std::string& str);
-		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
-		std::string to_string() override;
+		IntType(const std::string& str);
+		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) const override;
+		std::string to_string() const override;
 		virtual void negate_value() override;
-		bool operator==(const IntType& other)const;
+		bool operator==(const IntType& other) const;
 
 	public:
-		static bool check_range(std::string& literal_string);
+		static bool check_range(const std::string& literal_string);
 	private:
 		uint64_t data;
 	};
@@ -95,9 +95,9 @@ namespace types
 	{
 	public:
 		FloatType();
-		FloatType(std::string& str);
-		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
-		std::string to_string() override;
+		FloatType(const std::string& str);
+		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) const override;
+		std::string to_string() const override;
 		virtual void negate_value() override;
 	private:
 		double data;
@@ -107,9 +107,9 @@ namespace types
 	{
 	public:
 		BoolType();
-		BoolType(std::string& str);
-		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
-		std::string to_string() override;
+		BoolType(const std::string& str);
+		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) const override;
+		std::string to_string() const override;
 	private:
 		bool data;
 	};
@@ -118,9 +118,9 @@ namespace types
 	{
 	public:
 		CharType();
-		CharType(std::string& str);
-		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) override;
-		std::string to_string() override;
+		CharType(const std::string& str);
+		llvm::ConstantData* get_value(llvm::LLVMContext* llvm_context) const override;
+		std::string to_string() const override;
 	private:
 		char data;
 	};
