@@ -215,7 +215,7 @@ namespace builder
 			else
 			{
 				// check for void return type
-				if (function_definition->prototype->return_type.type_enum == types::TypeEnum::Void)
+				if (function_definition->prototype->return_type.get_type_enum() == types::TypeEnum::Void)
 				{
 					llvm_ir_builder->CreateRetVoid();
 				}
@@ -430,7 +430,7 @@ namespace builder
 			}
 			case operators::BinaryOp::Addition:
 			{
-				switch (expr->get_result_type().type_enum)
+				switch (expr->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -450,13 +450,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::Subtraction:
 			{
-				switch (expr->get_result_type().type_enum)
+				switch (expr->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -476,13 +476,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::Multiplication:
 			{
-				switch (expr->get_result_type().type_enum)
+				switch (expr->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -502,14 +502,14 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::Division:
 			{
 				// TODO: deal with divide by zero errors
-				switch (expr->get_result_type().type_enum)
+				switch (expr->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -540,14 +540,14 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::Modulo:
 			{
 				// TODO: deal with divide by zero errors
-				switch (expr->get_result_type().type_enum)
+				switch (expr->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -578,13 +578,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::LessThan:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
@@ -616,13 +616,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::LessThanEqual:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
@@ -654,13 +654,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::GreaterThan:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
@@ -692,13 +692,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::GreaterThanEqual:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
@@ -730,13 +730,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::EqualTo:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Bool:
@@ -758,13 +758,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::NotEqualTo:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Bool:
@@ -786,7 +786,7 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -870,7 +870,7 @@ namespace builder
 
 				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "and.res");
 
-				phi_node->addIncoming(types::get_default_value(*llvm_context, types::get_default_type(types::TypeEnum::Bool)), lhs_end_block);
+				phi_node->addIncoming(types::get_default_value(*llvm_context, types::Type{ types::TypeEnum::Bool }), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
@@ -954,13 +954,13 @@ namespace builder
 
 				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "or.res");
 
-				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(types::TypeEnum::Bool)), 1, false), lhs_end_block);
+				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type{ types::TypeEnum::Bool }), 1, false), lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
 			case operators::BinaryOp::BitwiseAnd:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -972,13 +972,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::BitwiseOr:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -990,13 +990,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::BitwiseXor:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -1008,13 +1008,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::BitwiseShiftLeft:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -1026,13 +1026,13 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
 			case operators::BinaryOp::BitwiseShiftRight:
 			{
-				switch (expr->lhs->get_result_type().type_enum)
+				switch (expr->lhs->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -1055,7 +1055,7 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -1107,7 +1107,7 @@ namespace builder
 		}
 
 		// void return types cannot have a name
-		if (expr->get_result_type().type_enum == types::TypeEnum::Void)
+		if (expr->get_result_type().get_type_enum() == types::TypeEnum::Void)
 		{
 			return llvm_ir_builder->CreateCall(callee_func, args);
 		}
@@ -1458,7 +1458,7 @@ namespace builder
 			}
 			case operators::UnaryOp::Minus:
 			{
-				switch (expr->expr->get_result_type().type_enum)
+				switch (expr->expr->get_result_type().get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					{
@@ -1478,7 +1478,7 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + types::to_string(expr->get_result_type()) + ", for operator: " + operators::to_string(expr->unop));
+						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->unop));
 					}
 				}
 			}
@@ -1539,13 +1539,13 @@ namespace builder
 			}
 		}
 
-		switch (from_type.type_enum)
+		switch (from_type.get_type_enum())
 		{
 			case types::TypeEnum::Int:
 			case types::TypeEnum::Bool:
 			case types::TypeEnum::Char:
 			{
-				switch (target_type.type_enum)
+				switch (target_type.get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:
@@ -1600,7 +1600,7 @@ namespace builder
 							return llvm::ConstantExpr::getTrunc(constant_value, llvm_target_type);
 							return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_NE, constant_value, llvm::ConstantInt::get(constant_value->getType(), 0, from_type.is_signed()));
 						}
-						return llvm_ir_builder->CreateICmpNE(expr_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::get_default_type(from_type.type_enum)), 0, from_type.is_signed()), "convert_to_bool");
+						return llvm_ir_builder->CreateICmpNE(expr_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type{ from_type.get_type_enum() }), 0, from_type.is_signed()), "convert_to_bool");
 					}
 					case types::TypeEnum::Float:
 					{
@@ -1629,7 +1629,7 @@ namespace builder
 			}
 			case types::TypeEnum::Float:
 			{
-				switch (target_type.type_enum)
+				switch (target_type.get_type_enum())
 				{
 					case types::TypeEnum::Int:
 					case types::TypeEnum::Char:

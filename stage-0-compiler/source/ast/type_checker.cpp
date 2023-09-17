@@ -236,8 +236,8 @@ namespace type_checker
 		// check the expression result type
 		if (!expr->check_types())
 		{
-			std::string type1 = types::to_string(expr->curr_type);
-			std::string type2 = types::to_string(expr->expr->get_result_type());
+			std::string type1 = expr->curr_type.to_string();
+			std::string type2 = expr->expr->get_result_type().to_string();
 			return log_error(expr, "Variable declaration expression for: " + module::StringManager::get_string(expr->name_id) + ", expected type: " + type1 + " but got type: " + type2 + " instead");
 		}
 
@@ -379,15 +379,15 @@ namespace type_checker
 			// check both sides of the binary operator have the same type, type is given by lhs
 			if (!expr->check_types())
 			{
-				std::string type1 = types::to_string(expr->lhs->get_result_type());
-				std::string type2 = types::to_string(expr->rhs->get_result_type());
+				std::string type1 = expr->lhs->get_result_type().to_string();
+				std::string type2 = expr->lhs->get_result_type().to_string();
 				return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " has incompatible types: " + type1 + " and " + type2 + " given");
 			}
 
 			// check type supports the specified operation
 			if (!operators::is_type_supported(expr->binop, expr->get_result_type()))
 			{
-				std::string type = types::to_string(expr->rhs->get_result_type());
+				std::string type = expr->rhs->get_result_type().to_string();
 				return log_error(expr, "Binary operator " + operators::to_string(expr->binop) + " does not support the given type: " + type);
 			}
 		}
@@ -503,7 +503,7 @@ namespace type_checker
 		}
 
 		// check the condition has type bool
-		if (expr->condition->get_result_type().type_enum != types::TypeEnum::Bool)
+		if (expr->condition->get_result_type().get_type_enum() != types::TypeEnum::Bool)
 		{
 			return log_error(expr, "If condition must have type bool");
 		}
@@ -523,8 +523,8 @@ namespace type_checker
 		// check both bodies have the same result type, type iof given by the if body
 		if (!expr->check_types())
 		{
-			std::string type1 = types::to_string(expr->if_body->get_result_type());
-			std::string type2 = types::to_string(expr->else_body->get_result_type());
+			std::string type1 = expr->if_body->get_result_type().to_string();
+			std::string type2 = expr->else_body->get_result_type().to_string();
 			return log_error(expr, "If Statement has incompatible result types: " + type1 + " and " + type2 + " given");
 		}
 
@@ -546,8 +546,8 @@ namespace type_checker
 		// check the variable has correct type
 		if (expr->var_type != expr->start_expr->get_result_type())
 		{
-			std::string type1 = types::to_string(expr->var_type);
-			std::string type2 = types::to_string(expr->start_expr->get_result_type());
+			std::string type1 = expr->var_type.to_string();
+			std::string type2 = expr->start_expr->get_result_type().to_string();
 			return log_error(expr, "for start expression has invalid type, expected type: " + type1 + ", but got type: " + type2 + " instead");
 		}
 
@@ -558,7 +558,7 @@ namespace type_checker
 		}
 
 		// check the end condition has type bool
-		if (expr->end_expr->get_result_type().type_enum != types::TypeEnum::Bool)
+		if (expr->end_expr->get_result_type().get_type_enum() != types::TypeEnum::Bool)
 		{
 			return log_error(expr, "For end condition must have type bool");
 		}
@@ -594,7 +594,7 @@ namespace type_checker
 		}
 
 		// check the end condition has type bool
-		if (expr->end_expr->get_result_type().type_enum != types::TypeEnum::Bool)
+		if (expr->end_expr->get_result_type().get_type_enum() != types::TypeEnum::Bool)
 		{
 			return log_error(expr, "While end condition must have type bool");
 		}
@@ -639,9 +639,9 @@ namespace type_checker
 				body = body->get_body();
 			}
 
-			std::string type1 = types::to_string(body->parent_function->return_type);
+			std::string type1 = body->parent_function->return_type.to_string();
 
-			std::string type2 = types::to_string(expr->ret_expr->get_result_type());
+			std::string type2 = expr->ret_expr->get_result_type().to_string();
 			return log_error(expr, "Return statement has incompatible type with function return type, expected: " + type1 + " , but got: " + type2 + " instead");
 		}
 
@@ -684,14 +684,14 @@ namespace type_checker
 		// check both sides of the binary operator have the same type, type is given by lhs
 		if (!expr->check_types())
 		{
-			std::string type = types::to_string(expr->expr->get_result_type());
+			std::string type = expr->expr->get_result_type().to_string();
 			return log_error(expr, "Unary operator " + operators::to_string(expr->unop) + " has incompatible type: " + type + " given");
 		}
 
 		// check type supports the specified operation
 		if (!operators::is_type_supported(expr->unop, expr->get_result_type()))
 		{
-			std::string type = types::to_string(expr->expr->get_result_type());
+			std::string type = expr->expr->get_result_type().to_string();
 			return log_error(expr, "Unary operator " + operators::to_string(expr->unop) + " does not support the given type: " + type);
 		}
 
@@ -731,7 +731,7 @@ namespace type_checker
 
 		// check target type is a valid type
 		types::Type type = types::is_valid_type(module::StringManager::get_string(expr->target_type_id));
-		if (type.type_enum == types::TypeEnum::None)
+		if (type.get_type_enum() == types::TypeEnum::None)
 		{
 			return log_error(expr, "Cast target type is invalid: " + module::StringManager::get_string(expr->target_type_id));
 		}
@@ -741,8 +741,8 @@ namespace type_checker
 		// check that type can be converted into the target type
 		if (!types::is_cast_valid(from_type, type))
 		{
-			std::string type1 = types::to_string(from_type);
-			std::string type2 = types::to_string(type);
+			std::string type1 = from_type.to_string();
+			std::string type2 = type.to_string();
 			return log_error(expr, "Cannot cast from type: " + type1 + ", to type: " + type2);
 		}
 
@@ -761,7 +761,7 @@ namespace type_checker
 		// check value
 		if (!expr->check_types())
 		{
-			std::string type = types::to_string(expr->value_expr->get_result_type());
+			std::string type = expr->value_expr->get_result_type().to_string();
 			return log_error(expr, "Switch value must have type integer, but got type: " + type);
 		}
 
@@ -777,8 +777,8 @@ namespace type_checker
 
 			if (case_expr->case_expr->get_result_type() != value_type)
 			{
-				std::string type1 = types::to_string(value_type);
-				std::string type2 = types::to_string(case_expr->case_expr->get_result_type());
+				std::string type1 = value_type.to_string();
+				std::string type2 = case_expr->case_expr->get_result_type().to_string();
 				return log_error(case_expr.get(), "Case has invalid type, expected: " + type1 + " , but got: " + type2 + " instead");
 			}
 		}

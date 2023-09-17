@@ -243,7 +243,7 @@ namespace parser
 			{
 				// check if identifier is a bool
 				std::pair<bool, types::Type> res = types::check_type_string(identifier_string);
-				if (res.first && res.second.type_enum == types::TypeEnum::Bool)
+				if (res.first && res.second.get_type_enum() == types::TypeEnum::Bool)
 				{
 					curr_type = res.second;
 					curr_token = Token::LiteralValue;
@@ -746,7 +746,7 @@ namespace parser
 		std::vector<types::Type> types;
 		std::vector<int> arg_ids;
 
-		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::get_default_type(types::TypeEnum::Void), types, arg_ids);
+		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::Type{ types::TypeEnum::Void }, types, arg_ids);
 		return make_ptr<ast::FunctionDefinition>(proto, std::move(expr));
 	}
 
@@ -951,7 +951,7 @@ namespace parser
 	/// literal_expr ::= 'curr_type'
 	ptr_type<ast::BaseExpr> Parser::parse_literal()
 	{
-		if (curr_type.type_enum == types::TypeEnum::None)
+		if (curr_type.get_type_enum() == types::TypeEnum::None)
 		{
 			return log_error("Literal is not a valid type");
 		}
@@ -962,7 +962,7 @@ namespace parser
 		// TODO: not ignore float
 		if (!types::check_range(literal_string, curr_type))
 		{
-			return log_error("Literal value for type: " + types::to_string(curr_type) + " is out of range");
+			return log_error("Literal value for type: " + curr_type.to_string() + " is out of range");
 		}
 
 		// next token will be eaten in parse_primary
@@ -977,7 +977,7 @@ namespace parser
 
 		types::Type var_type = types::is_valid_type(identifier_string);
 
-		if (var_type.type_enum == types::TypeEnum::None)
+		if (var_type.get_type_enum() == types::TypeEnum::None)
 		{
 			return log_error("Invalid type specified");
 		}
@@ -1101,7 +1101,7 @@ namespace parser
 
 		types::Type return_type = types::is_valid_type(identifier_string);
 
-		if (return_type.type_enum == types::TypeEnum::None)
+		if (return_type.get_type_enum() == types::TypeEnum::None)
 		{
 			log_error_empty("Return type for function prototype is invalid");
 			return nullptr;
@@ -1340,7 +1340,7 @@ namespace parser
 
 		types::Type var_type = types::is_valid_type(identifier_string);
 
-		if (var_type.type_enum == types::TypeEnum::None)
+		if (var_type.get_type_enum() == types::TypeEnum::None)
 		{
 			return log_error("Invalid type after for");
 		}

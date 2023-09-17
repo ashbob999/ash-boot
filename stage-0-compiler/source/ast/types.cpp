@@ -5,19 +5,43 @@
 
 namespace types
 {
-	Type::Type() : type_enum(TypeEnum::None), data(0)
+	Type::Type() : type_enum{ TypeEnum::None }, size{ 0 }, signed_value{ false }
 	{}
 
-	Type::Type(TypeEnum type_enum) : type_enum(type_enum), data(0)
-	{}
+	Type::Type(TypeEnum type_enum) : type_enum{ type_enum }, size{ 0 }, signed_value{ false }
+	{
+		switch (type_enum)
+		{
+			case TypeEnum::Int:
+			{
+				this->size = 32;
+				this->signed_value = true;
+				break;
+			}
+			case TypeEnum::Float:
+			{
+				this->size = 32;
+				this->signed_value = true;
+				break;
+			}
+			case TypeEnum::Bool:
+			{
+				this->size = 1;
+				this->signed_value = false;
+				break;
+			}
+			case TypeEnum::Char:
+			{
+				this->size = 8;
+				this->signed_value = true;
+				break;
+			}
+		}
+	}
 
 	bool Type::operator==(const Type& other) const
 	{
-		if (this->type_enum == other.type_enum && this->data == other.data)
-		{
-			return true;
-		}
-		return false;
+		return std::tie(this->type_enum, this->size, this->signed_value) == std::tie(other.type_enum, other.size, other.signed_value);
 	}
 
 	bool Type::operator!=(const Type& other) const
@@ -25,18 +49,48 @@ namespace types
 		return !(*this == other);
 	}
 
-	Type::Type(TypeEnum type_enum, int size, bool is_signed) : type_enum(type_enum)
+	std::string Type::to_string() const
 	{
-		// data bit-0: sign bit
-		// data bit1-31: size bits
-		data = size << 1;
-		if (is_signed)
+		switch (this->type_enum)
 		{
-			data |= 1;
+			case TypeEnum::None:
+			{
+				return "None";
+			}
+			case TypeEnum::Int:
+			{
+				if (this->signed_value)
+				{
+					return "i" + std::to_string(this->size);
+				}
+				else
+				{
+					return "u" + std::to_string(this->size);
+				}
+			}
+			case TypeEnum::Float:
+			{
+				return "f" + std::to_string(this->size);
+			}
+			case TypeEnum::Void:
+			{
+				return "Void";
+			}
+			case TypeEnum::Bool:
+			{
+				return "Bool";
+			}
+			case TypeEnum::Char:
+			{
+				return "Char";
+			}
 		}
 	}
 
-	Type::Type(const std::string& literal, TypeEnum type) : type_enum{ type }, data{ 0 }
+	Type::Type(TypeEnum type_enum, int size, bool is_signed) : type_enum(type_enum), size{ size }, signed_value{ is_signed }
+	{}
+
+	Type::Type(const std::string& literal, TypeEnum type) : type_enum{ type }, size{ 0 }, signed_value{ false }
 	{
 		char c1 = '\0';
 		char c2 = '\0';
@@ -52,8 +106,7 @@ namespace types
 		}
 		else
 		{
-			Type t = get_default_type(type_enum);
-			this->data = t.data;
+			*this = Type{ type_enum };
 			return;
 		}
 
@@ -65,30 +118,18 @@ namespace types
 
 		if (i == 0 || i == literal.length() - 1)
 		{
-			Type t = get_default_type(type_enum);
-			this->data = data;
+			*this = Type{ type_enum };
 			return;
 		}
 
-		Type t{ type_enum, std::stoi(std::string{ literal.begin() + i + 1, literal.end() }), literal[i] != 'u' };
-		this->data = t.data;
-	}
-
-	int Type::get_size()
-	{
-		return data >> 1;
-	}
-
-	bool Type::is_signed()
-	{
-		return (data & 1) == 1;
+		*this = Type{ type_enum, std::stoi(std::string{ literal.begin() + i + 1, literal.end() }), literal[i] != 'u' };
 	}
 
 	Type is_valid_type(std::string& str)
 	{
 		if (str == "int")
 		{
-			return get_default_type(TypeEnum::Int);
+			return Type{ TypeEnum::Int };
 		}
 		else if ((str[0] == 'i' || str[0] == 'u') && str.length() > 1)
 		{
@@ -100,7 +141,7 @@ namespace types
 		}
 		else if (str == "float")
 		{
-			return get_default_type(TypeEnum::Float);
+			return Type{ TypeEnum::Float };
 		}
 		else if (str[0] == 'f' && str.length() > 1)
 		{
@@ -149,19 +190,19 @@ namespace types
 		}
 		else if (std::regex_match(str, match, bool_regex))
 		{
-			return { true, get_default_type(TypeEnum::Bool) };
+			return { true, Type{TypeEnum::Bool} };
 		}
 		else if (std::regex_match(str, match, char_regex))
 		{
-			return { true, get_default_type(TypeEnum::Char) };
+			return { true, Type{ TypeEnum::Char } };
 		}
 
-		return { false, get_default_type(TypeEnum::None) };
+		return { false, Type{ TypeEnum::None } };
 	}
 
 	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, Type type)
 	{
-		switch (type.type_enum)
+		switch (type.get_type_enum())
 		{
 			case TypeEnum::Int:
 			case TypeEnum::Bool:
@@ -195,7 +236,7 @@ namespace types
 
 	llvm::Value* get_default_value(llvm::LLVMContext& llvm_context, Type type)
 	{
-		switch (type.type_enum)
+		switch (type.get_type_enum())
 		{
 			case TypeEnum::Int:
 			case TypeEnum::Bool:
@@ -222,47 +263,9 @@ namespace types
 		}
 	}
 
-	std::string to_string(Type type)
-	{
-		switch (type.type_enum)
-		{
-			case TypeEnum::None:
-			{
-				return "None";
-			}
-			case TypeEnum::Int:
-			{
-				if (type.is_signed())
-				{
-					return "i" + std::to_string(type.get_size());
-				}
-				else
-				{
-					return "u" + std::to_string(type.get_size());
-				}
-			}
-			case TypeEnum::Float:
-			{
-				return "f" + std::to_string(type.get_size());
-			}
-			case TypeEnum::Void:
-			{
-				return "Void";
-			}
-			case TypeEnum::Bool:
-			{
-				return "Bool";
-			}
-			case TypeEnum::Char:
-			{
-				return "Char";
-			}
-		}
-	}
-
 	bool check_range(std::string& literal_string, Type type)
 	{
-		switch (type.type_enum)
+		switch (type.get_type_enum())
 		{
 			case types::TypeEnum::Int:
 			{
@@ -285,40 +288,13 @@ namespace types
 		return false;
 	}
 
-	Type get_default_type(TypeEnum type_enum)
-	{
-		switch (type_enum)
-		{
-			case TypeEnum::Int:
-			{
-				return { TypeEnum::Int, 32, true };
-			}
-			case TypeEnum::Float:
-			{
-				return { TypeEnum::Float, 32, true };
-			}
-			case TypeEnum::Bool:
-			{
-				return { TypeEnum::Bool, 1, false };
-			}
-			case TypeEnum::Char:
-			{
-				return { TypeEnum::Char, 8, true };
-			}
-			default:
-			{
-				return Type(type_enum);
-			}
-		}
-	}
-
 	bool is_cast_valid(Type from, Type target)
 	{
-		switch (from.type_enum)
+		switch (from.get_type_enum())
 		{
 			case TypeEnum::Int: // int -> numeric
 			{
-				switch (target.type_enum)
+				switch (target.get_type_enum())
 				{
 					case TypeEnum::Bool:
 					case TypeEnum::Char:
@@ -352,22 +328,22 @@ namespace types
 			}
 			case TypeEnum::Float: // float -> numeric
 			{
-				if (target.type_enum == TypeEnum::Bool)
+				if (target.get_type_enum() == TypeEnum::Bool)
 				{
 					return false;
 				}
 				else
 				{
-					return is_numeric(target.type_enum);
+					return is_numeric(target.get_type_enum());
 				}
 			}
 			case TypeEnum::Bool: // bool -> numeric
 			{
-				return is_numeric(target.type_enum);
+				return is_numeric(target.get_type_enum());
 			}
 			case TypeEnum::Char: // char -> numeric
 			{
-				return is_numeric(target.type_enum);
+				return is_numeric(target.get_type_enum());
 			}
 			default:
 			{
@@ -408,7 +384,7 @@ namespace types
 	{
 		ptr_type<BaseType> type = nullptr;
 
-		switch (curr_type.type_enum)
+		switch (curr_type.get_type_enum())
 		{
 			case TypeEnum::Int:
 			{
@@ -456,7 +432,7 @@ namespace types
 		// parse the numbers
 		for (; i < str.length() && std::isdigit(str[i]); i++)
 		{
-			value = value * 10 + (str[i] - '0');
+			value = value * 10 + static_cast<uint64_t>(str[i] - '0');
 		}
 
 		//std::cout << "int " << value << std::endl;

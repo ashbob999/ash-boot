@@ -230,7 +230,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Literal Value : {" << constant_to_string(this) << '\n';
-		str << tabs << '\t' << "Type: " << types::to_string(this->curr_type) << '\n';
+		str << tabs << '\t' << "Type: " << this->curr_type.to_string() << '\n';
 		str << tabs << '\t' << "Value: " << this->value_type->to_string() << '\n';
 		str << tabs << "}," << '\n';
 
@@ -239,7 +239,7 @@ namespace ast
 
 	types::Type LiteralExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			result_type = this->curr_type;
 		}
@@ -248,7 +248,7 @@ namespace ast
 
 	bool LiteralExpr::check_types()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			result_type = this->curr_type;
 		}
@@ -276,7 +276,7 @@ namespace ast
 
 		str << tabs << "Variable Declaration: {" << constant_to_string(this) << '\n';
 		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
-		str << tabs << '\t' << "Type: " << types::to_string(this->curr_type) << '\n';
+		str << tabs << '\t' << "Type: " << this->curr_type.to_string() << '\n';
 		str << tabs << '\t' << "Value: {" << '\n';
 		if (this->expr == nullptr)
 		{
@@ -294,7 +294,7 @@ namespace ast
 
 	types::Type VariableDeclarationExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			result_type = this->curr_type;
 		}
@@ -330,7 +330,7 @@ namespace ast
 
 	types::Type VariableReferenceExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			//result_type = this->get_body()->named_types[this->name];
 			result_type = scope::get_scope(this)->named_types[this->name_id];
@@ -374,11 +374,11 @@ namespace ast
 
 	types::Type BinaryExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			if (is_binary_comparision(this->binop))
 			{
-				result_type = types::get_default_type(types::TypeEnum::Bool);
+				result_type = types::Type{ types::TypeEnum::Bool };
 			}
 			else if (this->binop == operators::BinaryOp::ModuleScope)
 			{
@@ -451,7 +451,7 @@ namespace ast
 
 	types::Type BodyExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			if (this->expressions.size() > 0)
 			{
@@ -529,7 +529,7 @@ namespace ast
 
 	types::Type CallExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			//result_type = scope::get_scope(ptr_type<CallExpr>(this))->function_prototypes[this->callee]->return_type;
 			result_type = scope::get_scope(this)->function_prototypes[this->callee_id]->return_type;
@@ -605,7 +605,7 @@ namespace ast
 
 	types::Type IfExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			if (this->should_return_value)
 			{
@@ -613,7 +613,7 @@ namespace ast
 			}
 			else
 			{
-				result_type = types::get_default_type(types::TypeEnum::Void);
+				result_type = types::Type{ types::TypeEnum::Void };
 			}
 		}
 		return result_type;
@@ -621,7 +621,7 @@ namespace ast
 
 	bool IfExpr::check_types()
 	{
-		if (this->condition->get_result_type().type_enum == types::TypeEnum::Bool)
+		if (this->condition->get_result_type().get_type_enum() == types::TypeEnum::Bool)
 		{
 			if (this->should_return_value)
 			{
@@ -659,7 +659,7 @@ namespace ast
 		str << tabs << "For Loop: {" << constant_to_string(this) << '\n';
 
 		str << tabs << '\t' << "Start Value: {" << '\n';
-		str << tabs << '\t' << '\t' << "Type: " << types::to_string(this->var_type) << "," << '\n';
+		str << tabs << '\t' << '\t' << "Type: " << this->var_type.to_string() << "," << '\n';
 		str << tabs << '\t' << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << "," << '\n';
 		str << tabs << '\t' << '\t' << "Value: {" << '\n';
 		str << this->start_expr->to_string(depth + 3);
@@ -690,16 +690,16 @@ namespace ast
 
 	types::Type ForExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::get_default_type(types::TypeEnum::Void);
+			result_type = types::Type{ types::TypeEnum::Void };
 		}
 		return result_type;
 	}
 
 	bool ForExpr::check_types()
 	{
-		if (end_expr->get_result_type().type_enum == types::TypeEnum::Bool)
+		if (end_expr->get_result_type().get_type_enum() == types::TypeEnum::Bool)
 		{
 			return true;
 		}
@@ -734,16 +734,16 @@ namespace ast
 
 	types::Type WhileExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::get_default_type(types::TypeEnum::Void);
+			result_type = types::Type{ types::TypeEnum::Void };
 		}
 		return result_type;
 	}
 
 	bool WhileExpr::check_types()
 	{
-		if (end_expr->get_result_type().type_enum == types::TypeEnum::Bool)
+		if (end_expr->get_result_type().get_type_enum() == types::TypeEnum::Bool)
 		{
 			return true;
 		}
@@ -799,11 +799,11 @@ namespace ast
 
 	types::Type ReturnExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			if (ret_expr == nullptr)
 			{
-				result_type = types::get_default_type(types::TypeEnum::Void);
+				result_type = types::Type{ types::TypeEnum::Void };
 			}
 			else
 			{
@@ -847,9 +847,9 @@ namespace ast
 
 	types::Type ContinueExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::get_default_type(types::TypeEnum::Void);
+			result_type = types::Type{ types::TypeEnum::Void };
 		}
 		return result_type;
 	}
@@ -888,9 +888,9 @@ namespace ast
 
 	types::Type BreakExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::get_default_type(types::TypeEnum::Void);
+			result_type = types::Type{ types::TypeEnum::Void };
 		}
 		return result_type;
 	}
@@ -936,7 +936,7 @@ namespace ast
 
 	types::Type UnaryExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			result_type = this->expr->get_result_type();
 		}
@@ -959,7 +959,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Cast Operation: {" << constant_to_string(this) << '\n';
-		str << tabs << '\t' << "Target Type: " << types::to_string(target_type) << '\n';
+		str << tabs << '\t' << "Target Type: " << this->target_type.to_string() << '\n';
 		str << tabs << '\t' << "Expression: {" << '\n';
 		str << this->expr->to_string(depth + 2);
 		str << tabs << '\t' << "}" << '\n';
@@ -970,7 +970,7 @@ namespace ast
 
 	types::Type CastExpr::get_result_type()
 	{
-		if (result_type.type_enum == types::TypeEnum::None)
+		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			result_type = target_type;
 		}
@@ -1012,16 +1012,16 @@ namespace ast
 
 	types::Type SwitchExpr::get_result_type()
 	{
-		if (this->result_type.type_enum == types::TypeEnum::None)
+		if (this->result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			this->result_type = types::get_default_type(types::TypeEnum::Void);
+			this->result_type = types::Type{ types::TypeEnum::Void };
 		}
 		return this->result_type;
 	}
 
 	bool SwitchExpr::check_types()
 	{
-		if (this->value_expr->get_result_type().type_enum == types::TypeEnum::Int)
+		if (this->value_expr->get_result_type().get_type_enum() == types::TypeEnum::Int)
 		{
 			return true;
 		}
@@ -1062,9 +1062,9 @@ namespace ast
 
 	types::Type CaseExpr::get_result_type()
 	{
-		if (this->result_type.type_enum == types::TypeEnum::None)
+		if (this->result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			this->result_type = types::get_default_type(types::TypeEnum::Void);
+			this->result_type = types::Type{ types::TypeEnum::Void };
 		}
 		return this->result_type;
 	}
@@ -1072,7 +1072,7 @@ namespace ast
 	bool CaseExpr::check_types()
 	{
 		// TODO: maybe check for constant expressions
-		if (this->case_expr->get_result_type().type_enum == types::TypeEnum::Int)
+		if (this->case_expr->get_result_type().get_type_enum() == types::TypeEnum::Int)
 		{
 			return true;
 		}
@@ -1096,7 +1096,7 @@ namespace ast
 
 		for (int i = 0; i < this->args.size(); i++)
 		{
-			str << tabs << '\t' << '\t' << "{ " << module::StringManager::get_string(this->args[i]) << ": " << types::to_string(this->types[i]) << "}," << '\n';
+			str << tabs << '\t' << '\t' << "{ " << module::StringManager::get_string(this->args[i]) << ": " << this->types[i].to_string() << "}," << '\n';
 		}
 
 		str << tabs << '\t' << "]," << '\n';
@@ -1136,7 +1136,7 @@ namespace ast
 
 	bool FunctionDefinition::check_return_type()
 	{
-		if (this->prototype->return_type.type_enum == types::TypeEnum::Void)
+		if (this->prototype->return_type.get_type_enum() == types::TypeEnum::Void)
 		{
 			return true;
 		}

@@ -567,7 +567,7 @@ namespace operators
 		{
 			return false; // module scope operator does not apply to types
 		}
-		switch (type.type_enum)
+		switch (type.get_type_enum())
 		{
 			case types::TypeEnum::Int:
 			{
@@ -622,7 +622,7 @@ namespace operators
 
 	bool is_type_supported(UnaryOp unop, types::Type type)
 	{
-		switch (type.type_enum)
+		switch (type.get_type_enum())
 		{
 			case types::TypeEnum::Int:
 			{

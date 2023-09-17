@@ -152,11 +152,11 @@ namespace mangler
 		{
 			for (int i = 0; i < types.size() - 1; i++)
 			{
-				name += types::to_string(types[i]);
+				name += types[i].to_string();
 				name += '_';
 			}
 
-			name += types::to_string(types.back());
+			name += types.back().to_string();
 		}
 
 		return name;
@@ -427,7 +427,7 @@ namespace mangler
 		std::string name = "V";
 
 		// TODO: handle the type to string better & handle the second option
-		std::string type_name = types::to_string(type);
+		std::string type_name = type.to_string();
 
 		name += std::to_string(type_name.size());
 		name += type_name;
