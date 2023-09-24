@@ -1,8 +1,8 @@
 #include <cassert>
 #include <iostream>
 
-#include "module.h"
 #include "mangler.h"
+#include "module.h"
 
 namespace module
 {
@@ -53,7 +53,7 @@ namespace module
 			assert(false && "invalid id");
 		}
 
-		//return id_to_string[id];
+		// return id_to_string[id];
 		auto it = id_to_string.begin();
 		std::advance(it, id);
 		return *it;
@@ -98,14 +98,16 @@ namespace module
 
 			for (auto& v : ModuleManager::file_usings.at(filename))
 			{
-				auto f = std::find_if(ModuleManager::file_modules.begin(), ModuleManager::file_modules.end(), [&](const std::pair<int, int>& p)
-				{
-					return p.second == v;
-				});
+				auto f = std::find_if(
+					ModuleManager::file_modules.begin(),
+					ModuleManager::file_modules.end(),
+					[&](const std::pair<int, int>& p) { return p.second == v; });
 
 				if (f == ModuleManager::file_modules.end())
 				{
-					log_error("Using Module '" + StringManager::get_string(v) + "' does not exist (in file: " + StringManager::get_string(filename) + ")");
+					log_error(
+						"Using Module '" + StringManager::get_string(v) +
+						"' does not exist (in file: " + StringManager::get_string(filename) + ")");
 					return false;
 				}
 			}
@@ -171,7 +173,7 @@ namespace module
 		{
 			{
 				// check current module
-				int mangled_id = mangler::Mangler::add_mangled_name(module_id, name_id);
+				int mangled_id = mangler::add_mangled_name(module_id, name_id);
 				for (auto& f : exported_functions)
 				{
 					if (f == mangled_id)
@@ -186,7 +188,7 @@ namespace module
 			{
 				std::unordered_set<int>& funcs = ModuleManager::exported_functions.at(m);
 
-				int mangled_id = mangler::Mangler::add_mangled_name(m, name_id);
+				int mangled_id = mangler::add_mangled_name(m, name_id);
 
 				// check module funtions
 				for (auto& f : funcs)
@@ -211,7 +213,7 @@ namespace module
 		{
 			std::unordered_set<int>& funcs = ModuleManager::exported_functions.at(m);
 
-			int mangled_id = mangler::Mangler::add_mangled_name(m, name_id);
+			int mangled_id = mangler::add_mangled_name(m, name_id);
 
 			// check module funtions
 			for (auto& f : funcs)
@@ -291,7 +293,7 @@ namespace module
 			// add node to tail of  L
 			L.push_back(node);
 
-			//for (auto& m : ModuleManager::module_usings.at(node))
+			// for (auto& m : ModuleManager::module_usings.at(node))
 			for (auto& m : find_using_modules(node))
 			{
 				// remove edge from node -> m from graph
@@ -303,7 +305,6 @@ namespace module
 					S.insert(m);
 				}
 			}
-
 		}
 
 		// if a graph has edges, then the graph has at least one cycle
@@ -329,7 +330,8 @@ namespace module
 	{
 		std::vector<std::pair<int, int>> circular_dependencies;
 
-		// find cycles in dag: https://stackoverflow.com/questions/261573/best-algorithm-for-detecting-cycles-in-a-directed-graph
+		// find cycles in dag:
+		// https://stackoverflow.com/questions/261573/best-algorithm-for-detecting-cycles-in-a-directed-graph
 		std::unordered_set<int> discovered;
 		std::unordered_set<int> finished;
 
@@ -378,7 +380,9 @@ namespace module
 		auto r = get_circular_dependencies();
 		for (auto p : r)
 		{
-			log_error("\tIn module '" + StringManager::get_string(p.first) + "': requiring '" + StringManager::get_string(p.second) + "' creates a cycle.");
+			log_error(
+				"\tIn module '" + StringManager::get_string(p.first) + "': requiring '" +
+				StringManager::get_string(p.second) + "' creates a cycle.");
 		}
 	}
 
@@ -398,7 +402,7 @@ namespace module
 
 	ast::BodyExpr* ModuleManager::find_body(int function_id)
 	{
-		int module_name = mangler::Mangler::extract_module(function_id);
+		int module_name = mangler::extract_module(function_id);
 
 		for (auto& file : ModuleManager::module_contents.at(module_name))
 		{

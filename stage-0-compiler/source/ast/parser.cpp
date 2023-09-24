@@ -1,10 +1,11 @@
 #include <iostream>
 
-#include "parser.h"
 #include "mangler.h"
+#include "parser.h"
 
 namespace parser
 {
+	// clang-format off
 	// the operator precedences, higher binds tighter, same binds to the left
 	const std::unordered_map<operators::BinaryOp, int> Parser::binop_precedence = {
 		{operators::BinaryOp::Assignment,                10},
@@ -36,8 +37,11 @@ namespace parser
 		{operators::BinaryOp::Modulo,                   140},
 		{operators::BinaryOp::ModuleScope,              200},
 	};
+	// clang-format on
 
-	Parser::Parser(std::ifstream& input_file, const std::string& file_name) : input_file(input_file), file_name(file_name)
+	Parser::Parser(std::ifstream& input_file, const std::string& file_name) :
+		input_file(input_file),
+		file_name(file_name)
 	{
 		filename_id = module::ModuleManager::get_file_as_module(file_name);
 	}
@@ -262,7 +266,8 @@ namespace parser
 		{
 			identifier_string = last_char;
 			char next_char = peek_char();
-			while (std::isdigit(next_char) || next_char == '.' || next_char == 'f' || next_char == 'i' || next_char == 'u')
+			while (std::isdigit(next_char) || next_char == '.' || next_char == 'f' || next_char == 'i' ||
+				   next_char == 'u')
 			{
 				last_char = get_char();
 				identifier_string += last_char;
@@ -398,7 +403,7 @@ namespace parser
 			return curr_token;
 		}
 
-		//std::cout << "identifier " << identifier_string << " " << last_char << std::endl;
+		// std::cout << "identifier " << identifier_string << " " << last_char << std::endl;
 
 		// anything else
 		curr_token = Token::None;
@@ -427,8 +432,7 @@ namespace parser
 			/*curr_token = get_next_token();*/
 			switch (curr_token)
 			{
-				case Token::EndOfFile:
-				{
+				case Token::EndOfFile: {
 					if (has_curly_brackets)
 					{
 						bodies.pop_back();
@@ -436,13 +440,11 @@ namespace parser
 					}
 					return body;
 				}
-				case Token::EndOfExpression:
-				{
+				case Token::EndOfExpression: {
 					// skip
 					break;
 				}
-				case Token::VariableDeclaration:
-				{
+				case Token::VariableDeclaration: {
 					if (is_top_level)
 					{
 						return log_error_body("Expressions are not allowed in top level code");
@@ -459,8 +461,7 @@ namespace parser
 
 					break;
 				}
-				case Token::FunctionDefinition:
-				{
+				case Token::FunctionDefinition: {
 					if (this->finished_parsing_modules == false)
 					{
 						this->update_current_module();
@@ -483,8 +484,7 @@ namespace parser
 
 					break;
 				}
-				case Token::ExternFunction:
-				{
+				case Token::ExternFunction: {
 					if (this->finished_parsing_modules == false)
 					{
 						this->update_current_module();
@@ -500,8 +500,7 @@ namespace parser
 					body->add_prototype(proto);
 					break;
 				}
-				case Token::IfStatement:
-				{
+				case Token::IfStatement: {
 					if (is_top_level)
 					{
 						return log_error_body("If statements are not allowed in top level code");
@@ -521,8 +520,7 @@ namespace parser
 
 					break;
 				}
-				case Token::SwitchStatement:
-				{
+				case Token::SwitchStatement: {
 					if (is_top_level)
 					{
 						return log_error_body("Switch statements are not allowed in top level code");
@@ -539,8 +537,7 @@ namespace parser
 
 					break;
 				}
-				case Token::ForStatement:
-				{
+				case Token::ForStatement: {
 					if (is_top_level)
 					{
 						return log_error_body("For statements are not allowed in top level code");
@@ -557,8 +554,7 @@ namespace parser
 
 					break;
 				}
-				case Token::WhileStatement:
-				{
+				case Token::WhileStatement: {
 					if (is_top_level)
 					{
 						return log_error_body("While statements are not allowed in top level code");
@@ -575,13 +571,11 @@ namespace parser
 
 					break;
 				}
-				case Token::Comment:
-				{
+				case Token::Comment: {
 					parse_comment();
 					break;
 				}
-				case Token::ReturnStatement:
-				{
+				case Token::ReturnStatement: {
 					if (is_top_level)
 					{
 						return log_error_body("Return statements are not allowed in top level code");
@@ -598,8 +592,7 @@ namespace parser
 
 					break;
 				}
-				case Token::ContinueStatement:
-				{
+				case Token::ContinueStatement: {
 					if (is_top_level)
 					{
 						return log_error_body("Continue statements are not allowed in top level code");
@@ -616,8 +609,7 @@ namespace parser
 
 					break;
 				}
-				case Token::BreakStatement:
-				{
+				case Token::BreakStatement: {
 					if (is_top_level)
 					{
 						return log_error_body("Break statements are not allowed in top level code");
@@ -634,8 +626,7 @@ namespace parser
 
 					break;
 				}
-				case Token::ModuleStatement:
-				{
+				case Token::ModuleStatement: {
 					if (!is_top_level)
 					{
 						return log_error_body("Module Definition can only be in top level code");
@@ -653,8 +644,7 @@ namespace parser
 
 					break;
 				}
-				case Token::UsingStatement:
-				{
+				case Token::UsingStatement: {
 					if (!is_top_level)
 					{
 						return log_error_body("Using Statement can only be in top level code");
@@ -672,8 +662,7 @@ namespace parser
 
 					break;
 				}
-				case Token::BodyStart:
-				{
+				case Token::BodyStart: {
 					// Body expressions used to create scope
 					if (is_top_level)
 					{
@@ -694,14 +683,12 @@ namespace parser
 
 					break;
 				}
-				case Token::BodyEnd:
-				{
+				case Token::BodyEnd: {
 					bodies.pop_back();
 					return body;
 					break;
 				}
-				default:
-				{
+				default: {
 					if (is_top_level)
 					{
 						return log_error_body("Expressions are not allowed in top level code");
@@ -746,7 +733,8 @@ namespace parser
 		std::vector<types::Type> types;
 		std::vector<int> arg_ids;
 
-		ast::FunctionPrototype* proto = new ast::FunctionPrototype(name, types::Type{ types::TypeEnum::Void }, types, arg_ids);
+		ast::FunctionPrototype* proto =
+			new ast::FunctionPrototype(name, types::Type{ types::TypeEnum::Void }, types, arg_ids);
 		return make_ptr<ast::FunctionDefinition>(proto, std::move(expr));
 	}
 
@@ -802,23 +790,19 @@ namespace parser
 
 		switch (curr_token)
 		{
-			case Token::VariableReference:
-			{
+			case Token::VariableReference: {
 				expr = parse_variable_reference();
 				break;
 			}
-			case Token::LiteralValue:
-			{
+			case Token::LiteralValue: {
 				expr = parse_literal();
 				break;
 			}
-			case Token::ParenStart:
-			{
+			case Token::ParenStart: {
 				expr = parse_parenthesis();
 				break;
 			}
-			case Token::IfStatement:
-			{
+			case Token::IfStatement: {
 				ptr_type<ast::BaseExpr> expr = parse_if_else(true);
 
 				if (expr != nullptr)
@@ -832,8 +816,7 @@ namespace parser
 
 				return expr;
 			}
-			default:
-			{
+			default: {
 				return log_error("Unknown token when expecting an expression");
 			}
 		}
@@ -872,13 +855,13 @@ namespace parser
 		{
 			int token_precedence = get_token_precedence();
 
-			//std::cout << "token p " << token_precedence << " exrp p " << expr_precedence << std::endl;
+			// std::cout << "token p " << token_precedence << " exrp p " << expr_precedence << std::endl;
 
 			// If this is a binop that binds at least as tightly as the current binop,
 			// consume it, otherwise we are done.
 			if (token_precedence < expr_precedence)
 			{
-				//std::cout << "ealry end" << std::endl;
+				// std::cout << "ealry end" << std::endl;
 				return std::move(lhs);
 			}
 
@@ -897,19 +880,19 @@ namespace parser
 				return nullptr;
 			}
 
-			//std::cout << "rhs type " << (int) rhs->get_type() << std::endl;
+			// std::cout << "rhs type " << (int) rhs->get_type() << std::endl;
 
-			//get_next_token();
+			// get_next_token();
 
 			// If BinOp binds less tightly with RHS than the operator after RHS, let
 			// the pending operator take RHS as its LHS.
 			int next_precedence = get_token_precedence();
 
-			//std::cout << "next token " << last_char << " next p " << next_precedence << std::endl;
+			// std::cout << "next token " << last_char << " next p " << next_precedence << std::endl;
 
 			if (token_precedence < next_precedence)
 			{
-				//std::cout << "parse right first" << std::endl;
+				// std::cout << "parse right first" << std::endl;
 				rhs = parse_binop_rhs(token_precedence + 1, std::move(rhs));
 				if (rhs == nullptr)
 				{
@@ -1173,7 +1156,7 @@ namespace parser
 			}
 		}
 
-		//get_next_token();
+		// get_next_token();
 
 		return new ast::FunctionPrototype(name, return_type, types, args);
 	}
@@ -1235,7 +1218,8 @@ namespace parser
 		return make_ptr<ast::FunctionDefinition>(proto, std::move(body));
 	}
 
-	// ifexpr ::= 'if' '(' condition ')' '{' expression* '}' ('else' 'if' '(' condition ')' '{' expression* '}')* (else '{' expression* '}')?
+	// ifexpr ::= 'if' '(' condition ')' '{' expression* '}' ('else' 'if' '(' condition ')' '{' expression* '}')* (else
+	// '{' expression* '}')?
 	ptr_type<ast::BaseExpr> Parser::parse_if_else(bool should_return_value)
 	{
 		get_next_token();
@@ -1317,11 +1301,21 @@ namespace parser
 		{
 			if (previous_if_expr != nullptr)
 			{
-				previous_if_expr = make_ptr<ast::IfExpr>(bodies.back(), std::move(if_conditions[i]), std::move(if_bodies[i]), std::move(previous_if_expr), should_return_value);
+				previous_if_expr = make_ptr<ast::IfExpr>(
+					bodies.back(),
+					std::move(if_conditions[i]),
+					std::move(if_bodies[i]),
+					std::move(previous_if_expr),
+					should_return_value);
 			}
 			else
 			{
-				previous_if_expr = make_ptr<ast::IfExpr>(bodies.back(), std::move(if_conditions[i]), std::move(if_bodies[i]), std::move(else_body), should_return_value);
+				previous_if_expr = make_ptr<ast::IfExpr>(
+					bodies.back(),
+					std::move(if_conditions[i]),
+					std::move(if_bodies[i]),
+					std::move(else_body),
+					should_return_value);
 			}
 		}
 
@@ -1413,7 +1407,14 @@ namespace parser
 
 		start_expr->get_body()->named_types[name_id] = var_type;
 
-		return make_ptr<ast::ForExpr>(bodies.back(), var_type, name_id, std::move(start_expr), std::move(end_expr), std::move(step_expr), std::move(for_body));
+		return make_ptr<ast::ForExpr>(
+			bodies.back(),
+			var_type,
+			name_id,
+			std::move(start_expr),
+			std::move(end_expr),
+			std::move(step_expr),
+			std::move(for_body));
 	}
 
 	/// whileexpr ::= 'while' expr '{' expression* '}'
@@ -1428,7 +1429,7 @@ namespace parser
 			return nullptr;
 		}
 
-		//get_next_token();
+		// get_next_token();
 
 		ptr_type<ast::BodyExpr> while_body = parse_body(ast::BodyType::Loop, false, true);
 
@@ -1601,7 +1602,8 @@ namespace parser
 			get_next_token(); // needed?
 
 			// TODO: check if bodies.back() is correct for this use case
-			cases.push_back(make_ptr<ast::CaseExpr>(bodies.back(), std::move(value_expr), std::move(body_expr), is_default_case));
+			cases.push_back(
+				make_ptr<ast::CaseExpr>(bodies.back(), std::move(value_expr), std::move(body_expr), is_default_case));
 		}
 
 		if (this->curr_token != Token::BodyEnd)
@@ -1637,11 +1639,11 @@ namespace parser
 
 		if (this->current_module == -1)
 		{
-			this->current_module = mangler::Mangler::add_module(-1, module_id);
+			this->current_module = mangler::add_module(-1, module_id);
 		}
 		else
 		{
-			this->current_module = mangler::Mangler::add_module(this->current_module, module_id);
+			this->current_module = mangler::add_module(this->current_module, module_id);
 		}
 
 		return true;
@@ -1659,7 +1661,8 @@ namespace parser
 			return false;
 		}
 
-		if (base_expr->get_type() != ast::AstExprType::VariableReferenceExpr && base_expr->get_type() != ast::AstExprType::BinaryExpr)
+		if (base_expr->get_type() != ast::AstExprType::VariableReferenceExpr &&
+			base_expr->get_type() != ast::AstExprType::BinaryExpr)
 		{
 			log_error_empty("Unexpected expression after using statement.");
 			return false;
@@ -1667,7 +1670,6 @@ namespace parser
 
 		if (base_expr->get_type() == ast::AstExprType::VariableReferenceExpr)
 		{
-
 		}
 		else
 		{
@@ -1683,7 +1685,9 @@ namespace parser
 
 				if (lhs_type != ast::AstExprType::VariableReferenceExpr && lhs_type != ast::AstExprType::BinaryExpr)
 				{
-					log_error_empty("Binary Operator: " + operators::to_string(scope_expr->binop) + ", lhs must be an identifier or another scoper operator.");
+					log_error_empty(
+						"Binary Operator: " + operators::to_string(scope_expr->binop) +
+						", lhs must be an identifier or another scoper operator.");
 					return false;
 				}
 				else
@@ -1691,7 +1695,9 @@ namespace parser
 					// check rhs type is variable refernce, if were not at the top scope binop
 					if (scope_expr != expr && scope_expr->rhs->get_type() != ast::AstExprType::VariableReferenceExpr)
 					{
-						log_error_empty("Binary Operator: " + operators::to_string(scope_expr->binop) + ", rhs must be an identifier.");
+						log_error_empty(
+							"Binary Operator: " + operators::to_string(scope_expr->binop) +
+							", rhs must be an identifier.");
 						return false;
 					}
 					if (lhs_type == ast::AstExprType::BinaryExpr)
@@ -1711,7 +1717,8 @@ namespace parser
 			ast::AstExprType rhs_type = expr->rhs->get_type();
 			if (rhs_type != ast::AstExprType::VariableReferenceExpr)
 			{
-				log_error_empty("Binary Operator: " + operators::to_string(expr->binop) + ", rhs must be an identifier.");
+				log_error_empty(
+					"Binary Operator: " + operators::to_string(expr->binop) + ", rhs must be an identifier.");
 				return false;
 			}
 		}
@@ -1720,11 +1727,12 @@ namespace parser
 		int module_id = -1;
 		if (base_expr->get_type() == ast::AstExprType::BinaryExpr)
 		{
-			module_id = mangler::Mangler::add_mangled_name(-1, mangler::Mangler::mangle_using(dynamic_cast<ast::BinaryExpr*>(base_expr.get())));
+			module_id =
+				mangler::add_mangled_name(-1, mangler::mangle_using(dynamic_cast<ast::BinaryExpr*>(base_expr.get())));
 		}
 		else
 		{
-			module_id = mangler::Mangler::add_module(-1, dynamic_cast<ast::VariableReferenceExpr*>(base_expr.get())->name_id);
+			module_id = mangler::add_module(-1, dynamic_cast<ast::VariableReferenceExpr*>(base_expr.get())->name_id);
 		}
 
 		using_modules.insert(module_id);
@@ -1767,7 +1775,7 @@ namespace parser
 			std::string name = "file";
 			std::string filename = module::StringManager::get_string(this->filename_id);
 			name += std::to_string(std::hash<std::string>{}(filename));
-			current_module = mangler::Mangler::add_module(-1, module::StringManager::get_id(name));
+			current_module = mangler::add_module(-1, module::StringManager::get_id(name));
 		}
 
 		module::ModuleManager::add_module(filename_id, current_module, using_modules);
@@ -1801,7 +1809,7 @@ namespace parser
 	{
 		std::cout << '\t' << "File: " << module::StringManager::get_string(this->filename_id) << std::endl;
 		std::cout << '\t' << "Current Character: " << last_char << std::endl;
-		//std::cout << '\t' << "curr token: " << (int) curr_token << ", last char: " << last_char << std::endl;
+		// std::cout << '\t' << "curr token: " << (int) curr_token << ", last char: " << last_char << std::endl;
 		if (identifier_string != "")
 		{
 			std::cout << '\t' << "Identifier String: " << identifier_string << std::endl;
