@@ -5,7 +5,7 @@
 
 #include "ast/ast.h"
 #include "ast/builder.h"
-#include "ast/module.h"
+#include "ast/module_manager.h"
 
 namespace cli
 {

@@ -36,15 +36,15 @@ namespace type_checker
 					}
 				}
 
-				int id = mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
+				int id = mangler::mangle(moduleManager::get_module(this->current_file_id), proto);
 
-				int func_id = module::ModuleManager::find_function(this->current_file_id, id, true);
+				int func_id = moduleManager::find_function(this->current_file_id, id, true);
 				if (func_id != -1)
 				{
 					log_error(body, "Function: " + stringManager::get_string(func_id) + ", is already defined.");
 					return false;
 				}
-				module::ModuleManager::get_exported_functions(this->current_file_id).insert(id);
+				moduleManager::get_exported_functions(this->current_file_id).insert(id);
 				body->function_prototypes.insert({ id, proto });
 			}
 		}
@@ -164,7 +164,7 @@ namespace type_checker
 					continue;
 				}
 			}
-			int id = mangler::mangle(module::ModuleManager::get_module(this->current_file_id), proto);
+			int id = mangler::mangle(moduleManager::get_module(this->current_file_id), proto);
 			function_prototypes.insert({ id, proto });
 			proto->name_id = id;
 		}
@@ -346,7 +346,7 @@ namespace type_checker
 					mangler::add_module(-1, dynamic_cast<ast::VariableReferenceExpr*>(expr->lhs.get())->name_id);
 			}
 
-			if (!module::ModuleManager::is_module_available(this->current_file_id, module_id))
+			if (!moduleManager::is_module_available(this->current_file_id, module_id))
 			{
 				return log_error(
 					expr,
@@ -452,7 +452,7 @@ namespace type_checker
 		}
 		else
 		{
-			id = mangler::mangle(module::ModuleManager::get_module(this->current_file_id), expr);
+			id = mangler::mangle(moduleManager::get_module(this->current_file_id), expr);
 			no_module_id = mangler::mangle(expr);
 		}
 
@@ -461,7 +461,7 @@ namespace type_checker
 		{
 			// check to see if function exists in the modules
 			int full_function_id =
-				module::ModuleManager::find_function(this->current_file_id, no_module_id, expr->is_mangled());
+				moduleManager::find_function(this->current_file_id, no_module_id, expr->is_mangled());
 			if (full_function_id == -1)
 			{
 				return log_error(
@@ -487,7 +487,7 @@ namespace type_checker
 			if (!expr->is_mangled())
 			{
 				auto modules_function_is_in =
-					module::ModuleManager::get_matching_function_locations(this->current_file_id, no_module_id);
+					moduleManager::get_matching_function_locations(this->current_file_id, no_module_id);
 
 				if (modules_function_is_in.size() > 1 ||
 					(function_is_in_same_file && modules_function_is_in.size() > 0))

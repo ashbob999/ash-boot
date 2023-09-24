@@ -208,7 +208,7 @@ namespace cli
 				return false;
 			}
 
-			module::ModuleManager::add_ast(current_module, std::move(body_ast));
+			moduleManager::add_ast(current_module, std::move(body_ast));
 		}
 
 		std::cout << "File Was Parsed Successfully" << std::endl;
@@ -218,14 +218,14 @@ namespace cli
 
 	bool CLI::check_modules()
 	{
-		if (!module::ModuleManager::check_modules())
+		if (!moduleManager::check_modules())
 		{
 			std::cout << "File Failed Module Checks" << std::endl;
 			return false;
 		}
 
 		// get the build file order
-		build_files_order = module::ModuleManager::get_build_files_order();
+		build_files_order = moduleManager::get_build_files_order();
 		if (build_files_order.size() == 0)
 		{
 			return false;
@@ -245,7 +245,7 @@ namespace cli
 
 			tc.set_file_id(f);
 
-			ast::BodyExpr* body_ast = module::ModuleManager::get_ast(f);
+			ast::BodyExpr* body_ast = moduleManager::get_ast(f);
 
 			if (!tc.check_prototypes(body_ast))
 			{
@@ -261,7 +261,7 @@ namespace cli
 
 			tc.set_file_id(f);
 
-			ast::BaseExpr* body_ast = module::ModuleManager::get_ast(f);
+			ast::BaseExpr* body_ast = moduleManager::get_ast(f);
 
 			if (!tc.check_types(body_ast))
 			{
@@ -279,7 +279,7 @@ namespace cli
 	{
 		for (auto& f : build_files_order)
 		{
-			ast::BaseExpr* body_ast = module::ModuleManager::get_ast(f);
+			ast::BaseExpr* body_ast = moduleManager::get_ast(f);
 
 			// do constant checking
 			constant_checker::check_expression_dispatch(body_ast);
@@ -302,7 +302,7 @@ namespace cli
 
 		for (auto& f : build_files_order)
 		{
-			ast::BodyExpr* body_ast = module::ModuleManager::get_ast(f);
+			ast::BodyExpr* body_ast = moduleManager::get_ast(f);
 
 			// generate all of the function prototypes
 			for (auto& p : body_ast->function_prototypes)
@@ -321,7 +321,7 @@ namespace cli
 
 		for (auto& f : build_files_order)
 		{
-			ast::BodyExpr* body_ast = module::ModuleManager::get_ast(f);
+			ast::BodyExpr* body_ast = moduleManager::get_ast(f);
 
 			// generate all of the top level functions
 			for (auto& f : body_ast->functions)

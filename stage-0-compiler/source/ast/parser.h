@@ -7,7 +7,6 @@
 
 #include "../config.h"
 #include "ast.h"
-#include "module.h"
 
 namespace parser
 {
@@ -63,6 +62,7 @@ namespace parser
 		ptr_type<ast::BodyExpr> parse_file_as_body();
 		int get_module();
 		static const std::unordered_map<operators::BinaryOp, int> binop_precedence;
+
 	private:
 		char get_char();
 		char peek_char();
@@ -100,6 +100,7 @@ namespace parser
 		ptr_type<ast::FunctionPrototype> log_error_prototype(const std::string& error_message) const;
 		void log_error_empty(const std::string& error_message) const;
 		void log_line_info() const;
+
 	private:
 		std::ifstream& input_file;
 		std::string identifier_string;

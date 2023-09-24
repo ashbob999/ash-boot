@@ -1,7 +1,7 @@
 #include <iostream>
 
+#include "module_manager.h"
 #include "scope_checker.h"
-#include "module.h"
 
 namespace scope
 {
@@ -28,7 +28,7 @@ namespace scope
 		}
 
 		// check using modules
-		return module::ModuleManager::find_body(call_expr->callee_id);
+		return moduleManager::find_body(call_expr->callee_id);
 	}
 
 	ast::BodyExpr* get_scope(const ast::VariableReferenceExpr* var_ref)
@@ -72,7 +72,9 @@ namespace scope
 		std::pair<int, ast::ReferenceType> p{ name_id, type };
 
 		auto f = std::find(body->in_scope_vars.begin(), body->in_scope_vars.end(), p);
-		while (body != nullptr && (type == ast::ReferenceType::Function || body->body_type != ast::BodyType::Function) && f == body->in_scope_vars.end())
+		while (body != nullptr &&
+			   (type == ast::ReferenceType::Function || body->body_type != ast::BodyType::Function) &&
+			   f == body->in_scope_vars.end())
 		{
 			body = body->get_body();
 

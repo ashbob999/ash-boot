@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include "mangler.h"
+#include "module_manager.h"
 #include "string_manager.h"
 
 #include <iostream>
@@ -45,7 +46,7 @@ namespace parser
 		input_file(input_file),
 		file_name(file_name)
 	{
-		filename_id = module::ModuleManager::get_file_as_module(file_name);
+		filename_id = moduleManager::get_file_as_module(file_name);
 	}
 
 	ptr_type<ast::BaseExpr> Parser::parse_file()
@@ -1803,7 +1804,7 @@ namespace parser
 			current_module = mangler::add_module(-1, stringManager::get_id(name));
 		}
 
-		module::ModuleManager::add_module(filename_id, current_module, using_modules);
+		moduleManager::add_module(filename_id, current_module, using_modules);
 	}
 
 	ptr_type<ast::BaseExpr> Parser::log_error(const std::string& error_message) const

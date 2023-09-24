@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ast.h"
-#include "module.h"
+#include "module_manager.h"
 
 namespace type_checker
 {

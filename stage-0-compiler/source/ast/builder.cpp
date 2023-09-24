@@ -10,7 +10,7 @@
 #include "llvm/Support/TargetSelect.h"
 
 #include "builder.h"
-#include "module.h"
+#include "module_manager.h"
 #include "scope_checker.h"
 #include "string_manager.h"
 
