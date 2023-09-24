@@ -1,6 +1,6 @@
 #include "ManglerV2.h"
 
-#include "../module.h"
+#include "../string_manager.h"
 
 namespace manglerV2
 {
@@ -19,7 +19,7 @@ int manglerV2::mangle(int current_module_id, const ast::FunctionPrototype* proto
 
 	name += mangle_function(proto->name_id, proto->types);
 
-	return module::StringManager::get_id(name);
+	return stringManager::get_id(name);
 }
 
 int manglerV2::mangle(int current_module_id, const ast::CallExpr* expr)
@@ -28,13 +28,13 @@ int manglerV2::mangle(int current_module_id, const ast::CallExpr* expr)
 
 	name += mangle_call(expr);
 
-	return module::StringManager::get_id(name);
+	return stringManager::get_id(name);
 }
 
 int manglerV2::mangle(const ast::CallExpr* expr)
 {
 	std::string name = mangle_call(expr);
-	return module::StringManager::get_id(name);
+	return stringManager::get_id(name);
 }
 
 int manglerV2::mangle(int current_module_id, int function_id, const std::vector<types::Type>& function_args)
@@ -43,28 +43,28 @@ int manglerV2::mangle(int current_module_id, int function_id, const std::vector<
 
 	name += mangle_function(function_id, function_args);
 
-	return module::StringManager::get_id(name);
+	return stringManager::get_id(name);
 }
 
 int manglerV2::add_module(int current_module_id, int other_module_id)
 {
 	std::string name = get_name_or_start(current_module_id);
 
-	std::string module_name = module::StringManager::get_string(other_module_id);
+	std::string module_name = stringManager::get_string(other_module_id);
 
 	// module = M<char length><name>
 	name += 'M';
 	name += std::to_string(module_name.size());
 	name += module_name;
 
-	return module::StringManager::get_id(name);
+	return stringManager::get_id(name);
 }
 
 int manglerV2::add_mangled_name(int current_module_id, int mangled_name_id)
 {
 	std::string name = get_name_or_start(current_module_id);
-	name += module::StringManager::get_string(mangled_name_id);
-	return module::StringManager::get_id(name);
+	name += stringManager::get_string(mangled_name_id);
+	return stringManager::get_id(name);
 }
 
 int manglerV2::mangle_using(const ast::BinaryExpr* scope_expr)
@@ -79,13 +79,12 @@ int manglerV2::mangle_using(const ast::BinaryExpr* scope_expr)
 	// add lhs
 	if (scope_expr->lhs->get_type() == ast::AstExprType::BinaryExpr)
 	{
-		modules +=
-			module::StringManager::get_string(mangle_using(dynamic_cast<ast::BinaryExpr*>(scope_expr->lhs.get())));
+		modules += stringManager::get_string(mangle_using(dynamic_cast<ast::BinaryExpr*>(scope_expr->lhs.get())));
 	}
 	else
 	{
-		std::string name = module::StringManager::get_string(
-			dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->lhs.get())->name_id);
+		std::string name =
+			stringManager::get_string(dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->lhs.get())->name_id);
 		modules += 'M';
 		modules += std::to_string(name.size());
 		modules += name;
@@ -93,17 +92,17 @@ int manglerV2::mangle_using(const ast::BinaryExpr* scope_expr)
 
 	// add rhs
 	std::string name =
-		module::StringManager::get_string(dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->rhs.get())->name_id);
+		stringManager::get_string(dynamic_cast<ast::VariableReferenceExpr*>(scope_expr->rhs.get())->name_id);
 	modules += 'M';
 	modules += std::to_string(name.size());
 	modules += name;
 
-	return module::StringManager::get_id(modules);
+	return stringManager::get_id(modules);
 }
 
 int manglerV2::extract_module(int function_id)
 {
-	std::string mangled_name = module::StringManager::get_string(function_id);
+	std::string mangled_name = stringManager::get_string(function_id);
 
 	size_t i = StartStringSize;
 
@@ -148,7 +147,7 @@ int manglerV2::extract_module(int function_id)
 		}
 	}
 
-	return module::StringManager::get_id(module_string);
+	return stringManager::get_id(module_string);
 }
 
 std::string manglerV2::pretty_modules(int module_id)
@@ -158,7 +157,7 @@ std::string manglerV2::pretty_modules(int module_id)
 		return "";
 	}
 
-	std::string module_string = remove_start_string(module::StringManager::get_string(module_id));
+	std::string module_string = remove_start_string(stringManager::get_string(module_id));
 
 	std::string pretty_string;
 
@@ -230,7 +229,7 @@ std::string manglerV2::get_name_or_start(int name_id)
 	}
 	else
 	{
-		return module::StringManager::get_string(name_id);
+		return stringManager::get_string(name_id);
 	}
 }
 
@@ -240,7 +239,7 @@ std::string manglerV2::mangle_function(int function_id, const std::vector<types:
 
 	std::string name = "F";
 
-	std::string function_name = module::StringManager::get_string(function_id);
+	std::string function_name = stringManager::get_string(function_id);
 
 	// add function name
 	name += std::to_string(function_name.size());

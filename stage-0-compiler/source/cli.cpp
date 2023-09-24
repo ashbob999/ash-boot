@@ -1,15 +1,16 @@
 #include "cli.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
-#include "llvm/Support/FileSystem.h"
 #include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Support/FileSystem.h"
 
-#include "config.h"
-#include "ast/parser.h"
-#include "ast/type_checker.h"
 #include "ast/constant_checker.h"
+#include "ast/parser.h"
+#include "ast/string_manager.h"
+#include "ast/type_checker.h"
+#include "config.h"
 
 namespace cli
 {
@@ -52,7 +53,8 @@ namespace cli
 		// check if the file path is an actual file
 		if (!std::filesystem::is_regular_file(input_file_path))
 		{
-			std::cout << "File: \"" << input_file_path.c_str() << "\" must be a regular text file." << std::endl;;
+			std::cout << "File: \"" << input_file_path.c_str() << "\" must be a regular text file." << std::endl;
+			;
 			return;
 		}
 
@@ -102,7 +104,9 @@ namespace cli
 					// check if the file path is an actual file
 					if (!std::filesystem::is_regular_file(input_file_path))
 					{
-						std::cout << "File: \"" << input_file_path.c_str() << "\" must be a regular text file." << std::endl;;
+						std::cout << "File: \"" << input_file_path.c_str() << "\" must be a regular text file."
+								  << std::endl;
+						;
 						return;
 					}
 
@@ -294,7 +298,7 @@ namespace cli
 			return false;
 		}
 
-		//llvm_builder.llvm_module->setSourceFileName(input_files[0].string());
+		// llvm_builder.llvm_module->setSourceFileName(input_files[0].string());
 
 		for (auto& f : build_files_order)
 		{
@@ -307,7 +311,8 @@ namespace cli
 
 				if (proto == nullptr)
 				{
-					std::cout << "Failed To Generate LLVM IR Code For Function Prototype: " << module::StringManager::get_string(p.second->name_id) << std::endl;
+					std::cout << "Failed To Generate LLVM IR Code For Function Prototype: "
+							  << stringManager::get_string(p.second->name_id) << std::endl;
 
 					return false;
 				}
@@ -325,12 +330,13 @@ namespace cli
 
 				if (func == nullptr)
 				{
-					std::cout << "Failed To Generate LLVM IR Code For Function: " << module::StringManager::get_string(f->prototype->name_id) << std::endl;
+					std::cout << "Failed To Generate LLVM IR Code For Function: "
+							  << stringManager::get_string(f->prototype->name_id) << std::endl;
 
 					return false;
 				}
 
-				//std::cout << std::endl << f->to_string(0) << std::endl << std::endl;
+				// std::cout << std::endl << f->to_string(0) << std::endl << std::endl;
 			}
 		}
 
@@ -344,7 +350,12 @@ namespace cli
 		std::error_code error_code;
 
 		// create the raw fd stream
-		llvm::raw_fd_ostream output_file_stream(output_file.string(), error_code, llvm::sys::fs::CreationDisposition::CD_CreateAlways, llvm::sys::fs::FileAccess::FA_Write, llvm::sys::fs::OpenFlags::OF_TextWithCRLF);
+		llvm::raw_fd_ostream output_file_stream(
+			output_file.string(),
+			error_code,
+			llvm::sys::fs::CreationDisposition::CD_CreateAlways,
+			llvm::sys::fs::FileAccess::FA_Write,
+			llvm::sys::fs::OpenFlags::OF_TextWithCRLF);
 
 		if (error_code)
 		{
@@ -369,7 +380,12 @@ namespace cli
 		std::error_code error_code;
 
 		// create the raw fd stream
-		llvm::raw_fd_ostream output_file_stream(output_file.string(), error_code, llvm::sys::fs::CreationDisposition::CD_CreateAlways, llvm::sys::fs::FileAccess::FA_Write, llvm::sys::fs::OpenFlags::OF_Text);
+		llvm::raw_fd_ostream output_file_stream(
+			output_file.string(),
+			error_code,
+			llvm::sys::fs::CreationDisposition::CD_CreateAlways,
+			llvm::sys::fs::FileAccess::FA_Write,
+			llvm::sys::fs::OpenFlags::OF_Text);
 
 		if (error_code)
 		{

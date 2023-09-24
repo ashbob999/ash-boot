@@ -24,7 +24,7 @@ BinPackParameters: 'false'
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BraceWrapping:
-    AfterCaseLabel: false
+    AfterCaseLabel: true
     AfterClass: true
     AfterControlStatement: true
     AfterEnum: true

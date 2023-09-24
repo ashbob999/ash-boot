@@ -1,31 +1,17 @@
 #pragma once
 
-#include <unordered_map>
+#include <list>
 #include <string>
-#include <vector>
-#include <list>
 #include <string_view>
-#include <list>
+#include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "../config.h"
 #include "ast.h"
 
 namespace module
 {
-	class StringManager
-	{
-	public:
-		static int get_id(const std::string& str);
-		static bool is_valid_id(int id);
-		static const std::string& get_string(int id);
-	private:
-		static int store_string(const std::string& str);
-	private:
-		static std::unordered_map<std::string_view, int> string_to_id;
-		static std::list<std::string> id_to_string;
-	};
-
 	class ModuleManager
 	{
 	public:
@@ -41,6 +27,7 @@ namespace module
 		static ast::BodyExpr* get_ast(int filename);
 		static std::vector<int> get_build_files_order();
 		static ast::BodyExpr* find_body(int function_id);
+
 	private:
 		static std::unordered_set<int> find_using_modules(int module_id);
 		static std::list<int> get_module_order();

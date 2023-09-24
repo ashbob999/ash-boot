@@ -1,7 +1,9 @@
-#include <iostream>
+#include "parser.h"
 
 #include "mangler.h"
-#include "parser.h"
+#include "string_manager.h"
+
+#include <iostream>
 
 namespace parser
 {
@@ -432,7 +434,8 @@ namespace parser
 			/*curr_token = get_next_token();*/
 			switch (curr_token)
 			{
-				case Token::EndOfFile: {
+				case Token::EndOfFile:
+				{
 					if (has_curly_brackets)
 					{
 						bodies.pop_back();
@@ -440,11 +443,13 @@ namespace parser
 					}
 					return body;
 				}
-				case Token::EndOfExpression: {
+				case Token::EndOfExpression:
+				{
 					// skip
 					break;
 				}
-				case Token::VariableDeclaration: {
+				case Token::VariableDeclaration:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("Expressions are not allowed in top level code");
@@ -461,7 +466,8 @@ namespace parser
 
 					break;
 				}
-				case Token::FunctionDefinition: {
+				case Token::FunctionDefinition:
+				{
 					if (this->finished_parsing_modules == false)
 					{
 						this->update_current_module();
@@ -484,7 +490,8 @@ namespace parser
 
 					break;
 				}
-				case Token::ExternFunction: {
+				case Token::ExternFunction:
+				{
 					if (this->finished_parsing_modules == false)
 					{
 						this->update_current_module();
@@ -500,7 +507,8 @@ namespace parser
 					body->add_prototype(proto);
 					break;
 				}
-				case Token::IfStatement: {
+				case Token::IfStatement:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("If statements are not allowed in top level code");
@@ -520,7 +528,8 @@ namespace parser
 
 					break;
 				}
-				case Token::SwitchStatement: {
+				case Token::SwitchStatement:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("Switch statements are not allowed in top level code");
@@ -537,7 +546,8 @@ namespace parser
 
 					break;
 				}
-				case Token::ForStatement: {
+				case Token::ForStatement:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("For statements are not allowed in top level code");
@@ -554,7 +564,8 @@ namespace parser
 
 					break;
 				}
-				case Token::WhileStatement: {
+				case Token::WhileStatement:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("While statements are not allowed in top level code");
@@ -571,11 +582,13 @@ namespace parser
 
 					break;
 				}
-				case Token::Comment: {
+				case Token::Comment:
+				{
 					parse_comment();
 					break;
 				}
-				case Token::ReturnStatement: {
+				case Token::ReturnStatement:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("Return statements are not allowed in top level code");
@@ -592,7 +605,8 @@ namespace parser
 
 					break;
 				}
-				case Token::ContinueStatement: {
+				case Token::ContinueStatement:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("Continue statements are not allowed in top level code");
@@ -609,7 +623,8 @@ namespace parser
 
 					break;
 				}
-				case Token::BreakStatement: {
+				case Token::BreakStatement:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("Break statements are not allowed in top level code");
@@ -626,7 +641,8 @@ namespace parser
 
 					break;
 				}
-				case Token::ModuleStatement: {
+				case Token::ModuleStatement:
+				{
 					if (!is_top_level)
 					{
 						return log_error_body("Module Definition can only be in top level code");
@@ -644,7 +660,8 @@ namespace parser
 
 					break;
 				}
-				case Token::UsingStatement: {
+				case Token::UsingStatement:
+				{
 					if (!is_top_level)
 					{
 						return log_error_body("Using Statement can only be in top level code");
@@ -662,7 +679,8 @@ namespace parser
 
 					break;
 				}
-				case Token::BodyStart: {
+				case Token::BodyStart:
+				{
 					// Body expressions used to create scope
 					if (is_top_level)
 					{
@@ -683,12 +701,14 @@ namespace parser
 
 					break;
 				}
-				case Token::BodyEnd: {
+				case Token::BodyEnd:
+				{
 					bodies.pop_back();
 					return body;
 					break;
 				}
-				default: {
+				default:
+				{
 					if (is_top_level)
 					{
 						return log_error_body("Expressions are not allowed in top level code");
@@ -790,19 +810,23 @@ namespace parser
 
 		switch (curr_token)
 		{
-			case Token::VariableReference: {
+			case Token::VariableReference:
+			{
 				expr = parse_variable_reference();
 				break;
 			}
-			case Token::LiteralValue: {
+			case Token::LiteralValue:
+			{
 				expr = parse_literal();
 				break;
 			}
-			case Token::ParenStart: {
+			case Token::ParenStart:
+			{
 				expr = parse_parenthesis();
 				break;
 			}
-			case Token::IfStatement: {
+			case Token::IfStatement:
+			{
 				ptr_type<ast::BaseExpr> expr = parse_if_else(true);
 
 				if (expr != nullptr)
@@ -816,7 +840,8 @@ namespace parser
 
 				return expr;
 			}
-			default: {
+			default:
+			{
 				return log_error("Unknown token when expecting an expression");
 			}
 		}
@@ -988,7 +1013,7 @@ namespace parser
 			}
 		}
 
-		int name_id = module::StringManager::get_id(name);
+		int name_id = stringManager::get_id(name);
 
 		expr->get_body()->named_types[name_id] = var_type;
 		return make_ptr<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, std::move(expr));
@@ -999,7 +1024,7 @@ namespace parser
 	///   ::= identifier '(' expression* ')'
 	ptr_type<ast::BaseExpr> Parser::parse_variable_reference()
 	{
-		int name_id = module::StringManager::get_id(identifier_string);
+		int name_id = stringManager::get_id(identifier_string);
 
 		// peek at next token
 		Token next_token = peek_next_token();
@@ -1132,7 +1157,7 @@ namespace parser
 					return nullptr;
 				}
 
-				args.push_back(module::StringManager::get_id(identifier_string));
+				args.push_back(stringManager::get_id(identifier_string));
 
 				get_next_token();
 
@@ -1346,7 +1371,7 @@ namespace parser
 			return log_error("Expected identifier after type");
 		}
 
-		int name_id = module::StringManager::get_id(identifier_string);
+		int name_id = stringManager::get_id(identifier_string);
 
 		get_next_token();
 
@@ -1510,7 +1535,7 @@ namespace parser
 			return log_error("Cast Expression expected a type specifier after '<'");
 		}
 
-		int type_id = module::StringManager::get_id(identifier_string);
+		int type_id = stringManager::get_id(identifier_string);
 
 		next_char = peek_char();
 
@@ -1627,7 +1652,7 @@ namespace parser
 			return false;
 		}
 
-		int module_id = module::StringManager::get_id(identifier_string);
+		int module_id = stringManager::get_id(identifier_string);
 
 		get_next_token();
 
@@ -1773,9 +1798,9 @@ namespace parser
 			// use filename as first module
 			// name = file<hash of filename>
 			std::string name = "file";
-			std::string filename = module::StringManager::get_string(this->filename_id);
+			std::string filename = stringManager::get_string(this->filename_id);
 			name += std::to_string(std::hash<std::string>{}(filename));
-			current_module = mangler::add_module(-1, module::StringManager::get_id(name));
+			current_module = mangler::add_module(-1, stringManager::get_id(name));
 		}
 
 		module::ModuleManager::add_module(filename_id, current_module, using_modules);
@@ -1807,7 +1832,7 @@ namespace parser
 
 	void Parser::log_line_info() const
 	{
-		std::cout << '\t' << "File: " << module::StringManager::get_string(this->filename_id) << std::endl;
+		std::cout << '\t' << "File: " << stringManager::get_string(this->filename_id) << std::endl;
 		std::cout << '\t' << "Current Character: " << last_char << std::endl;
 		// std::cout << '\t' << "curr token: " << (int) curr_token << ", last char: " << last_char << std::endl;
 		if (identifier_string != "")

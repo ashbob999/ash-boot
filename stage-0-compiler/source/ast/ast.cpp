@@ -1,8 +1,9 @@
-#include <sstream>
-
 #include "ast.h"
+
 #include "scope_checker.h"
-#include "module.h"
+#include "string_manager.h"
+
+#include <sstream>
 
 namespace ast
 {
@@ -30,9 +31,7 @@ namespace ast
 		return "";
 	}
 
-	BaseExpr::BaseExpr(AstExprType ast_type, BodyExpr* body)
-		: ast_type(ast_type), body(body)
-	{}
+	BaseExpr::BaseExpr(AstExprType ast_type, BodyExpr* body) : ast_type(ast_type), body(body) {}
 
 	AstExprType BaseExpr::get_type() const
 	{
@@ -211,17 +210,18 @@ namespace ast
 
 	bool BaseExpr::is_constant() const
 	{
-		return this->constant_status == ConstantStatus::Constant || this->constant_status == ConstantStatus::CanBeConstant;
+		return this->constant_status == ConstantStatus::Constant ||
+			this->constant_status == ConstantStatus::CanBeConstant;
 	}
 
-	LiteralExpr::LiteralExpr(BodyExpr* body, const types::Type& curr_type, const std::string& str)
-		: BaseExpr(AstExprType::LiteralExpr, body), curr_type(curr_type)
+	LiteralExpr::LiteralExpr(BodyExpr* body, const types::Type& curr_type, const std::string& str) :
+		BaseExpr(AstExprType::LiteralExpr, body),
+		curr_type(curr_type)
 	{
 		value_type = types::BaseType::create_type(curr_type, str);
 	}
 
-	LiteralExpr::~LiteralExpr()
-	{}
+	LiteralExpr::~LiteralExpr() {}
 
 	std::string LiteralExpr::to_string(int depth) const
 	{
@@ -256,8 +256,15 @@ namespace ast
 		return true;
 	}
 
-	VariableDeclarationExpr::VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, ptr_type<BaseExpr> expr)
-		: BaseExpr(AstExprType::VariableDeclarationExpr, body), curr_type(curr_type), name_id(name_id), expr(std::move(expr))
+	VariableDeclarationExpr::VariableDeclarationExpr(
+		BodyExpr* body,
+		types::Type curr_type,
+		int name_id,
+		ptr_type<BaseExpr> expr) :
+		BaseExpr(AstExprType::VariableDeclarationExpr, body),
+		curr_type(curr_type),
+		name_id(name_id),
+		expr(std::move(expr))
 	{
 		if (this->expr != nullptr)
 		{
@@ -265,8 +272,7 @@ namespace ast
 		}
 	}
 
-	VariableDeclarationExpr::~VariableDeclarationExpr()
-	{}
+	VariableDeclarationExpr::~VariableDeclarationExpr() {}
 
 	std::string VariableDeclarationExpr::to_string(int depth) const
 	{
@@ -275,7 +281,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Variable Declaration: {" << constant_to_string(this) << '\n';
-		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
+		str << tabs << '\t' << "Name: " << stringManager::get_string(this->name_id) << '\n';
 		str << tabs << '\t' << "Type: " << this->curr_type.to_string() << '\n';
 		str << tabs << '\t' << "Value: {" << '\n';
 		if (this->expr == nullptr)
@@ -311,8 +317,9 @@ namespace ast
 		return false;
 	}
 
-	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, int name_id)
-		: BaseExpr(AstExprType::VariableReferenceExpr, body), name_id(name_id)
+	VariableReferenceExpr::VariableReferenceExpr(BodyExpr* body, int name_id) :
+		BaseExpr(AstExprType::VariableReferenceExpr, body),
+		name_id(name_id)
 	{}
 
 	std::string VariableReferenceExpr::to_string(int depth) const
@@ -322,7 +329,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Variable Reference: {" << constant_to_string(this) << '\n';
-		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
+		str << tabs << '\t' << "Name: " << stringManager::get_string(this->name_id) << '\n';
 		str << tabs << "}," << '\n';
 
 		return str.str();
@@ -332,7 +339,7 @@ namespace ast
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			//result_type = this->get_body()->named_types[this->name];
+			// result_type = this->get_body()->named_types[this->name];
 			result_type = scope::get_scope(this)->named_types[this->name_id];
 		}
 		return result_type;
@@ -343,15 +350,17 @@ namespace ast
 		return true;
 	}
 
-	BinaryExpr::BinaryExpr(BodyExpr* body, operators::BinaryOp binop, ptr_type<BaseExpr> lhs, ptr_type<BaseExpr> rhs)
-		: BaseExpr(AstExprType::BinaryExpr, body), binop(binop), lhs(std::move(lhs)), rhs(std::move(rhs))
+	BinaryExpr::BinaryExpr(BodyExpr* body, operators::BinaryOp binop, ptr_type<BaseExpr> lhs, ptr_type<BaseExpr> rhs) :
+		BaseExpr(AstExprType::BinaryExpr, body),
+		binop(binop),
+		lhs(std::move(lhs)),
+		rhs(std::move(rhs))
 	{
 		this->lhs->set_parent_data(this, 0);
 		this->rhs->set_parent_data(this, 1);
 	}
 
-	BinaryExpr::~BinaryExpr()
-	{}
+	BinaryExpr::~BinaryExpr() {}
 
 	std::string BinaryExpr::to_string(int depth) const
 	{
@@ -406,8 +415,7 @@ namespace ast
 		return false;
 	}
 
-	BodyExpr::BodyExpr(BodyExpr* body, BodyType body_type)
-		: BaseExpr(AstExprType::BodyExpr, body), body_type(body_type)
+	BodyExpr::BodyExpr(BodyExpr* body, BodyType body_type) : BaseExpr(AstExprType::BodyExpr, body), body_type(body_type)
 	{}
 
 	BodyExpr::~BodyExpr()
@@ -495,8 +503,11 @@ namespace ast
 		return type;
 	}
 
-	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args)
-		: BaseExpr(AstExprType::CallExpr, body), callee_id(callee_id), unmangled_callee_id(callee_id), args(args.size())
+	CallExpr::CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args) :
+		BaseExpr(AstExprType::CallExpr, body),
+		callee_id(callee_id),
+		unmangled_callee_id(callee_id),
+		args(args.size())
 	{
 		for (int i = 0; i < this->args.size(); i++)
 		{
@@ -505,8 +516,7 @@ namespace ast
 		}
 	}
 
-	CallExpr::~CallExpr()
-	{}
+	CallExpr::~CallExpr() {}
 
 	std::string CallExpr::to_string(int depth) const
 	{
@@ -515,7 +525,7 @@ namespace ast
 		std::stringstream str;
 
 		str << tabs << "Function Call: {" << constant_to_string(this) << '\n';
-		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->callee_id) << '\n';
+		str << tabs << '\t' << "Name: " << stringManager::get_string(this->callee_id) << '\n';
 		str << tabs << '\t' << "Args: {" << '\n';
 		for (auto& a : this->args)
 		{
@@ -531,9 +541,9 @@ namespace ast
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			//result_type = scope::get_scope(ptr_type<CallExpr>(this))->function_prototypes[this->callee]->return_type;
+			// result_type = scope::get_scope(ptr_type<CallExpr>(this))->function_prototypes[this->callee]->return_type;
 			result_type = scope::get_scope(this)->function_prototypes[this->callee_id]->return_type;
-			//result_type = this->get_body()->function_prototypes[this->callee]->return_type;
+			// result_type = this->get_body()->function_prototypes[this->callee]->return_type;
 		}
 		return result_type;
 	}
@@ -550,7 +560,8 @@ namespace ast
 		BodyExpr* b1 = this->get_body();
 		BodyExpr* b2 = this->get_body()->get_body();
 		*/
-		//ptr_type<FunctionPrototype> proto = scope::get_scope(ptr_type<CallExpr>(this))->function_prototypes[this->callee];
+		// ptr_type<FunctionPrototype> proto =
+		// scope::get_scope(ptr_type<CallExpr>(this))->function_prototypes[this->callee];
 		FunctionPrototype* proto = scope::get_scope(this)->function_prototypes[this->callee_id];
 
 		for (int i = 0; i < this->args.size(); i++)
@@ -564,8 +575,17 @@ namespace ast
 		return true;
 	}
 
-	IfExpr::IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr> else_body, bool should_return_value)
-		: BaseExpr(AstExprType::IfExpr, body), condition(std::move(condition)), if_body(std::move(if_body)), else_body(std::move(else_body)), should_return_value(should_return_value)
+	IfExpr::IfExpr(
+		BodyExpr* body,
+		ptr_type<BaseExpr> condition,
+		ptr_type<BaseExpr> if_body,
+		ptr_type<BaseExpr> else_body,
+		bool should_return_value) :
+		BaseExpr(AstExprType::IfExpr, body),
+		condition(std::move(condition)),
+		if_body(std::move(if_body)),
+		else_body(std::move(else_body)),
+		should_return_value(should_return_value)
 	{
 		this->condition->set_parent_data(this, 0);
 		this->if_body->set_parent_data(this, 1);
@@ -638,8 +658,21 @@ namespace ast
 		return false;
 	}
 
-	ForExpr::ForExpr(BodyExpr* body, types::Type var_type, int name_id, ptr_type<BaseExpr> start_expr, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> step_expr, ptr_type<BodyExpr> for_body)
-		: BaseExpr(AstExprType::ForExpr, body), var_type(var_type), name_id(name_id), start_expr(std::move(start_expr)), end_expr(std::move(end_expr)), step_expr(std::move(step_expr)), for_body(std::move(for_body))
+	ForExpr::ForExpr(
+		BodyExpr* body,
+		types::Type var_type,
+		int name_id,
+		ptr_type<BaseExpr> start_expr,
+		ptr_type<BaseExpr> end_expr,
+		ptr_type<BaseExpr> step_expr,
+		ptr_type<BodyExpr> for_body) :
+		BaseExpr(AstExprType::ForExpr, body),
+		var_type(var_type),
+		name_id(name_id),
+		start_expr(std::move(start_expr)),
+		end_expr(std::move(end_expr)),
+		step_expr(std::move(step_expr)),
+		for_body(std::move(for_body))
 	{
 		this->start_expr->set_parent_data(this, 0);
 		this->end_expr->set_parent_data(this, 1);
@@ -660,7 +693,7 @@ namespace ast
 
 		str << tabs << '\t' << "Start Value: {" << '\n';
 		str << tabs << '\t' << '\t' << "Type: " << this->var_type.to_string() << "," << '\n';
-		str << tabs << '\t' << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << "," << '\n';
+		str << tabs << '\t' << '\t' << "Name: " << stringManager::get_string(this->name_id) << "," << '\n';
 		str << tabs << '\t' << '\t' << "Value: {" << '\n';
 		str << this->start_expr->to_string(depth + 3);
 		str << tabs << '\t' << '\t' << "}," << '\n';
@@ -706,8 +739,10 @@ namespace ast
 		return false;
 	}
 
-	WhileExpr::WhileExpr(BodyExpr* body, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> while_body)
-		: BaseExpr(AstExprType::WhileExpr, body), end_expr(std::move(end_expr)), while_body(std::move(while_body))
+	WhileExpr::WhileExpr(BodyExpr* body, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> while_body) :
+		BaseExpr(AstExprType::WhileExpr, body),
+		end_expr(std::move(end_expr)),
+		while_body(std::move(while_body))
 	{
 		this->end_expr->set_parent_data(this, 0);
 		this->while_body->set_parent_data(this, 1);
@@ -750,9 +785,7 @@ namespace ast
 		return false;
 	}
 
-	CommentExpr::CommentExpr(BodyExpr* body)
-		: BaseExpr(AstExprType::CommentExpr, body)
-	{}
+	CommentExpr::CommentExpr(BodyExpr* body) : BaseExpr(AstExprType::CommentExpr, body) {}
 
 	std::string CommentExpr::to_string(int depth) const
 	{
@@ -769,8 +802,9 @@ namespace ast
 		return true;
 	}
 
-	ReturnExpr::ReturnExpr(BodyExpr* body, ptr_type<BaseExpr> ret_expr)
-		: BaseExpr(AstExprType::ReturnExpr, body), ret_expr(std::move(ret_expr))
+	ReturnExpr::ReturnExpr(BodyExpr* body, ptr_type<BaseExpr> ret_expr) :
+		BaseExpr(AstExprType::ReturnExpr, body),
+		ret_expr(std::move(ret_expr))
 	{}
 
 	std::string ReturnExpr::to_string(int depth) const
@@ -830,9 +864,7 @@ namespace ast
 		return false;
 	}
 
-	ContinueExpr::ContinueExpr(BodyExpr* body)
-		: BaseExpr(AstExprType::ContinueExpr, body)
-	{}
+	ContinueExpr::ContinueExpr(BodyExpr* body) : BaseExpr(AstExprType::ContinueExpr, body) {}
 
 	std::string ContinueExpr::to_string(int depth) const
 	{
@@ -871,9 +903,7 @@ namespace ast
 		return false;
 	}
 
-	BreakExpr::BreakExpr(BodyExpr* body)
-		: BaseExpr(AstExprType::BreakExpr, body)
-	{}
+	BreakExpr::BreakExpr(BodyExpr* body) : BaseExpr(AstExprType::BreakExpr, body) {}
 
 	std::string BreakExpr::to_string(int depth) const
 	{
@@ -912,8 +942,10 @@ namespace ast
 		return false;
 	}
 
-	UnaryExpr::UnaryExpr(BodyExpr* body, operators::UnaryOp unop, ptr_type<BaseExpr> expr)
-		: BaseExpr(ast::AstExprType::UnaryExpr, body), unop(unop), expr(std::move(expr))
+	UnaryExpr::UnaryExpr(BodyExpr* body, operators::UnaryOp unop, ptr_type<BaseExpr> expr) :
+		BaseExpr(ast::AstExprType::UnaryExpr, body),
+		unop(unop),
+		expr(std::move(expr))
 	{
 		this->expr->set_parent_data(this, 0);
 	}
@@ -948,8 +980,10 @@ namespace ast
 		return true;
 	}
 
-	CastExpr::CastExpr(BodyExpr* body, int target_type_id, ptr_type<BaseExpr> expr)
-		: BaseExpr(AstExprType::CastExpr, body), target_type_id(target_type_id), expr(std::move(expr))
+	CastExpr::CastExpr(BodyExpr* body, int target_type_id, ptr_type<BaseExpr> expr) :
+		BaseExpr(AstExprType::CastExpr, body),
+		target_type_id(target_type_id),
+		expr(std::move(expr))
 	{}
 
 	std::string CastExpr::to_string(int depth) const
@@ -982,8 +1016,9 @@ namespace ast
 		return true;
 	}
 
-	SwitchExpr::SwitchExpr(BodyExpr* body, ptr_type<BaseExpr> value_expr, std::vector<ptr_type<CaseExpr>>& cases)
-		: BaseExpr(AstExprType::SwitchExpr, body), value_expr(std::move(value_expr))
+	SwitchExpr::SwitchExpr(BodyExpr* body, ptr_type<BaseExpr> value_expr, std::vector<ptr_type<CaseExpr>>& cases) :
+		BaseExpr(AstExprType::SwitchExpr, body),
+		value_expr(std::move(value_expr))
 	{
 		for (auto& case_expr : cases)
 		{
@@ -1028,8 +1063,11 @@ namespace ast
 		return false;
 	}
 
-	CaseExpr::CaseExpr(BodyExpr* body, ptr_type<BaseExpr> case_expr, ptr_type<BaseExpr> case_body, bool default_case)
-		: BaseExpr(AstExprType::CaseExpr, body), case_expr(std::move(case_expr)), case_body(std::move(case_body)), default_case(default_case)
+	CaseExpr::CaseExpr(BodyExpr* body, ptr_type<BaseExpr> case_expr, ptr_type<BaseExpr> case_body, bool default_case) :
+		BaseExpr(AstExprType::CaseExpr, body),
+		case_expr(std::move(case_expr)),
+		case_body(std::move(case_body)),
+		default_case(default_case)
 	{}
 
 	std::string CaseExpr::to_string(int depth) const
@@ -1042,7 +1080,9 @@ namespace ast
 
 		if (this->default_case)
 		{
-			str << tabs << '\t' << "Value: " << "Default Case" << "," << '\n';
+			str << tabs << '\t' << "Value: "
+				<< "Default Case"
+				<< "," << '\n';
 		}
 		else
 		{
@@ -1079,8 +1119,16 @@ namespace ast
 		return false;
 	}
 
-	FunctionPrototype::FunctionPrototype(const std::string& name, const types::Type& return_type, const std::vector<types::Type>& types, const std::vector<int>& args)
-		: name_id(module::StringManager::get_id(name)), unmangled_name_id(name_id), return_type(return_type), types(types), args(args)
+	FunctionPrototype::FunctionPrototype(
+		const std::string& name,
+		const types::Type& return_type,
+		const std::vector<types::Type>& types,
+		const std::vector<int>& args) :
+		name_id(stringManager::get_id(name)),
+		unmangled_name_id(name_id),
+		return_type(return_type),
+		types(types),
+		args(args)
 	{}
 
 	std::string FunctionPrototype::to_string(int depth) const
@@ -1091,12 +1139,13 @@ namespace ast
 
 		str << tabs << "Function Prototype: {" << '\n';
 
-		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->name_id) << '\n';
+		str << tabs << '\t' << "Name: " << stringManager::get_string(this->name_id) << '\n';
 		str << tabs << '\t' << "Args: [" << '\n';
 
 		for (int i = 0; i < this->args.size(); i++)
 		{
-			str << tabs << '\t' << '\t' << "{ " << module::StringManager::get_string(this->args[i]) << ": " << this->types[i].to_string() << "}," << '\n';
+			str << tabs << '\t' << '\t' << "{ " << stringManager::get_string(this->args[i]) << ": "
+				<< this->types[i].to_string() << "}," << '\n';
 		}
 
 		str << tabs << '\t' << "]," << '\n';
@@ -1105,12 +1154,12 @@ namespace ast
 		return str.str();
 	}
 
-	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body)
-		: prototype(prototype), body(std::move(body))
+	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body) :
+		prototype(prototype),
+		body(std::move(body))
 	{}
 
-	FunctionDefinition::~FunctionDefinition()
-	{}
+	FunctionDefinition::~FunctionDefinition() {}
 
 	std::string FunctionDefinition::to_string(int depth) const
 	{
@@ -1124,10 +1173,10 @@ namespace ast
 			str << '\n';
 		}
 
-		//str << this->prototype->to_string(depth);
-		//str << '\n';
+		// str << this->prototype->to_string(depth);
+		// str << '\n';
 		str << tabs << "Function Body : {" << '\n';
-		str << tabs << '\t' << "Name: " << module::StringManager::get_string(this->prototype->name_id) << '\n';
+		str << tabs << '\t' << "Name: " << stringManager::get_string(this->prototype->name_id) << '\n';
 		str << this->body->to_string(depth + 1);
 		str << tabs << '}' << '\n';
 

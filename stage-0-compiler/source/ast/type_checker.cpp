@@ -5,6 +5,7 @@
 #include "constant_checker.h"
 #include "mangler.h"
 #include "scope_checker.h"
+#include "string_manager.h"
 #include "type_checker.h"
 
 namespace type_checker
@@ -27,7 +28,7 @@ namespace type_checker
 				if (body->get_body() == nullptr)
 				{
 					std::string main = "main";
-					int main_id = module::StringManager::get_id(main);
+					int main_id = stringManager::get_id(main);
 
 					if (proto->name_id == main_id && proto->args.size() == 0)
 					{
@@ -40,9 +41,7 @@ namespace type_checker
 				int func_id = module::ModuleManager::find_function(this->current_file_id, id, true);
 				if (func_id != -1)
 				{
-					log_error(
-						body,
-						"Function: " + module::StringManager::get_string(func_id) + ", is already defined.");
+					log_error(body, "Function: " + stringManager::get_string(func_id) + ", is already defined.");
 					return false;
 				}
 				module::ModuleManager::get_exported_functions(this->current_file_id).insert(id);
@@ -61,7 +60,7 @@ namespace type_checker
 	bool TypeChecker::log_error(const ast::BaseExpr* expr, const std::string& str) const
 	{
 		std::cout << str << std::endl;
-		std::cout << '\t' << "In File: " << module::StringManager::get_string(this->current_file_id) << std::endl;
+		std::cout << '\t' << "In File: " << stringManager::get_string(this->current_file_id) << std::endl;
 
 		/*
 		// TODO: use when file is read into char array
@@ -157,7 +156,7 @@ namespace type_checker
 			if (body->get_body() == nullptr)
 			{
 				std::string main = "main";
-				int main_id = module::StringManager::get_id(main);
+				int main_id = stringManager::get_id(main);
 
 				if (proto->name_id == main_id && proto->args.size() == 0)
 				{
@@ -178,9 +177,7 @@ namespace type_checker
 		{
 			if (scope::is_variable_defined(body, p.first, ast::ReferenceType::Function))
 			{
-				return log_error(
-					body,
-					"Function: " + module::StringManager::get_string(p.first) + ", is already defined");
+				return log_error(body, "Function: " + stringManager::get_string(p.first) + ", is already defined");
 			}
 
 			body->in_scope_vars.push_back({ p.first, ast::ReferenceType::Function });
@@ -224,7 +221,7 @@ namespace type_checker
 				{
 					return log_error(
 						expr,
-						"Variable: " + module::StringManager::get_string(expr->name_id) + ", has already been defined");
+						"Variable: " + stringManager::get_string(expr->name_id) + ", has already been defined");
 				}
 			}
 		}
@@ -244,7 +241,7 @@ namespace type_checker
 			std::string type2 = expr->expr->get_result_type().to_string();
 			return log_error(
 				expr,
-				"Variable declaration expression for: " + module::StringManager::get_string(expr->name_id) +
+				"Variable declaration expression for: " + stringManager::get_string(expr->name_id) +
 					", expected type: " + type1 + " but got type: " + type2 + " instead");
 		}
 
@@ -259,7 +256,7 @@ namespace type_checker
 		{
 			return log_error(
 				expr,
-				"Variable reference for: " + module::StringManager::get_string(expr->name_id) +
+				"Variable reference for: " + stringManager::get_string(expr->name_id) +
 					", is not in scope (not defined)");
 		}
 
@@ -268,7 +265,7 @@ namespace type_checker
 		{
 			return log_error(
 				expr,
-				"Variable reference for: " + module::StringManager::get_string(expr->name_id) + ", is not in scope");
+				"Variable reference for: " + stringManager::get_string(expr->name_id) + ", is not in scope");
 		}
 
 		// chekc variable type
@@ -276,7 +273,7 @@ namespace type_checker
 		{
 			return log_error(
 				expr,
-				"Variable reference for: " + module::StringManager::get_string(expr->name_id) + ", has invalid type");
+				"Variable reference for: " + stringManager::get_string(expr->name_id) + ", has invalid type");
 		}
 
 		return true;
@@ -354,7 +351,7 @@ namespace type_checker
 				return log_error(
 					expr,
 					"Binary Operator: " + operators::to_string(expr->binop) +
-						", lhs module: " + module::StringManager::get_string(module_id) + ", does not exist.");
+						", lhs module: " + stringManager::get_string(module_id) + ", does not exist.");
 			}
 
 			// get rhs name id
@@ -469,7 +466,7 @@ namespace type_checker
 			{
 				return log_error(
 					expr,
-					"Function call for: " + module::StringManager::get_string(expr->callee_id) +
+					"Function call for: " + stringManager::get_string(expr->callee_id) +
 						", is not in scope (not defined)");
 			}
 			else
@@ -496,7 +493,7 @@ namespace type_checker
 					(function_is_in_same_file && modules_function_is_in.size() > 0))
 				{
 					std::string error_message =
-						"Function call for: " + module::StringManager::get_string(expr->unmangled_callee_id) +
+						"Function call for: " + stringManager::get_string(expr->unmangled_callee_id) +
 						", is ambiguous (defined in multiple places)";
 
 					if (function_is_in_same_file)
@@ -504,7 +501,7 @@ namespace type_checker
 						error_message += '\n';
 						error_message += '\t';
 						error_message +=
-							"Function defined in file: " + module::StringManager::get_string(this->current_file_id);
+							"Function defined in file: " + stringManager::get_string(this->current_file_id);
 					}
 
 					for (auto& module_id : modules_function_is_in)
@@ -525,7 +522,7 @@ namespace type_checker
 		// check function is in scope
 		if (scope::get_scope(expr) == nullptr)
 		{
-			// return log_error(expr, "Function call for: " + module::StringManager::get_string(expr->callee_id) + ", is
+			// return log_error(expr, "Function call for: " + stringManager::get_string(expr->callee_id) + ", is
 			// not in scope");
 		}
 
@@ -760,10 +757,12 @@ namespace type_checker
 
 			switch (expr->unop)
 			{
-				case operators::UnaryOp::Plus: {
+				case operators::UnaryOp::Plus:
+				{
 					// do nothing
 				}
-				case operators::UnaryOp::Minus: {
+				case operators::UnaryOp::Minus:
+				{
 					literal_expr->value_type->negate_value();
 					ast::change_ast_object(expr, std::move(expr->expr));
 				}
@@ -785,12 +784,10 @@ namespace type_checker
 		types::Type from_type = expr->expr->get_result_type();
 
 		// check target type is a valid type
-		types::Type type = types::is_valid_type(module::StringManager::get_string(expr->target_type_id));
+		types::Type type = types::is_valid_type(stringManager::get_string(expr->target_type_id));
 		if (type.get_type_enum() == types::TypeEnum::None)
 		{
-			return log_error(
-				expr,
-				"Cast target type is invalid: " + module::StringManager::get_string(expr->target_type_id));
+			return log_error(expr, "Cast target type is invalid: " + stringManager::get_string(expr->target_type_id));
 		}
 
 		expr->target_type = type;
@@ -903,55 +900,72 @@ namespace type_checker
 	{
 		switch (expr->get_type())
 		{
-			case ast::AstExprType::LiteralExpr: {
+			case ast::AstExprType::LiteralExpr:
+			{
 				return check_expression(dynamic_cast<ast::LiteralExpr*>(expr));
 			}
-			case ast::AstExprType::BodyExpr: {
+			case ast::AstExprType::BodyExpr:
+			{
 				return check_expression(dynamic_cast<ast::BodyExpr*>(expr));
 			}
-			case ast::AstExprType::VariableDeclarationExpr: {
+			case ast::AstExprType::VariableDeclarationExpr:
+			{
 				return check_expression(dynamic_cast<ast::VariableDeclarationExpr*>(expr));
 			}
-			case ast::AstExprType::VariableReferenceExpr: {
+			case ast::AstExprType::VariableReferenceExpr:
+			{
 				return check_expression(dynamic_cast<ast::VariableReferenceExpr*>(expr));
 			}
-			case ast::AstExprType::BinaryExpr: {
+			case ast::AstExprType::BinaryExpr:
+			{
 				return check_expression(dynamic_cast<ast::BinaryExpr*>(expr));
 			}
-			case ast::AstExprType::CallExpr: {
+			case ast::AstExprType::CallExpr:
+			{
 				return check_expression(dynamic_cast<ast::CallExpr*>(expr));
 			}
-			case ast::AstExprType::IfExpr: {
+			case ast::AstExprType::IfExpr:
+			{
 				return check_expression(dynamic_cast<ast::IfExpr*>(expr));
 			}
-			case ast::AstExprType::ForExpr: {
+			case ast::AstExprType::ForExpr:
+			{
 				return check_expression(dynamic_cast<ast::ForExpr*>(expr));
 			}
-			case ast::AstExprType::WhileExpr: {
+			case ast::AstExprType::WhileExpr:
+			{
 				return check_expression(dynamic_cast<ast::WhileExpr*>(expr));
 			}
-			case ast::AstExprType::CommentExpr: {
+			case ast::AstExprType::CommentExpr:
+			{
 				return check_expression(dynamic_cast<ast::CommentExpr*>(expr));
 			}
-			case ast::AstExprType::ReturnExpr: {
+			case ast::AstExprType::ReturnExpr:
+			{
 				return check_expression(dynamic_cast<ast::ReturnExpr*>(expr));
 			}
-			case ast::AstExprType::ContinueExpr: {
+			case ast::AstExprType::ContinueExpr:
+			{
 				return check_expression(dynamic_cast<ast::ContinueExpr*>(expr));
 			}
-			case ast::AstExprType::BreakExpr: {
+			case ast::AstExprType::BreakExpr:
+			{
 				return check_expression(dynamic_cast<ast::BreakExpr*>(expr));
 			}
-			case ast::AstExprType::UnaryExpr: {
+			case ast::AstExprType::UnaryExpr:
+			{
 				return check_expression(dynamic_cast<ast::UnaryExpr*>(expr));
 			}
-			case ast::AstExprType::CastExpr: {
+			case ast::AstExprType::CastExpr:
+			{
 				return check_expression(dynamic_cast<ast::CastExpr*>(expr));
 			}
-			case ast::AstExprType::SwitchExpr: {
+			case ast::AstExprType::SwitchExpr:
+			{
 				return check_expression(dynamic_cast<ast::SwitchExpr*>(expr));
 			}
-			case ast::AstExprType::CaseExpr: {
+			case ast::AstExprType::CaseExpr:
+			{
 				return check_expression(dynamic_cast<ast::CaseExpr*>(expr));
 			}
 		}

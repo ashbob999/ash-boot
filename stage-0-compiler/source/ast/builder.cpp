@@ -1,17 +1,18 @@
 #include <iostream>
 #include <optional>
 
-#include "llvm/IR/Verifier.h"
-#include "llvm/IR/DiagnosticPrinter.h"
-#include "llvm/IR/DiagnosticInfo.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Support/Host.h"
-#include "llvm/MC/TargetRegistry.h"
 #include "llvm/ADT/APInt.h"
+#include "llvm/IR/DiagnosticInfo.h"
+#include "llvm/IR/DiagnosticPrinter.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/MC/TargetRegistry.h"
+#include "llvm/Support/Host.h"
+#include "llvm/Support/TargetSelect.h"
 
 #include "builder.h"
-#include "scope_checker.h"
 #include "module.h"
+#include "scope_checker.h"
+#include "string_manager.h"
 
 using std::dynamic_pointer_cast;
 
@@ -40,7 +41,7 @@ namespace builder
 		llvm_module = new llvm::Module("ash-boot", *llvm_context);
 		llvm_ir_builder = new llvm::IRBuilder<>(*llvm_context);
 
-		//llvm_context->setDiagnosticHandlerCallBack(&this->diagnostic_handler_callback);
+		// llvm_context->setDiagnosticHandlerCallBack(&this->diagnostic_handler_callback);
 	}
 
 	LLVMBuilder::~LLVMBuilder()
@@ -95,7 +96,8 @@ namespace builder
 		return nullptr;
 	}
 
-	llvm::AllocaInst* LLVMBuilder::create_entry_block_alloca(llvm::Function* the_function, llvm::Type* type, llvm::StringRef name)
+	llvm::AllocaInst*
+	LLVMBuilder::create_entry_block_alloca(llvm::Function* the_function, llvm::Type* type, llvm::StringRef name)
 	{
 		llvm::IRBuilder<> tmp(&the_function->getEntryBlock(), the_function->getEntryBlock().begin());
 		return tmp.CreateAlloca(type, nullptr, name);
@@ -110,13 +112,14 @@ namespace builder
 		}
 
 		// create the function type
-		llvm::FunctionType* ft = llvm::FunctionType::get(types::get_llvm_type(*llvm_context, prototype->return_type), types, false);
+		llvm::FunctionType* ft =
+			llvm::FunctionType::get(types::get_llvm_type(*llvm_context, prototype->return_type), types, false);
 
 		std::string proto_name;
 
 		if (prototype->is_extern)
 		{
-			proto_name = module::StringManager::get_string(prototype->unmangled_name_id);
+			proto_name = stringManager::get_string(prototype->unmangled_name_id);
 
 			llvm::Function* the_function = llvm_module->getFunction(proto_name);
 			if (the_function != nullptr)
@@ -126,7 +129,7 @@ namespace builder
 		}
 		else
 		{
-			proto_name = module::StringManager::get_string(prototype->name_id);
+			proto_name = stringManager::get_string(prototype->name_id);
 		}
 
 		llvm::Function* f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, proto_name, llvm_module);
@@ -136,7 +139,7 @@ namespace builder
 		int index = 0;
 		for (auto& arg : f->args())
 		{
-			arg.setName(module::StringManager::get_string(prototype->args[index]));
+			arg.setName(stringManager::get_string(prototype->args[index]));
 			index++;
 		}
 
@@ -168,7 +171,8 @@ namespace builder
 		}
 
 		// check for existing function
-		llvm::Function* the_function = llvm_module->getFunction(module::StringManager::get_string(function_definition->prototype->name_id));
+		llvm::Function* the_function =
+			llvm_module->getFunction(stringManager::get_string(function_definition->prototype->name_id));
 
 		if (the_function == nullptr)
 		{
@@ -186,8 +190,8 @@ namespace builder
 		llvm_ir_builder->SetInsertPoint(bb);
 
 		// record the functions types and arguments
-		//llvm_named_types.clear();
-		//llvm_named_values.clear();
+		// llvm_named_types.clear();
+		// llvm_named_values.clear();
 
 		for (auto& arg : the_function->args())
 		{
@@ -195,10 +199,10 @@ namespace builder
 
 			llvm_ir_builder->CreateStore(&arg, alloca);
 
-			//llvm_named_values[std::string{ arg.getName() }] = alloca;
+			// llvm_named_values[std::string{ arg.getName() }] = alloca;
 			std::string name{ arg.getName() };
-			function_definition->body->llvm_named_values[module::StringManager::get_id(name)] = alloca;
-			function_definition->body->llvm_named_types[module::StringManager::get_id(name)] = arg.getType();
+			function_definition->body->llvm_named_values[stringManager::get_id(name)] = alloca;
+			function_definition->body->llvm_named_types[stringManager::get_id(name)] = arg.getType();
 		}
 
 		llvm::Value* return_value = generate_code_dispatch(function_definition->body.get());
@@ -208,7 +212,8 @@ namespace builder
 			// finish off the function
 
 			// add return instruction if the last body expression was not a retrun expression
-			if (function_definition->body->expressions.size() > 0 && function_definition->body->expressions.back()->get_type() == ast::AstExprType::ReturnExpr)
+			if (function_definition->body->expressions.size() > 0 &&
+				function_definition->body->expressions.back()->get_type() == ast::AstExprType::ReturnExpr)
 			{
 				// do nothing
 			}
@@ -252,7 +257,7 @@ namespace builder
 
 		if (expr->expressions.size() == 0)
 		{
-			//return llvm::Constant::getNullValue(types::get_llvm_type(*llvm_context, types::Type::Int));
+			// return llvm::Constant::getNullValue(types::get_llvm_type(*llvm_context, types::Type::Int));
 			return llvm::ConstantTokenNone::get(*llvm_context);
 		}
 
@@ -304,50 +309,56 @@ namespace builder
 			init_value = types::get_default_value(*llvm_context, expr->curr_type);
 		}
 
-		llvm::AllocaInst* alloca = create_entry_block_alloca(the_function, types::get_llvm_type(*llvm_context, expr->curr_type), module::StringManager::get_string(expr->name_id));
+		llvm::AllocaInst* alloca = create_entry_block_alloca(
+			the_function,
+			types::get_llvm_type(*llvm_context, expr->curr_type),
+			stringManager::get_string(expr->name_id));
 		llvm_ir_builder->CreateStore(init_value, alloca);
 
 		// remember the old varibale binding so we can restore when the function ends
-		//old_binding = llvm_named_values[var_name];
+		// old_binding = llvm_named_values[var_name];
 		// remember the new binding
-		//llvm_named_values[var_name] = alloca;
-		//llvm_named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
+		// llvm_named_values[var_name] = alloca;
+		// llvm_named_types[var_name] = types::get_llvm_type(*llvm_context, expr->curr_type);
 		expr->get_body()->llvm_named_values[var_id] = alloca;
 		expr->get_body()->llvm_named_types[var_id] = types::get_llvm_type(*llvm_context, expr->curr_type);
 
 		// create the body code?????????
 		// TODO: SORT
-		//llvm::Value* 
+		// llvm::Value*
 
 		// put the variable back into scope
-		//llvm_named_values[expr->name] = old_binding;
+		// llvm_named_values[expr->name] = old_binding;
 
 		return init_value;
-		//return llvm::Constant::getNullValue(llvm::Type::getVoidTy(*llvm_context));
-		//return llvm::UndefValue::get(llvm::Type::getVoidTy(*llvm_context));
-		//llvm::Value::
+		// return llvm::Constant::getNullValue(llvm::Type::getVoidTy(*llvm_context));
+		// return llvm::UndefValue::get(llvm::Type::getVoidTy(*llvm_context));
+		// llvm::Value::
 	}
 
 	template<>
 	llvm::Value* LLVMBuilder::generate_code<ast::VariableReferenceExpr>(ast::VariableReferenceExpr* expr)
 	{
 		// lookup the variable in the function
-		//auto f = llvm_named_values.find(expr->name);
-		//auto f = expr->get_body()->llvm_named_values.find(expr->name);
+		// auto f = llvm_named_values.find(expr->name);
+		// auto f = expr->get_body()->llvm_named_values.find(expr->name);
 		auto b = scope::get_scope(expr);
-		//if (f == expr->get_body()->llvm_named_values.end())
+		// if (f == expr->get_body()->llvm_named_values.end())
 		if (b == nullptr)
 		{
-			return log_error_value("unknown variable name: " + module::StringManager::get_string(expr->name_id));
+			return log_error_value("unknown variable name: " + stringManager::get_string(expr->name_id));
 		}
 
 		auto f = b->llvm_named_values.find(expr->name_id);
 
 		// load the value
-		//return llvm_ir_builder->CreateLoad(llvm_named_types[f->first], f->second, f->first.c_str());
-		//return llvm_ir_builder->CreateLoad(expr->get_body()->llvm_named_types[f->first], f->second, f->first.c_str());
-		//std::string name = ;
-		return llvm_ir_builder->CreateLoad(b->get_llvm_type(*llvm_context, f->first), f->second, module::StringManager::get_string(f->first));
+		// return llvm_ir_builder->CreateLoad(llvm_named_types[f->first], f->second, f->first.c_str());
+		// return llvm_ir_builder->CreateLoad(expr->get_body()->llvm_named_types[f->first], f->second,
+		// f->first.c_str()); std::string name = ;
+		return llvm_ir_builder->CreateLoad(
+			b->get_llvm_type(*llvm_context, f->first),
+			f->second,
+			stringManager::get_string(f->first));
 	}
 
 	template<>
@@ -372,13 +383,13 @@ namespace builder
 			}
 
 			// look up the name
-			//auto f = llvm_named_values.find(lhs_expr->name);
-			//auto f = lhs_expr->get_body()->llvm_named_values.find(lhs_expr->name_id);
+			// auto f = llvm_named_values.find(lhs_expr->name);
+			// auto f = lhs_expr->get_body()->llvm_named_values.find(lhs_expr->name_id);
 			ast::BodyExpr* scope = scope::get_scope(lhs_expr);
 			auto f = scope->llvm_named_values.find(lhs_expr->name_id);
 			if (f == scope->llvm_named_values.end())
 			{
-				return log_error_value("unknown variable name: " + module::StringManager::get_string(lhs_expr->name_id));
+				return log_error_value("unknown variable name: " + stringManager::get_string(lhs_expr->name_id));
 			}
 
 			llvm_ir_builder->CreateStore(rhs, f->second);
@@ -389,7 +400,8 @@ namespace builder
 		llvm::Value* rhs = nullptr;
 
 		// don't pre generate the code for the lhs & rhs if the binop is a boolean operator, or a module scope binop
-		if ((!operators::is_boolean_operator(expr->binop) && expr->binop != operators::BinaryOp::ModuleScope) || expr->is_constant())
+		if ((!operators::is_boolean_operator(expr->binop) && expr->binop != operators::BinaryOp::ModuleScope) ||
+			expr->is_constant())
 		{
 			lhs = generate_code_dispatch(expr->lhs.get());
 			rhs = generate_code_dispatch(expr->rhs.get());
@@ -450,7 +462,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -476,7 +490,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -502,7 +518,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -540,7 +558,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -578,7 +598,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -616,7 +638,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -654,7 +678,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -692,7 +718,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -730,7 +758,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -758,7 +788,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -786,7 +818,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -868,9 +902,14 @@ namespace builder
 				// set insertion point to end block
 				llvm_ir_builder->SetInsertPoint(end_block);
 
-				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "and.res");
+				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(
+					types::get_llvm_type(*llvm_context, expr->get_result_type()),
+					2,
+					"and.res");
 
-				phi_node->addIncoming(types::get_default_value(*llvm_context, types::Type{ types::TypeEnum::Bool }), lhs_end_block);
+				phi_node->addIncoming(
+					types::get_default_value(*llvm_context, types::Type{ types::TypeEnum::Bool }),
+					lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
@@ -952,9 +991,17 @@ namespace builder
 				// set insertion point to end block
 				llvm_ir_builder->SetInsertPoint(end_block);
 
-				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "or.res");
+				llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(
+					types::get_llvm_type(*llvm_context, expr->get_result_type()),
+					2,
+					"or.res");
 
-				phi_node->addIncoming(llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type{ types::TypeEnum::Bool }), 1, false), lhs_end_block);
+				phi_node->addIncoming(
+					llvm::ConstantInt::get(
+						types::get_llvm_type(*llvm_context, types::Type{ types::TypeEnum::Bool }),
+						1,
+						false),
+					lhs_end_block);
 				phi_node->addIncoming(rhs, rhs_end_block);
 				return phi_node;
 			}
@@ -972,7 +1019,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -990,7 +1039,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -1008,7 +1059,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -1026,7 +1079,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -1055,7 +1110,9 @@ namespace builder
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->binop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->binop));
 					}
 				}
 			}
@@ -1076,11 +1133,11 @@ namespace builder
 		std::string name;
 		if (expr->is_extern)
 		{
-			name = module::StringManager::get_string(expr->unmangled_callee_id);
+			name = stringManager::get_string(expr->unmangled_callee_id);
 		}
 		else
 		{
-			name = module::StringManager::get_string(expr->callee_id);
+			name = stringManager::get_string(expr->callee_id);
 		}
 
 		llvm::Function* callee_func = llvm_module->getFunction(name);
@@ -1194,7 +1251,8 @@ namespace builder
 
 		if (expr->should_return_value)
 		{
-			llvm::PHINode* phi_node = llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "ifres");
+			llvm::PHINode* phi_node =
+				llvm_ir_builder->CreatePHI(types::get_llvm_type(*llvm_context, expr->get_result_type()), 2, "ifres");
 
 			phi_node->addIncoming(if_value, if_block);
 			phi_node->addIncoming(else_value, else_block);
@@ -1212,7 +1270,10 @@ namespace builder
 		llvm::Function* func = llvm_ir_builder->GetInsertBlock()->getParent();
 
 		// create an alloc in the start block
-		llvm::AllocaInst* alloca = create_entry_block_alloca(func, types::get_llvm_type(*llvm_context, expr->var_type), module::StringManager::get_string(expr->name_id));
+		llvm::AllocaInst* alloca = create_entry_block_alloca(
+			func,
+			types::get_llvm_type(*llvm_context, expr->var_type),
+			stringManager::get_string(expr->name_id));
 
 		// emit the start code
 		llvm::Value* start_value = generate_code_dispatch(expr->start_expr.get());
@@ -1472,13 +1533,17 @@ namespace builder
 					{
 						if (expr->is_constant())
 						{
-							return llvm::ConstantExpr::getSub(llvm::ConstantFP::get(constant_value->getType(), 0), constant_value);
+							return llvm::ConstantExpr::getSub(
+								llvm::ConstantFP::get(constant_value->getType(), 0),
+								constant_value);
 						}
 						return llvm_ir_builder->CreateFNeg(expr_value, "fneg");
 					}
 					default:
 					{
-						return log_error_value("Unsupported type: " + expr->get_result_type().to_string() + ", for operator: " + operators::to_string(expr->unop));
+						return log_error_value(
+							"Unsupported type: " + expr->get_result_type().to_string() +
+							", for operator: " + operators::to_string(expr->unop));
 					}
 				}
 			}
@@ -1598,9 +1663,18 @@ namespace builder
 						if (expr->is_constant())
 						{
 							return llvm::ConstantExpr::getTrunc(constant_value, llvm_target_type);
-							return llvm::ConstantExpr::getICmp(llvm::CmpInst::ICMP_NE, constant_value, llvm::ConstantInt::get(constant_value->getType(), 0, from_type.is_signed()));
+							return llvm::ConstantExpr::getICmp(
+								llvm::CmpInst::ICMP_NE,
+								constant_value,
+								llvm::ConstantInt::get(constant_value->getType(), 0, from_type.is_signed()));
 						}
-						return llvm_ir_builder->CreateICmpNE(expr_value, llvm::ConstantInt::get(types::get_llvm_type(*llvm_context, types::Type{ from_type.get_type_enum() }), 0, from_type.is_signed()), "convert_to_bool");
+						return llvm_ir_builder->CreateICmpNE(
+							expr_value,
+							llvm::ConstantInt::get(
+								types::get_llvm_type(*llvm_context, types::Type{ from_type.get_type_enum() }),
+								0,
+								from_type.is_signed()),
+							"convert_to_bool");
 					}
 					case types::TypeEnum::Float:
 					{
@@ -1703,7 +1777,10 @@ namespace builder
 		}
 
 		// create the switch instruction
-		llvm::SwitchInst* switch_instruction = llvm_ir_builder->CreateSwitch(switch_value, switch_end_block, static_cast<unsigned int>(expr->cases.size()));
+		llvm::SwitchInst* switch_instruction = llvm_ir_builder->CreateSwitch(
+			switch_value,
+			switch_end_block,
+			static_cast<unsigned int>(expr->cases.size()));
 
 		std::vector<llvm::BasicBlock*> case_blocks;
 

@@ -1,67 +1,13 @@
+#include "module.h"
+
+#include "mangler.h"
+#include "string_manager.h"
+
 #include <cassert>
 #include <iostream>
 
-#include "mangler.h"
-#include "module.h"
-
 namespace module
 {
-	int StringManager::store_string(const std::string& str)
-	{
-		if (str == "")
-		{
-			assert(false && "string cannot be empty");
-		}
-
-		int id = id_to_string.size();
-
-		id_to_string.push_back(str);
-
-		std::string_view sv{ id_to_string.back() };
-
-		string_to_id.emplace(sv, id);
-
-		return id;
-	}
-
-	int StringManager::get_id(const std::string& str)
-	{
-		std::string_view sv{ str };
-
-		auto f = string_to_id.find(sv);
-		if (f != string_to_id.end())
-		{
-			return f->second;
-		}
-
-		return store_string(str);
-	}
-
-	bool StringManager::is_valid_id(int id)
-	{
-		if (id < 0 || id >= id_to_string.size())
-		{
-			return false;
-		}
-		return true;
-	}
-
-	const std::string& StringManager::get_string(int id)
-	{
-		if (!is_valid_id(id))
-		{
-			assert(false && "invalid id");
-		}
-
-		// return id_to_string[id];
-		auto it = id_to_string.begin();
-		std::advance(it, id);
-		return *it;
-	}
-
-	std::unordered_map<std::string_view, int> StringManager::string_to_id;
-	std::list<std::string> StringManager::id_to_string;
-
 	void ModuleManager::add_ast(int filename, ptr_type<ast::BodyExpr> ast_body)
 	{
 		ModuleManager::ast_files[filename] = std::move(ast_body);
@@ -69,7 +15,7 @@ namespace module
 
 	int ModuleManager::get_file_as_module(const std::string& file_name)
 	{
-		return StringManager::get_id(file_name);
+		return stringManager::get_id(file_name);
 	}
 
 	void ModuleManager::add_module(int filename, int module_id, std::unordered_set<int>& usings)
@@ -106,8 +52,8 @@ namespace module
 				if (f == ModuleManager::file_modules.end())
 				{
 					log_error(
-						"Using Module '" + StringManager::get_string(v) +
-						"' does not exist (in file: " + StringManager::get_string(filename) + ")");
+						"Using Module '" + stringManager::get_string(v) +
+						"' does not exist (in file: " + stringManager::get_string(filename) + ")");
 					return false;
 				}
 			}
@@ -381,8 +327,8 @@ namespace module
 		for (auto p : r)
 		{
 			log_error(
-				"\tIn module '" + StringManager::get_string(p.first) + "': requiring '" +
-				StringManager::get_string(p.second) + "' creates a cycle.");
+				"\tIn module '" + stringManager::get_string(p.first) + "': requiring '" +
+				stringManager::get_string(p.second) + "' creates a cycle.");
 		}
 	}
 
