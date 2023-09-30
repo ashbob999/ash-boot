@@ -1353,6 +1353,13 @@ namespace parser
 	{
 		get_next_token();
 
+		bool uses_parenthesis = false;
+		if (this->curr_token == Token::ParenStart)
+		{
+			uses_parenthesis = true;
+			get_next_token();
+		}
+
 		if (curr_token != Token::VariableReference)
 		{
 			return log_error("Expected type after for");
@@ -1411,6 +1418,18 @@ namespace parser
 			if (step_expr == nullptr)
 			{
 				return nullptr;
+			}
+		}
+
+		if (uses_parenthesis)
+		{
+			if (this->curr_token == Token::ParenEnd)
+			{
+				get_next_token();
+			}
+			else
+			{
+				return log_error("Expected ')' after statement");
 			}
 		}
 
