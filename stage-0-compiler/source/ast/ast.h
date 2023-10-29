@@ -1,15 +1,15 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "llvm/IR/Instructions.h"
 
 #include "../config.h"
-#include "types.h"
 #include "operators.h"
+#include "types.h"
 
 namespace ast
 {
@@ -121,10 +121,8 @@ namespace ast
 		virtual types::Type get_result_type() = 0;
 		virtual bool check_types() = 0;
 
-		// TODO: maybe remove virtual on final methods
 		virtual AstExprType get_type() const final;
 		virtual BodyExpr* get_body() const final;
-		virtual void set_body(BodyExpr* body) final;
 		virtual void set_line_info(const ExpressionLineInfo& line_info) final;
 		virtual ExpressionLineInfo get_line_info() const final;
 		virtual void set_mangled(bool mangled) final;
@@ -184,15 +182,16 @@ namespace ast
 		// TODO: remove?
 		llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, int str_id);
 
-		//bool is_function_body = false;
+		// bool is_function_body = false;
 		FunctionPrototype* parent_function = nullptr;
 		BodyType body_type;
-		std::vector<std::pair<int, ReferenceType>> in_scope_vars; // only used for checking vars are in scope, and order of defines
+		std::vector<std::pair<int, ReferenceType>>
+			in_scope_vars; // only used for checking vars are in scope, and order of defines
 		std::vector<ptr_type<BaseExpr>> expressions;
 		std::vector<ptr_type<FunctionDefinition>> functions;
 		std::vector<FunctionPrototype*> original_function_prototypes;
 		std::map<int, FunctionPrototype*> function_prototypes;
-		//std::map<std::string, FunctionDefinition*> functions;
+		// std::map<std::string, FunctionDefinition*> functions;
 		std::map<int, types::Type> named_types;
 		std::map<int, llvm::Type*> llvm_named_types;
 		std::map<int, llvm::AllocaInst*> llvm_named_values;
@@ -259,7 +258,12 @@ namespace ast
 	class IfExpr : public BaseExpr
 	{
 	public:
-		IfExpr(BodyExpr* body, ptr_type<BaseExpr> condition, ptr_type<BaseExpr> if_body, ptr_type<BaseExpr>else_body, bool should_return_value);
+		IfExpr(
+			BodyExpr* body,
+			ptr_type<BaseExpr> condition,
+			ptr_type<BaseExpr> if_body,
+			ptr_type<BaseExpr> else_body,
+			bool should_return_value);
 		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
@@ -273,7 +277,14 @@ namespace ast
 	class ForExpr : public BaseExpr
 	{
 	public:
-		ForExpr(BodyExpr* body, types::Type var_type, int name_id, ptr_type<BaseExpr> start_expr, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> step_expr, ptr_type<BodyExpr> for_body);
+		ForExpr(
+			BodyExpr* body,
+			types::Type var_type,
+			int name_id,
+			ptr_type<BaseExpr> start_expr,
+			ptr_type<BaseExpr> end_expr,
+			ptr_type<BaseExpr> step_expr,
+			ptr_type<BodyExpr> for_body);
 		std::string to_string(int depth) const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
@@ -392,7 +403,11 @@ namespace ast
 	class FunctionPrototype
 	{
 	public:
-		FunctionPrototype(const std::string& name, const types::Type& return_type, const std::vector<types::Type>& types, const std::vector<int>& args);
+		FunctionPrototype(
+			const std::string& name,
+			const types::Type& return_type,
+			const std::vector<types::Type>& types,
+			const std::vector<int>& args);
 		std::string to_string(int depth) const;
 		FunctionPrototype(const FunctionPrototype&) = delete;
 
@@ -416,6 +431,4 @@ namespace ast
 		FunctionPrototype* prototype;
 		ptr_type<BodyExpr> body;
 	};
-
-	void change_ast_object(ast::BaseExpr* object, ptr_type<ast::BaseExpr> new_object);
 }

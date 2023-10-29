@@ -70,6 +70,7 @@ namespace parser
 		Token peek_next_token();
 		Token get_next_token();
 		ptr_type<ast::BodyExpr> parse_body(ast::BodyType body_type, bool is_top_level, bool has_curly_brackets);
+		bool parse_body_using_existing(ptr_type<ast::BodyExpr>& body, bool is_top_level, bool has_curly_brackets);
 		ptr_type<ast::FunctionDefinition> parse_top_level();
 		ptr_type<ast::BaseExpr> parse_expression(bool for_call, bool middle_expression);
 		ptr_type<ast::BaseExpr> parse_primary();
@@ -98,6 +99,7 @@ namespace parser
 		ptr_type<ast::BaseExpr> log_error(const std::string& error_message) const;
 		ptr_type<ast::BodyExpr> log_error_body(const std::string& error_message) const;
 		ptr_type<ast::FunctionPrototype> log_error_prototype(const std::string& error_message) const;
+		bool log_error_bool(const std::string& error_message) const;
 		void log_error_empty(const std::string& error_message) const;
 		void log_line_info() const;
 

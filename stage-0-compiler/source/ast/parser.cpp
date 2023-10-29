@@ -1,5 +1,6 @@
 #include "parser.h"
 
+#include "../utils.h"
 #include "mangler.h"
 #include "module_manager.h"
 #include "string_manager.h"
@@ -418,15 +419,30 @@ namespace parser
 	{
 		ptr_type<ast::BodyExpr> body = make_ptr<ast::BodyExpr>(bodies.back(), body_type);
 
+		bool parse_success = this->parse_body_using_existing(body, is_top_level, has_curly_brackets);
+		if (parse_success)
+		{
+			return body;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
+	/// top ::= (definition | expression)*
+	bool Parser::parse_body_using_existing(ptr_type<ast::BodyExpr>& body, bool is_top_level, bool has_curly_brackets)
+	{
 		if (has_curly_brackets)
 		{
 			if (curr_token != Token::BodyStart)
 			{
-				return log_error_body("Body must start with a '{'");
+				return log_error_bool("Body must start with a '{'");
 			}
 		}
 
 		bodies.push_back(body.get());
+		ScopeExit scope_exit([this]() { this->bodies.pop_back(); });
 
 		curr_token = get_next_token();
 
@@ -439,10 +455,9 @@ namespace parser
 				{
 					if (has_curly_brackets)
 					{
-						bodies.pop_back();
-						return log_error_body("Body must end with a '}'");
+						return log_error_bool("Body must end with a '}'");
 					}
-					return body;
+					return true;
 				}
 				case Token::EndOfExpression:
 				{
@@ -453,14 +468,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("Expressions are not allowed in top level code");
+						return log_error_bool("Expressions are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_variable_declaration();
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -476,7 +491,7 @@ namespace parser
 
 					if (!is_top_level)
 					{
-						return log_error_body("Nested Functions are currently disabled.");
+						return log_error_bool("Nested Functions are currently disabled.");
 					}
 
 					ptr_type<ast::FunctionDefinition> fd = parse_function_definition();
@@ -486,7 +501,7 @@ namespace parser
 					}
 					else
 					{
-						return nullptr;
+						return false;
 					}
 
 					break;
@@ -502,7 +517,7 @@ namespace parser
 
 					if (proto == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_prototype(proto);
@@ -512,14 +527,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("If statements are not allowed in top level code");
+						return log_error_bool("If statements are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_if_else(false);
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					ast::IfExpr* if_expr = dynamic_cast<ast::IfExpr*>(base.get());
@@ -533,14 +548,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("Switch statements are not allowed in top level code");
+						return log_error_bool("Switch statements are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_switch_case();
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -551,14 +566,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("For statements are not allowed in top level code");
+						return log_error_bool("For statements are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_for_loop();
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -569,14 +584,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("While statements are not allowed in top level code");
+						return log_error_bool("While statements are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_while_loop();
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -592,14 +607,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("Return statements are not allowed in top level code");
+						return log_error_bool("Return statements are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_return();
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -610,14 +625,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("Continue statements are not allowed in top level code");
+						return log_error_bool("Continue statements are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_continue();
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -628,14 +643,14 @@ namespace parser
 				{
 					if (is_top_level)
 					{
-						return log_error_body("Break statements are not allowed in top level code");
+						return log_error_bool("Break statements are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_break();
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -646,17 +661,17 @@ namespace parser
 				{
 					if (!is_top_level)
 					{
-						return log_error_body("Module Definition can only be in top level code");
+						return log_error_bool("Module Definition can only be in top level code");
 					}
 
 					if (this->finished_parsing_modules)
 					{
-						return log_error_body("Module Definitions must be before any other code");
+						return log_error_bool("Module Definitions must be before any other code");
 					}
 
 					if (!parse_module())
 					{
-						return nullptr;
+						return false;
 					}
 
 					break;
@@ -665,17 +680,17 @@ namespace parser
 				{
 					if (!is_top_level)
 					{
-						return log_error_body("Using Statement can only be in top level code");
+						return log_error_bool("Using Statement can only be in top level code");
 					}
 
 					if (this->finished_parsing_modules)
 					{
-						return log_error_body("Using Statements must be before any other code");
+						return log_error_bool("Using Statements must be before any other code");
 					}
 
 					if (!parse_using())
 					{
-						return nullptr;
+						return false;
 					}
 
 					break;
@@ -685,14 +700,14 @@ namespace parser
 					// Body expressions used to create scope
 					if (is_top_level)
 					{
-						return log_error_body("Scope blocks are not allowed in top level code");
+						return log_error_bool("Scope blocks are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_body(ast::BodyType::ScopeBlock, false, true);
 
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
@@ -704,28 +719,26 @@ namespace parser
 				}
 				case Token::BodyEnd:
 				{
-					bodies.pop_back();
-					return body;
-					break;
+					return true;
 				}
 				default:
 				{
 					if (is_top_level)
 					{
-						return log_error_body("Expressions are not allowed in top level code");
+						return log_error_bool("Expressions are not allowed in top level code");
 					}
 
 					ptr_type<ast::BaseExpr> base = parse_expression(false, false);
 					if (base == nullptr)
 					{
-						return nullptr;
+						return false;
 					}
 
 					body->add_base(std::move(base));
 
 					if (curr_token != Token::EndOfExpression)
 					{
-						return log_error_body("Expected end of expression, missing ';'");
+						return log_error_bool("Expected end of expression, missing ';'");
 					}
 
 					break;
@@ -738,7 +751,7 @@ namespace parser
 			}
 		}
 
-		return body;
+		return false;
 	}
 
 	ptr_type<ast::FunctionDefinition> Parser::parse_top_level()
@@ -1351,6 +1364,9 @@ namespace parser
 	/// forexpr ::= 'for' 'type' identifier '=' expr ';' expr (';' expr)? '{' expression* '}'
 	ptr_type<ast::BaseExpr> Parser::parse_for_loop()
 	{
+		ptr_type<ast::BodyExpr> for_loop_body = make_ptr<ast::BodyExpr>(this->bodies.back(), ast::BodyType::Loop);
+		this->bodies.push_back(for_loop_body.get());
+
 		get_next_token();
 
 		bool uses_parenthesis = false;
@@ -1433,22 +1449,16 @@ namespace parser
 			}
 		}
 
-		ptr_type<ast::BodyExpr> for_body = parse_body(ast::BodyType::Loop, false, true);
+		this->bodies.pop_back();
 
-		if (for_body == nullptr)
+		bool parse_success = this->parse_body_using_existing(for_loop_body, false, true);
+
+		if (!parse_success)
 		{
 			return nullptr;
 		}
 
 		get_next_token();
-
-		// change the body of the start, end, step expressions to the for body
-		start_expr->set_body(for_body.get());
-		end_expr->set_body(for_body.get());
-		if (step_expr != nullptr)
-		{
-			step_expr->set_body(for_body.get());
-		}
 
 		start_expr->get_body()->named_types[name_id] = var_type;
 
@@ -1459,7 +1469,7 @@ namespace parser
 			std::move(start_expr),
 			std::move(end_expr),
 			std::move(step_expr),
-			std::move(for_body));
+			std::move(for_loop_body));
 	}
 
 	/// whileexpr ::= 'while' expr '{' expression* '}'
@@ -1842,6 +1852,12 @@ namespace parser
 	{
 		log_error_empty(error_message);
 		return nullptr;
+	}
+
+	bool Parser::log_error_bool(const std::string& error_message) const
+	{
+		log_error_empty(error_message);
+		return false;
 	}
 
 	void Parser::log_error_empty(const std::string& error_message) const
