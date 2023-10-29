@@ -97,14 +97,14 @@ namespace cli
 					// check if the file path exists
 					if (!std::filesystem::exists(input_file_path))
 					{
-						std::cout << "File: \"" << input_file_path.c_str() << "\" does not exist." << std::endl;
+						std::cout << "File: \"" << input_file_path.string() << "\" does not exist." << std::endl;
 						return;
 					}
 
 					// check if the file path is an actual file
 					if (!std::filesystem::is_regular_file(input_file_path))
 					{
-						std::cout << "File: \"" << input_file_path.c_str() << "\" must be a regular text file."
+						std::cout << "File: \"" << input_file_path.string() << "\" must be a regular text file."
 								  << std::endl;
 						;
 						return;
@@ -190,7 +190,7 @@ namespace cli
 
 			if (!file_stream.is_open())
 			{
-				std::cout << "File: \"" << file.c_str() << "\" could not be opened." << std::endl;
+				std::cout << "File: \"" << file.string() << "\" could not be opened." << std::endl;
 				return false;
 			}
 
