@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "../config.h"
+#include "../utils.h"
 #include "constant_checker.h"
 #include "mangler.h"
 #include "scope_checker.h"
@@ -45,7 +45,7 @@ namespace type_checker
 					return false;
 				}
 				moduleManager::get_exported_functions(this->current_file_id).insert(id);
-				body->function_prototypes.insert({ id, proto });
+				body->function_prototypes.insert({id, proto});
 			}
 		}
 
@@ -107,7 +107,7 @@ namespace type_checker
 		// add args to scope
 		for (auto& arg : func->prototype->args)
 		{
-			func->body->in_scope_vars.push_back({ arg, ast::ReferenceType::Variable });
+			func->body->in_scope_vars.push_back({arg, ast::ReferenceType::Variable});
 		}
 
 		// check function body
@@ -160,12 +160,12 @@ namespace type_checker
 
 				if (proto->name_id == main_id && proto->args.size() == 0)
 				{
-					function_prototypes.insert({ proto->name_id, proto });
+					function_prototypes.insert({proto->name_id, proto});
 					continue;
 				}
 			}
 			int id = mangler::mangle(moduleManager::get_module(this->current_file_id), proto);
-			function_prototypes.insert({ id, proto });
+			function_prototypes.insert({id, proto});
 			proto->name_id = id;
 		}
 
@@ -180,7 +180,7 @@ namespace type_checker
 				return log_error(body, "Function: " + stringManager::get_string(p.first) + ", is already defined");
 			}
 
-			body->in_scope_vars.push_back({ p.first, ast::ReferenceType::Function });
+			body->in_scope_vars.push_back({p.first, ast::ReferenceType::Function});
 			if (p.second->is_extern)
 			{
 				// add unmangled function name to extern list
@@ -226,7 +226,7 @@ namespace type_checker
 			}
 		}
 
-		expr->get_body()->in_scope_vars.push_back({ expr->name_id, ast::ReferenceType::Variable });
+		expr->get_body()->in_scope_vars.push_back({expr->name_id, ast::ReferenceType::Variable});
 
 		// check value expression
 		if (expr->expr != nullptr && !check_expression_dispatch(expr->expr.get()))
@@ -539,7 +539,6 @@ namespace type_checker
 	template<>
 	bool TypeChecker::check_expression<ast::IfExpr>(ast::IfExpr* expr) const
 	{
-
 		// check the condition
 		if (!check_expression_dispatch(expr->condition.get()))
 		{
@@ -579,7 +578,7 @@ namespace type_checker
 	bool TypeChecker::check_expression<ast::ForExpr>(ast::ForExpr* expr) const
 	{
 		// add variable to for body scope
-		expr->for_body->in_scope_vars.push_back({ expr->name_id, ast::ReferenceType::Variable });
+		expr->for_body->in_scope_vars.push_back({expr->name_id, ast::ReferenceType::Variable});
 
 		// check the start expression
 		if (!check_expression_dispatch(expr->start_expr.get()))

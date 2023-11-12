@@ -1,14 +1,14 @@
-#include <regex>
 #include <iostream>
+#include <regex>
 
+#include "../utils.h"
 #include "types.h"
 
 namespace types
 {
-	Type::Type() : type_enum{ TypeEnum::None }, size{ 0 }, signed_value{ false }
-	{}
+	Type::Type() : type_enum{TypeEnum::None}, size{0}, signed_value{false} {}
 
-	Type::Type(TypeEnum type_enum) : type_enum{ type_enum }, size{ 0 }, signed_value{ false }
+	Type::Type(TypeEnum type_enum) : type_enum{type_enum}, size{0}, signed_value{false}
 	{
 		switch (type_enum)
 		{
@@ -41,7 +41,8 @@ namespace types
 
 	bool Type::operator==(const Type& other) const
 	{
-		return std::tie(this->type_enum, this->size, this->signed_value) == std::tie(other.type_enum, other.size, other.signed_value);
+		return std::tie(this->type_enum, this->size, this->signed_value) ==
+			std::tie(other.type_enum, other.size, other.signed_value);
 	}
 
 	bool Type::operator!=(const Type& other) const
@@ -87,10 +88,10 @@ namespace types
 		}
 	}
 
-	Type::Type(TypeEnum type_enum, int size, bool is_signed) : type_enum(type_enum), size{ size }, signed_value{ is_signed }
+	Type::Type(TypeEnum type_enum, int size, bool is_signed) : type_enum(type_enum), size{size}, signed_value{is_signed}
 	{}
 
-	Type::Type(const std::string& literal, TypeEnum type) : type_enum{ type }, size{ 0 }, signed_value{ false }
+	Type::Type(const std::string& literal, TypeEnum type) : type_enum{type}, size{0}, signed_value{false}
 	{
 		char c1 = '\0';
 		char c2 = '\0';
@@ -106,7 +107,7 @@ namespace types
 		}
 		else
 		{
-			*this = Type{ type_enum };
+			*this = Type{type_enum};
 			return;
 		}
 
@@ -118,37 +119,37 @@ namespace types
 
 		if (i == 0 || i == literal.length() - 1)
 		{
-			*this = Type{ type_enum };
+			*this = Type{type_enum};
 			return;
 		}
 
-		*this = Type{ type_enum, std::stoi(std::string{ literal.begin() + i + 1, literal.end() }), literal[i] != 'u' };
+		*this = Type{type_enum, std::stoi(std::string{literal.begin() + i + 1, literal.end()}), literal[i] != 'u'};
 	}
 
 	Type is_valid_type(const std::string& str)
 	{
 		if (str == "int")
 		{
-			return Type{ TypeEnum::Int };
+			return Type{TypeEnum::Int};
 		}
 		else if ((str[0] == 'i' || str[0] == 'u') && str.length() > 1)
 		{
-			int size = std::stoi(std::string{ str.begin() + 1, str.end() });
+			int size = std::stoi(std::string{str.begin() + 1, str.end()});
 			if (size >= 8 && size <= 64 && (size & (size - 1)) == 0)
 			{
-				return { TypeEnum::Int, size, str[0] == 'i' };
+				return {TypeEnum::Int, size, str[0] == 'i'};
 			}
 		}
 		else if (str == "float")
 		{
-			return Type{ TypeEnum::Float };
+			return Type{TypeEnum::Float};
 		}
 		else if (str[0] == 'f' && str.length() > 1)
 		{
-			int size = std::stoi(std::string{ str.begin() + 1, str.end() });
+			int size = std::stoi(std::string{str.begin() + 1, str.end()});
 			if (size >= 32 && size <= 64 && (size & (size - 1)) == 0)
 			{
-				return { TypeEnum::Float, size, true };
+				return {TypeEnum::Float, size, true};
 			}
 		}
 		else if (str == "void")
@@ -157,11 +158,11 @@ namespace types
 		}
 		else if (str == "bool")
 		{
-			return { TypeEnum::Bool, 1, false };
+			return {TypeEnum::Bool, 1, false};
 		}
 		else if (str == "char")
 		{
-			return { TypeEnum::Char, 8, true };
+			return {TypeEnum::Char, 8, true};
 		}
 		return Type(TypeEnum::None);
 	}
@@ -173,31 +174,31 @@ namespace types
 		// float: ([0-9][0-9]*)[.]([0-9][0-9]*)(f(32|64)?)?
 		// char: '([^']|\\.)'
 
-		std::regex int_regex{ "[0-9][0-9]*((i|u)(8|16|32|64)?)?" };
-		std::regex float_regex{ "[0-9][0-9]*[.][0-9][0-9]*(f(32|64)?)?" };
-		std::regex bool_regex{ "(true|false)" };
-		std::regex char_regex{ "'([^']|\\\\.)'" };
+		std::regex int_regex{"[0-9][0-9]*((i|u)(8|16|32|64)?)?"};
+		std::regex float_regex{"[0-9][0-9]*[.][0-9][0-9]*(f(32|64)?)?"};
+		std::regex bool_regex{"(true|false)"};
+		std::regex char_regex{"'([^']|\\\\.)'"};
 
 		std::smatch match;
 
 		if (std::regex_match(str, match, int_regex))
 		{
-			return { true, {str, TypeEnum::Int} };
+			return {true, {str, TypeEnum::Int}};
 		}
 		else if (std::regex_match(str, match, float_regex))
 		{
-			return { true, {str, TypeEnum::Float} };
+			return {true, {str, TypeEnum::Float}};
 		}
 		else if (std::regex_match(str, match, bool_regex))
 		{
-			return { true, Type{TypeEnum::Bool} };
+			return {true, Type{TypeEnum::Bool}};
 		}
 		else if (std::regex_match(str, match, char_regex))
 		{
-			return { true, Type{ TypeEnum::Char } };
+			return {true, Type{TypeEnum::Char}};
 		}
 
-		return { false, Type{ TypeEnum::None } };
+		return {false, Type{TypeEnum::None}};
 	}
 
 	llvm::Type* get_llvm_type(llvm::LLVMContext& llvm_context, const Type& type)
@@ -435,7 +436,7 @@ namespace types
 			value = value * 10 + static_cast<uint64_t>(str[i] - '0');
 		}
 
-		//std::cout << "int " << value << std::endl;
+		// std::cout << "int " << value << std::endl;
 
 		data = value;
 	}
@@ -467,7 +468,7 @@ namespace types
 
 	bool IntType::check_range(const std::string& str)
 	{
-		Type type{ str, TypeEnum::Int };
+		Type type{str, TypeEnum::Int};
 
 		std::string int_min;
 		std::string int_max;
@@ -484,7 +485,7 @@ namespace types
 					int_min = "000";
 					int_max = "128";
 				}
-				else  // unsigned
+				else // unsigned
 				{
 					int_min = "000";
 					int_max = "255";
@@ -499,7 +500,7 @@ namespace types
 					int_min = "00000";
 					int_max = "32768";
 				}
-				else  // unsigned
+				else // unsigned
 				{
 					int_min = "00000";
 					int_max = "65535";
@@ -514,7 +515,7 @@ namespace types
 					int_min = "0000000000";
 					int_max = "2147483648";
 				}
-				else  // unsigned
+				else // unsigned
 				{
 					int_min = "0000000000";
 					int_max = "4294967295";
@@ -530,7 +531,7 @@ namespace types
 					int_max = "9223372036854775808";
 					length = 19;
 				}
-				else  // unsigned
+				else // unsigned
 				{
 					int_min = "00000000000000000000";
 					int_max = "18446744073709551615";
@@ -617,14 +618,13 @@ namespace types
 					fraction = fraction * 10 + (str[i] - '0');
 					decimal_power *= 10;
 				}
-
 			}
 		}
 
 		double value = (double) whole;
 		value += (double) fraction / (double) decimal_power;
 
-		//std::cout << "float " << value << std::endl;
+		// std::cout << "float " << value << std::endl;
 
 		data = value;
 	}
@@ -773,7 +773,7 @@ namespace types
 
 	std::string CharType::to_string() const
 	{
-		return std::string{ data };
+		return std::string{data};
 	}
 
 }

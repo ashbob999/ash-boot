@@ -27,6 +27,7 @@ namespace cli
 		bool check_modules();
 		bool check_ast();
 		bool extra_checks();
+		bool ouput_json();
 		bool build_ast();
 		bool output_llvm_ir();
 		bool output_object_file();
@@ -39,5 +40,8 @@ namespace cli
 		OutputType output_type = OutputType::IR;
 		int current_module;
 		std::vector<int> build_files_order;
+
+		bool json_output_enabled = false;
+		bool json_ouput_minified = false;
 	};
 }

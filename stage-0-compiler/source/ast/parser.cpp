@@ -768,7 +768,7 @@ namespace parser
 		std::vector<int> arg_ids;
 
 		ast::FunctionPrototype* proto =
-			new ast::FunctionPrototype(name, types::Type{ types::TypeEnum::Void }, types, arg_ids);
+			new ast::FunctionPrototype(name, types::Type{types::TypeEnum::Void}, types, arg_ids);
 		return make_ptr<ast::FunctionDefinition>(proto, std::move(expr));
 	}
 
@@ -1029,6 +1029,7 @@ namespace parser
 
 		int name_id = stringManager::get_id(name);
 
+		// TODO: check for crash
 		expr->get_body()->named_types[name_id] = var_type;
 		return make_ptr<ast::VariableDeclarationExpr>(bodies.back(), var_type, name_id, std::move(expr));
 	}

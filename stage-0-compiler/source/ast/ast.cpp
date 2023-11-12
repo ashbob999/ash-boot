@@ -7,6 +7,8 @@
 
 namespace ast
 {
+	static constexpr const char* ExprTypeKeyString = "expr_type";
+
 	std::string constant_to_string(const BaseExpr* expr)
 	{
 		switch (expr->constant_status)
@@ -103,6 +105,18 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue LiteralExpr::to_json() const
+	{
+		json ::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Literal Value");
+		// TODO: Check if these shouls use toJson
+		root.addData("value_type", this->curr_type.to_string());
+		root.addData("value", this->value_type->to_string());
+
+		return root;
+	}
+
 	types::Type LiteralExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
@@ -164,6 +178,25 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue VariableDeclarationExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Variable Declaration");
+		root.addData("variable_name", stringManager::get_string(this->name_id));
+		root.addData("variable_type", this->curr_type.to_string());
+		if (this->expr == nullptr)
+		{
+			root.addData("value", "<default>");
+		}
+		else
+		{
+			root.addData("value", this->expr->to_json());
+		}
+
+		return root;
+	}
+
 	types::Type VariableDeclarationExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
@@ -199,6 +232,16 @@ namespace ast
 		str << tabs << "}," << '\n';
 
 		return str.str();
+	}
+
+	json::JsonValue VariableReferenceExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Variable Reference");
+		root.addData("variable_name", stringManager::get_string(this->name_id));
+
+		return root;
 	}
 
 	types::Type VariableReferenceExpr::get_result_type()
@@ -247,13 +290,25 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue BinaryExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Binary");
+		root.addData("left_hand_side", this->lhs->to_json());
+		root.addData("operator", operators::to_string(this->binop));
+		root.addData("right_hand_side", this->rhs->to_json());
+
+		return root;
+	}
+
 	types::Type BinaryExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			if (is_binary_comparision(this->binop))
 			{
-				result_type = types::Type{ types::TypeEnum::Bool };
+				result_type = types::Type{types::TypeEnum::Bool};
 			}
 			else if (this->binop == operators::BinaryOp::ModuleScope)
 			{
@@ -321,6 +376,36 @@ namespace ast
 		str << tabs << "}," << '\n';
 
 		return str.str();
+	}
+
+	json::JsonValue BodyExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Body");
+
+		json::JsonArray prototypes;
+		for (auto& proto : this->function_prototypes)
+		{
+			prototypes.addValue(proto.second->to_json());
+		}
+		root.addData("function_prototypes", prototypes);
+
+		json::JsonArray functions;
+		for (auto& func : this->functions)
+		{
+			functions.addValue(func->to_json());
+		}
+		root.addData("functions", functions);
+
+		json::JsonArray expressions;
+		for (auto& expr : this->expressions)
+		{
+			expressions.addValue(expr->to_json());
+		}
+		root.addData("expressions", expressions);
+
+		return root;
 	}
 
 	types::Type BodyExpr::get_result_type()
@@ -401,6 +486,23 @@ namespace ast
 		str << tabs << "}," << '\n';
 
 		return str.str();
+	}
+
+	json::JsonValue CallExpr::to_json() const
+	{
+		json::JsonObject root;
+
+		root.addData(ExprTypeKeyString, "Call");
+		root.addData("function_name", stringManager::get_string(this->callee_id));
+
+		json::JsonArray arguments;
+		for (auto& arg : this->args)
+		{
+			arguments.addValue(arg->to_json());
+		}
+		root.addData("function_arguements", arguments);
+
+		return root;
 	}
 
 	types::Type CallExpr::get_result_type()
@@ -489,6 +591,26 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue IfExpr::to_json() const
+	{
+		json::JsonObject root;
+
+		root.addData(ExprTypeKeyString, "If");
+		root.addData("if_condition", this->condition->to_json());
+		root.addData("if_body", this->if_body->to_json());
+
+		if (this->else_body == nullptr)
+		{
+			root.addData("else_body", json::Null);
+		}
+		else
+		{
+			root.addData("else_body", this->else_body->to_json());
+		}
+
+		return root;
+	}
+
 	types::Type IfExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
@@ -499,7 +621,7 @@ namespace ast
 			}
 			else
 			{
-				result_type = types::Type{ types::TypeEnum::Void };
+				result_type = types::Type{types::TypeEnum::Void};
 			}
 		}
 		return result_type;
@@ -587,11 +709,38 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue ForExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "For");
+
+		json::JsonObject start{};
+		start.addData("type", this->var_type.to_string());
+		start.addData("name", stringManager::get_string(this->name_id));
+		start.addData("value", this->start_expr->to_json());
+		root.addData("start", start);
+
+		root.addData("end_condition", this->end_expr->to_json());
+		if (this->step_expr == nullptr)
+		{
+			root.addData("step", json::Null);
+		}
+		else
+		{
+			root.addData("step", this->step_expr->to_json());
+		}
+
+		root.addData("loop_body", this->for_body->to_json());
+
+		return root;
+	}
+
 	types::Type ForExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::Type{ types::TypeEnum::Void };
+			result_type = types::Type{types::TypeEnum::Void};
 		}
 		return result_type;
 	}
@@ -633,11 +782,22 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue WhileExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "While");
+		root.addData("end_condition", this->end_expr->to_json());
+		root.addData("loop_body", this->while_body->to_json());
+
+		return root;
+	}
+
 	types::Type WhileExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::Type{ types::TypeEnum::Void };
+			result_type = types::Type{types::TypeEnum::Void};
 		}
 		return result_type;
 	}
@@ -656,6 +816,15 @@ namespace ast
 	std::string CommentExpr::to_string(int depth) const
 	{
 		return std::string();
+	}
+
+	json::JsonValue CommentExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Comment");
+
+		return root;
 	}
 
 	types::Type CommentExpr::get_result_type()
@@ -697,13 +866,31 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue ReturnExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Return");
+
+		if (this->ret_expr == nullptr)
+		{
+			root.addData("return_value", json::Null);
+		}
+		else
+		{
+			root.addData("return_value", this->ret_expr->to_json());
+		}
+
+		return root;
+	}
+
 	types::Type ReturnExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
 			if (ret_expr == nullptr)
 			{
-				result_type = types::Type{ types::TypeEnum::Void };
+				result_type = types::Type{types::TypeEnum::Void};
 			}
 			else
 			{
@@ -743,11 +930,19 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue ContinueExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Continue");
+		return root;
+	}
+
 	types::Type ContinueExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::Type{ types::TypeEnum::Void };
+			result_type = types::Type{types::TypeEnum::Void};
 		}
 		return result_type;
 	}
@@ -782,11 +977,20 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue BreakExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Break");
+
+		return root;
+	}
+
 	types::Type BreakExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			result_type = types::Type{ types::TypeEnum::Void };
+			result_type = types::Type{types::TypeEnum::Void};
 		}
 		return result_type;
 	}
@@ -832,6 +1036,17 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue UnaryExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Unary");
+		root.addData("operator", operators::to_string(this->unop));
+		root.addData("unary_value", this->expr->to_json());
+
+		return root;
+	}
+
 	types::Type UnaryExpr::get_result_type()
 	{
 		if (result_type.get_type_enum() == types::TypeEnum::None)
@@ -866,6 +1081,17 @@ namespace ast
 		str << tabs << "}," << '\n';
 
 		return str.str();
+	}
+
+	json::JsonValue CastExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Cast");
+		root.addData("target_type", this->target_type.to_string());
+		root.addData("cast_value", this->expr->to_json());
+
+		return root;
 	}
 
 	types::Type CastExpr::get_result_type()
@@ -911,11 +1137,27 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue SwitchExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Switch");
+
+		json::JsonArray cases;
+		for (auto& case_expr : this->cases)
+		{
+			cases.addValue(case_expr->to_json());
+		}
+		root.addData("cases", cases);
+
+		return root;
+	}
+
 	types::Type SwitchExpr::get_result_type()
 	{
 		if (this->result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			this->result_type = types::Type{ types::TypeEnum::Void };
+			this->result_type = types::Type{types::TypeEnum::Void};
 		}
 		return this->result_type;
 	}
@@ -966,11 +1208,31 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue CaseExpr::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData(ExprTypeKeyString, "Case");
+
+		if (this->default_case)
+		{
+			root.addData("case_value", "<default_case>");
+		}
+		else
+		{
+			root.addData("case_value", this->case_expr->to_json());
+		}
+
+		root.addData("case_body", this->case_body->to_json());
+
+		return root;
+	}
+
 	types::Type CaseExpr::get_result_type()
 	{
 		if (this->result_type.get_type_enum() == types::TypeEnum::None)
 		{
-			this->result_type = types::Type{ types::TypeEnum::Void };
+			this->result_type = types::Type{types::TypeEnum::Void};
 		}
 		return this->result_type;
 	}
@@ -1020,6 +1282,29 @@ namespace ast
 		return str.str();
 	}
 
+	json::JsonValue FunctionPrototype::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData("function_type", "Prototype");
+		root.addData("function_name", stringManager::get_string(this->name_id));
+
+		json::JsonArray arguments{};
+		for (int i = 0; i < this->args.size(); i++)
+		{
+			json::JsonObject argument{};
+			argument.addData("argument_type", this->types[i].to_string());
+			argument.addData("arguemnt_name", stringManager::get_string(this->args[i]));
+			arguments.addValue(argument);
+		}
+		root.addData("function_arguments", arguments);
+
+		root.addData("return_type", this->return_type.to_string());
+		root.addData("is_extern", this->is_extern);
+
+		return root;
+	}
+
 	FunctionDefinition::FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body) :
 		prototype(prototype),
 		body(std::move(body))
@@ -1039,14 +1324,26 @@ namespace ast
 			str << '\n';
 		}
 
-		// str << this->prototype->to_string(depth);
-		// str << '\n';
+		str << this->prototype->to_string(depth);
+		str << '\n';
 		str << tabs << "Function Body : {" << '\n';
 		str << tabs << '\t' << "Name: " << stringManager::get_string(this->prototype->name_id) << '\n';
 		str << this->body->to_string(depth + 1);
 		str << tabs << '}' << '\n';
 
 		return str.str();
+	}
+
+	json::JsonValue FunctionDefinition::to_json() const
+	{
+		json::JsonObject root{};
+
+		root.addData("function_type", "Definition");
+		root.addData("function_prototype", this->prototype->to_json());
+		root.addData("function_name", stringManager::get_string(this->prototype->name_id));
+		root.addData("function_body", this->body->to_json());
+
+		return root;
 	}
 
 	bool FunctionDefinition::check_return_type() const

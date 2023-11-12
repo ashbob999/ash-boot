@@ -8,6 +8,7 @@
 #include "llvm/IR/Instructions.h"
 
 #include "../config.h"
+#include "../json.h"
 #include "operators.h"
 #include "types.h"
 
@@ -118,6 +119,7 @@ namespace ast
 		BaseExpr(AstExprType ast_type, BodyExpr* body);
 		virtual ~BaseExpr() = default;
 		virtual std::string to_string(int depth) const = 0;
+		virtual json::JsonValue to_json() const = 0;
 		virtual types::Type get_result_type() = 0;
 		virtual bool check_types() = 0;
 
@@ -136,7 +138,7 @@ namespace ast
 	protected:
 		AstExprType ast_type = AstExprType::BaseExpr;
 		BodyExpr* body;
-		types::Type result_type{ types::TypeEnum::None };
+		types::Type result_type{types::TypeEnum::None};
 		ExpressionLineInfo line_info;
 		bool is_name_mangled = false;
 		parent_data parent;
@@ -149,6 +151,7 @@ namespace ast
 		LiteralExpr(BodyExpr* body, const types::Type& curr_type, const std::string& str);
 		~LiteralExpr() override;
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -173,6 +176,7 @@ namespace ast
 		BodyExpr(BodyExpr* body, BodyType body_type);
 		~BodyExpr() override;
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -188,6 +192,7 @@ namespace ast
 		std::vector<std::pair<int, ReferenceType>>
 			in_scope_vars; // only used for checking vars are in scope, and order of defines
 		std::vector<ptr_type<BaseExpr>> expressions;
+		// TODO: redo this mess
 		std::vector<ptr_type<FunctionDefinition>> functions;
 		std::vector<FunctionPrototype*> original_function_prototypes;
 		std::map<int, FunctionPrototype*> function_prototypes;
@@ -205,6 +210,7 @@ namespace ast
 		VariableDeclarationExpr(BodyExpr* body, types::Type curr_type, int name_id, ptr_type<BaseExpr> expr);
 		~VariableDeclarationExpr() override;
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -219,6 +225,7 @@ namespace ast
 	public:
 		VariableReferenceExpr(BodyExpr* body, int name_id);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -232,6 +239,7 @@ namespace ast
 		BinaryExpr(BodyExpr* body, operators::BinaryOp binop, ptr_type<BaseExpr> lhs, ptr_type<BaseExpr> rhs);
 		~BinaryExpr() override;
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -246,6 +254,7 @@ namespace ast
 		CallExpr(BodyExpr* body, int callee_id, std::vector<ptr_type<BaseExpr>>& args);
 		~CallExpr() override;
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -265,6 +274,7 @@ namespace ast
 			ptr_type<BaseExpr> else_body,
 			bool should_return_value);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -286,6 +296,7 @@ namespace ast
 			ptr_type<BaseExpr> step_expr,
 			ptr_type<BodyExpr> for_body);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -302,6 +313,7 @@ namespace ast
 	public:
 		WhileExpr(BodyExpr* body, ptr_type<BaseExpr> end_expr, ptr_type<BaseExpr> while_body);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -314,6 +326,7 @@ namespace ast
 	public:
 		CommentExpr(BodyExpr* body);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 	};
@@ -323,6 +336,7 @@ namespace ast
 	public:
 		ReturnExpr(BodyExpr* body, ptr_type<BaseExpr> ret_expr);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -334,6 +348,7 @@ namespace ast
 	public:
 		ContinueExpr(BodyExpr* body);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 	};
@@ -343,6 +358,7 @@ namespace ast
 	public:
 		BreakExpr(BodyExpr* body);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 	};
@@ -352,6 +368,7 @@ namespace ast
 	public:
 		UnaryExpr(BodyExpr* body, operators::UnaryOp unop, ptr_type<BaseExpr> expr);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -364,6 +381,7 @@ namespace ast
 	public:
 		CastExpr(BodyExpr* body, int target_type_id, ptr_type<BaseExpr> expr);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -377,6 +395,7 @@ namespace ast
 	public:
 		SwitchExpr(BodyExpr* body, ptr_type<BaseExpr> value_expr, std::vector<ptr_type<CaseExpr>>& cases);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -390,6 +409,7 @@ namespace ast
 	public:
 		CaseExpr(BodyExpr* body, ptr_type<BaseExpr> case_expr, ptr_type<BaseExpr> case_body, bool default_case);
 		std::string to_string(int depth) const override;
+		json::JsonValue to_json() const override;
 		types::Type get_result_type() override;
 		bool check_types() override;
 
@@ -409,6 +429,7 @@ namespace ast
 			const std::vector<types::Type>& types,
 			const std::vector<int>& args);
 		std::string to_string(int depth) const;
+		json::JsonValue to_json() const;
 		FunctionPrototype(const FunctionPrototype&) = delete;
 
 		int name_id;
@@ -426,6 +447,7 @@ namespace ast
 		FunctionDefinition(FunctionPrototype* prototype, ptr_type<BodyExpr> body);
 		~FunctionDefinition();
 		std::string to_string(int depth) const;
+		json::JsonValue to_json() const;
 		bool check_return_type() const;
 
 		FunctionPrototype* prototype;

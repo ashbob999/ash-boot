@@ -50,7 +50,7 @@ CompactNamespaces: 'false'
 ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
 ConstructorInitializerIndentWidth: '4'
 ContinuationIndentWidth: '4'
-Cpp11BracedListStyle: 'false'
+Cpp11BracedListStyle: 'true'
 DerivePointerAlignment: 'false'
 DisableFormat: 'false'
 FixNamespaceComments: 'false'
@@ -59,8 +59,8 @@ IndentCaseLabels: 'true'
 IndentPPDirectives: None
 IndentWidth: '4'
 IndentWrappedFunctionNames: 'false'
-InsertNewlineAtEOF: true
-KeepEmptyLinesAtTheStartOfBlocks: 'true'
+InsertNewlineAtEOF: 'true'
+KeepEmptyLinesAtTheStartOfBlocks: 'false'
 Language: Cpp
 MaxEmptyLinesToKeep: '1'
 NamespaceIndentation: All

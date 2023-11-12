@@ -41,7 +41,7 @@ namespace cli
 			return;
 		}
 
-		std::filesystem::path input_file_path{ argv[1] };
+		std::filesystem::path input_file_path{argv[1]};
 
 		// check if the file path exists
 		if (!std::filesystem::exists(input_file_path))
@@ -60,19 +60,18 @@ namespace cli
 
 		input_files.push_back(input_file_path);
 
-		std::filesystem::path output_file_path{ argv[2] };
+		std::filesystem::path output_file_path{argv[2]};
 		output_file = output_file_path;
 
-		// argv[3] is output type
 		if (argc >= 4)
 		{
 			for (int i = 3; i < argc; i++)
 			{
-				std::string type_str{ argv[i] };
+				std::string arg_str{argv[i]};
 
-				if (type_str.rfind("--output-type=", 0) == 0) // --output-type=[ir|obj]
+				if (arg_str.rfind("--output-type=", 0) == 0) // --output-type=[ir|obj]
 				{
-					std::string option = type_str.substr(14);
+					std::string option = arg_str.substr(14);
 
 					if (option == "ir")
 					{
@@ -89,10 +88,10 @@ namespace cli
 						return;
 					}
 				}
-				else if (type_str.rfind("--input=", 0) == 0) // --input=filename
+				else if (arg_str.rfind("--input=", 0) == 0) // --input=filename
 				{
-					std::string option = type_str.substr(8);
-					std::filesystem::path input_file_path{ option };
+					std::string option = arg_str.substr(8);
+					std::filesystem::path input_file_path{option};
 
 					// check if the file path exists
 					if (!std::filesystem::exists(input_file_path))
@@ -106,15 +105,52 @@ namespace cli
 					{
 						std::cout << "File: \"" << input_file_path.string() << "\" must be a regular text file."
 								  << std::endl;
-						;
 						return;
 					}
 
 					input_files.push_back(input_file_path);
 				}
+				else if (arg_str.rfind("--output-json=", 0) == 0)
+				{
+					std::string option = arg_str.substr(14);
+
+					if (option == "true")
+					{
+						this->json_output_enabled = true;
+					}
+					else if (option == "false")
+					{
+						this->json_output_enabled = false;
+					}
+					else
+					{
+						std::cout << "Invalid value for --output-json option: " << option << std::endl;
+						std::cout << "Valid values are: yes or no" << std::endl;
+						return;
+					}
+				}
+				else if (arg_str.rfind("--json-format=", 0) == 0)
+				{
+					std::string option = arg_str.substr(14);
+
+					if (option == "regular")
+					{
+						this->json_ouput_minified = false;
+					}
+					else if (option == "minified")
+					{
+						this->json_ouput_minified = true;
+					}
+					else
+					{
+						std::cout << "Invalid value for --json-format option: " << option << std::endl;
+						std::cout << "Valid values are: regular or minified" << std::endl;
+						return;
+					}
+				}
 				else
 				{
-					std::cout << "Invalid option: " << type_str << std::endl;
+					std::cout << "Invalid option: " << arg_str << std::endl;
 					return;
 				}
 			}
@@ -148,6 +184,14 @@ namespace cli
 		if (!this->extra_checks())
 		{
 			return false;
+		}
+
+		if (this->json_output_enabled)
+		{
+			if (!this->ouput_json())
+			{
+				return false;
+			}
 		}
 
 		if (!build_ast())
@@ -195,7 +239,7 @@ namespace cli
 			}
 
 			// parse the file
-			parser::Parser parser{ file_stream, file.string() };
+			parser::Parser parser{file_stream, file.string()};
 			ptr_type<ast::BodyExpr> body_ast = std::move(parser.parse_file_as_body());
 			current_module = parser.get_module();
 
@@ -290,6 +334,34 @@ namespace cli
 		return true;
 	}
 
+	bool CLI::ouput_json()
+	{
+		json::JsonArray root{};
+
+		for (auto& f : build_files_order)
+		{
+			ast::BodyExpr* body_ast = moduleManager::get_ast(f);
+
+			json::JsonObject file_json{};
+			file_json.addData("filename", stringManager::get_string(f));
+
+			json::JsonArray functions{};
+
+			for (auto& f : body_ast->functions)
+			{
+				functions.addValue(f->to_json());
+			}
+
+			file_json.addData("functions", functions);
+
+			root.addValue(file_json);
+		}
+
+		std::cout << std::endl << root.to_string(0, this->json_ouput_minified) << std::endl << std::endl;
+
+		return true;
+	}
+
 	bool CLI::build_ast()
 	{
 		if (!llvm_builder.set_target())
@@ -335,8 +407,6 @@ namespace cli
 
 					return false;
 				}
-
-				// std::cout << std::endl << f->to_string(0) << std::endl << std::endl;
 			}
 		}
 
