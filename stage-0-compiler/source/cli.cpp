@@ -10,18 +10,22 @@
 #include "ast/parser.h"
 #include "ast/string_manager.h"
 #include "ast/type_checker.h"
+#include "cli_parser.h"
 #include "config.h"
 
 namespace cli
 {
 	CLI::CLI(int argc, char** argv)
 	{
+		const cliParser::cli_parsed_data cliData = cliParser::parse_arguemnts(argc, argv);
+
 		// argv[0] is file name
 		// argv[1] is input file
 		// argv[2] is output file
-		if (argc < 3)
+
+		if (!cliData.valid || cliData.values.size() < 2)
 		{
-			if (argc < 2)
+			if (cliData.values.size() < 2)
 			{
 				std::cout << "No input file specified." << std::endl;
 			}
@@ -29,7 +33,7 @@ namespace cli
 
 			std::cout << "Usage: ";
 
-#ifdef _WIN64
+#ifdef _WIN32
 			std::cout << "ash-boot-stage0.exe";
 #endif
 #ifdef __linux__
@@ -37,11 +41,10 @@ namespace cli
 #endif
 
 			std::cout << " input-file output-file" << std::endl;
-
 			return;
 		}
 
-		std::filesystem::path input_file_path{argv[1]};
+		std::filesystem::path input_file_path{cliData.values[0]};
 
 		// check if the file path exists
 		if (!std::filesystem::exists(input_file_path))
@@ -60,99 +63,93 @@ namespace cli
 
 		input_files.push_back(input_file_path);
 
-		std::filesystem::path output_file_path{argv[2]};
+		std::filesystem::path output_file_path{cliData.values[1]};
 		output_file = output_file_path;
 
-		if (argc >= 4)
+		// --output-type=[ir|obj]
+		if (cliData.hasOptionValue("output-type"))
 		{
-			for (int i = 3; i < argc; i++)
+			auto& option = cliData.getOptionValue("output-type");
+
+			if (option == "ir")
 			{
-				std::string arg_str{argv[i]};
+				output_type = OutputType::IR;
+			}
+			else if (option == "obj")
+			{
+				output_type = OutputType::OBJ;
+			}
+			else
+			{
+				std::cout << "Invalid value for --output-type option: " << option << std::endl;
+				std::cout << "Valid values are: ir or obj" << std::endl;
+				return;
+			}
+		}
 
-				if (arg_str.rfind("--output-type=", 0) == 0) // --output-type=[ir|obj]
-				{
-					std::string option = arg_str.substr(14);
+		// --input=filename
+		if (cliData.hasOptionValue("input"))
+		{
+			auto& option = cliData.getOptionValue("input");
 
-					if (option == "ir")
-					{
-						output_type = OutputType::IR;
-					}
-					else if (option == "obj")
-					{
-						output_type = OutputType::OBJ;
-					}
-					else
-					{
-						std::cout << "Invalid value for --output-type option: " << option << std::endl;
-						std::cout << "Valid values are: ir or obj" << std::endl;
-						return;
-					}
-				}
-				else if (arg_str.rfind("--input=", 0) == 0) // --input=filename
-				{
-					std::string option = arg_str.substr(8);
-					std::filesystem::path input_file_path{option};
+			std::filesystem::path input_file_path{option};
 
-					// check if the file path exists
-					if (!std::filesystem::exists(input_file_path))
-					{
-						std::cout << "File: \"" << input_file_path.string() << "\" does not exist." << std::endl;
-						return;
-					}
+			// check if the file path exists
+			if (!std::filesystem::exists(input_file_path))
+			{
+				std::cout << "File: \"" << input_file_path.string() << "\" does not exist." << std::endl;
+				return;
+			}
 
-					// check if the file path is an actual file
-					if (!std::filesystem::is_regular_file(input_file_path))
-					{
-						std::cout << "File: \"" << input_file_path.string() << "\" must be a regular text file."
-								  << std::endl;
-						return;
-					}
+			// check if the file path is an actual file
+			if (!std::filesystem::is_regular_file(input_file_path))
+			{
+				std::cout << "File: \"" << input_file_path.string() << "\" must be a regular text file." << std::endl;
+				return;
+			}
 
-					input_files.push_back(input_file_path);
-				}
-				else if (arg_str.rfind("--output-json=", 0) == 0)
-				{
-					std::string option = arg_str.substr(14);
+			input_files.push_back(input_file_path);
+		}
 
-					if (option == "true")
-					{
-						this->json_output_enabled = true;
-					}
-					else if (option == "false")
-					{
-						this->json_output_enabled = false;
-					}
-					else
-					{
-						std::cout << "Invalid value for --output-json option: " << option << std::endl;
-						std::cout << "Valid values are: yes or no" << std::endl;
-						return;
-					}
-				}
-				else if (arg_str.rfind("--json-format=", 0) == 0)
-				{
-					std::string option = arg_str.substr(14);
+		// --output-json=filename
+		if (cliData.hasOptionValue("output-json"))
+		{
+			auto& option = cliData.getOptionValue("output-json");
 
-					if (option == "regular")
-					{
-						this->json_ouput_minified = false;
-					}
-					else if (option == "minified")
-					{
-						this->json_ouput_minified = true;
-					}
-					else
-					{
-						std::cout << "Invalid value for --json-format option: " << option << std::endl;
-						std::cout << "Valid values are: regular or minified" << std::endl;
-						return;
-					}
-				}
-				else
-				{
-					std::cout << "Invalid option: " << arg_str << std::endl;
-					return;
-				}
+			if (option == "true")
+			{
+				this->json_output_enabled = true;
+			}
+			else if (option == "false")
+			{
+				this->json_output_enabled = false;
+			}
+			else
+			{
+				std::cout << "Invalid value for --output-json option: " << option << std::endl;
+				std::cout << "Valid values are: yes or no" << std::endl;
+				return;
+			}
+		}
+
+		// --json-format=[true|false]
+		if (cliData.hasOptionValue("json-format"))
+		{
+			auto& option = cliData.getOptionValue("json-format");
+
+			if (option == "regular")
+			{
+				this->json_ouput_minified = false;
+			}
+			else if (option == "minified")
+			{
+				this->json_ouput_minified = true;
+			}
+			else
+			{
+				std::cout << "Invalid value for --json-format option: " << option << std::endl;
+				std::cout << "Valid values are: regular or minified" << std::endl;
+				return;
 			}
 		}
 

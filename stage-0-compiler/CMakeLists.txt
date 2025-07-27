@@ -36,7 +36,7 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 include_directories(./include)
 
 # Now build our tools
-add_executable(ash-boot-stage0 "source/main.cpp" "source/ast/ast.cpp" "source/ast/types.cpp" "source/ast/builder.cpp" "source/ast/parser.cpp" "source/ast/type_checker.cpp" "source/ast/module_manager.h" "source/ast/module_manager.cpp" "source/ast/scope_checker.cpp" "source/ast/operators.cpp" "source/cli.cpp" "source/config.h" "source/ast/constant_checker.h" "source/ast/constant_checker.cpp" "source/ast/mangler.h"  "source/ast/mangler/mangler_v1.h" "source/ast/mangler/mangler_v1.cpp" "source/ast/mangler/mangler_v2.h" "source/ast/mangler/mangler_v2.cpp" "source/ast/string_manager.h" "source/ast/string_manager.cpp" "source/utils.h" "source/json.h" "source/json.cpp")
+add_executable(ash-boot-stage0 "source/main.cpp" "source/ast/ast.cpp" "source/ast/types.cpp" "source/ast/builder.cpp" "source/ast/parser.cpp" "source/ast/type_checker.cpp" "source/ast/module_manager.h" "source/ast/module_manager.cpp" "source/ast/scope_checker.cpp" "source/ast/operators.cpp" "source/cli.cpp" "source/config.h" "source/ast/constant_checker.h" "source/ast/constant_checker.cpp" "source/ast/mangler.h"  "source/ast/mangler/mangler_v1.h" "source/ast/mangler/mangler_v1.cpp" "source/ast/mangler/mangler_v2.h" "source/ast/mangler/mangler_v2.cpp" "source/ast/string_manager.h" "source/ast/string_manager.cpp" "source/utils.h" "source/json.h" "source/json.cpp" "source/cli_parser.h" "source/cli_parser.cpp")
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
